@@ -1,8 +1,9 @@
 {
   "project_info": {
     "project_number": "227611274377",
+    "firebase_url": "https://cuestionarios-autoevaluacion-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "cuestionarios-autoevaluacion",
-    "storage_bucket": "cuestionarios-autoevaluacion.appspot.com"
+    "storage_bucket": "cuestionarios-autoevaluacion.firebasestorage.app"
   },
   "client": [
     {

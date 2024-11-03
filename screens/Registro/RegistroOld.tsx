@@ -1,6 +1,8 @@
-// Login.tsx
+// Register.tsx
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { useNavigation } from "@react-navigation/native";
+import auth from "@react-native-firebase/auth";
+import db from "@react-native-firebase/database";
 import React, { useState } from "react";
 import {
   SafeAreaView,
@@ -12,42 +14,70 @@ import {
   Keyboard,
   ImageBackground,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 
-export const Login = () => {
+export default function Registro() {
+  const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
   const nav = useNavigation<NativeStackNavigationProp<any>>();
 
+  const createProfile = async (response: any) => {
+    try {
+      await db().ref(`/users/${response.user.uid}`).set({ name });
+    } catch (e) {
+      console.log('Error en createProfile:', e);
+      throw e; // Re-lanzar el error para que sea capturado en registerAndGoToMainFlow
+    }
+  }
+  
 
-  const goToRegistration = () => {
-    nav.replace("Registro")
-  };
+  const registerAndGoToMainFlow = async () => {
+    if (email && password) {
+      try {
+        const response = await auth().createUserWithEmailAndPassword(
+          email,
+          password
+        );
 
-  const goToMainFlow = async () => {
-    // Lógica de inicio de sesión
+        if(response.user) {
+          await createProfile(response);
+          nav.replace("Main")
+        }
+      } catch(e) {
+        Alert.alert("Oops", "Por favor revisa el formulario y inténtalo de nuevo")
+      }
+    }
   };
 
   return (
     <Pressable style={styles.container} onPress={Keyboard.dismiss}>
       <ImageBackground
-        source={require('../assets/images/switzerland-8056381_1280.jpg')}
+        source={require('../../assets/images/surfer-1836366_1280.jpg')}
         style={styles.backgroundImage}
         imageStyle={{ opacity: 0.7 }}
       >
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.titleContainer}>
-            <Text style={styles.titleText}>Inicio sesión</Text>
+            <Text style={styles.titleText}>Registro</Text>
           </View>
           <View style={styles.mainContent}>
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre"
+              value={name}
+              onChangeText={setName}
+              placeholderTextColor="#fff"
+            />
             <TextInput
               style={styles.input}
               placeholder="Email"
               value={email}
               onChangeText={setEmail}
-              autoCapitalize="none"
               keyboardType="email-address"
+              autoCapitalize="none"
               placeholderTextColor="#fff"
             />
             <TextInput
@@ -58,18 +88,18 @@ export const Login = () => {
               secureTextEntry
               placeholderTextColor="#fff"
             />
-            <TouchableOpacity style={styles.buttonPrimary} onPress={goToMainFlow}>
-              <Text style={styles.buttonTextPrimary}>Iniciar Sesión</Text>
+            <TouchableOpacity style={styles.buttonPrimary} onPress={registerAndGoToMainFlow}>
+              <Text style={styles.buttonTextPrimary}>Crear Cuenta</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.buttonSecondary} onPress={goToRegistration}>
-              <Text style={styles.buttonTextSecondary}>Registrarse</Text>
+            <TouchableOpacity style={styles.buttonSecondary} onPress={() => nav.replace("Login")}>
+              <Text style={styles.buttonTextSecondary}>Volver</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
       </ImageBackground>
     </Pressable>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -85,10 +115,10 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     alignItems: "center",
-    marginBottom: 60,
+    marginBottom: 40,
   },
   titleText: {
-    fontSize: 50,
+    fontSize: 46,
     color: "#fff",
     fontWeight: "bold",
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
@@ -102,7 +132,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.3)",
     borderRadius: 25,
     height: 50,
-    marginBottom: 20,
+    marginBottom: 15,
     paddingHorizontal: 20,
     fontSize: 16,
     color: "#fff",

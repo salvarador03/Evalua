@@ -17,14 +17,15 @@ import expo.modules.ReactNativeHostWrapper
 
 class MainApplication : Application(), ReactApplication {
 
-  override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
+    override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
         this,
         object : DefaultReactNativeHost(this) {
-          override fun getPackages(): List<ReactPackage> {
-            // Packages that cannot be autolinked yet can be added manually here, for example:
-            // packages.add(new MyReactNativePackage());
-            return PackageList(this).packages
-          }
+            override fun getPackages(): List<ReactPackage> {
+                val packages = PackageList(this).packages
+                // Añade esta línea
+                packages.add(ReactNativeFirebaseAppPackage())
+                return packages
+            }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
 
@@ -38,15 +39,16 @@ class MainApplication : Application(), ReactApplication {
   override val reactHost: ReactHost
     get() = ReactNativeHostWrapper.createReactHost(applicationContext, reactNativeHost)
 
-  override fun onCreate() {
-    super.onCreate()
-    SoLoader.init(this, false)
-    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
-      // If you opted-in for the New Architecture, we load the native entry point for this app.
-      load()
+    override fun onCreate() {
+        super.onCreate()
+        SoLoader.init(this, false)
+        // Añade esta línea
+        FirebaseApp.initializeApp(this)
+        if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+            load()
+        }
+        ApplicationLifecycleDispatcher.onApplicationCreate(this)
     }
-    ApplicationLifecycleDispatcher.onApplicationCreate(this)
-  }
 
   override fun onConfigurationChanged(newConfig: Configuration) {
     super.onConfigurationChanged(newConfig)
