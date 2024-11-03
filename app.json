@@ -26,9 +26,24 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "@react-native-firebase/app",
+      [
+        "@react-native-firebase/app",
+        {
+          "android_package_name": "com.evalua.app"
+        }
+      ],
       "@react-native-firebase/auth",
-      "@react-native-firebase/database"
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 33,
+            "targetSdkVersion": 33,
+            "buildToolsVersion": "33.0.0",
+            "kotlinVersion": "1.8.0"
+          }
+        }
+      ]
     ]
   }
 }
