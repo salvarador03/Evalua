@@ -1,4 +1,3 @@
-// src/screens/RegisterScreen.tsx
 import React, { useState } from 'react';
 import { View, Text, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -9,7 +8,9 @@ import { CustomButton } from '../../Components/CustomButton/CustomButton';
 import { typography } from '../../theme/typography';
 import { RootStackParamList } from '../../navigation/types';
 import auth from '@react-native-firebase/auth';
-import db from "@react-native-firebase/database"
+import db from "@react-native-firebase/database";
+import { TEACHER_SECRET_CODE } from '../../utils/roles';
+import type { User } from '../../types/user';
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Registro'>;
 
@@ -17,54 +18,51 @@ export const RegisterScreen: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [secretCode, setSecretCode] = useState('');
+  const [showSecretCode, setShowSecretCode] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation<RegisterScreenNavigationProp>();
 
   const handleRegister = async () => {
-    // Validaciones
     if (!name.trim() || !email.trim() || !password) {
       Alert.alert('Error', 'Todos los campos son obligatorios');
       return;
     }
-  
+
     if (password.length < 6) {
       Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
       return;
     }
-  
+
+    const isTeacher = showSecretCode && secretCode === TEACHER_SECRET_CODE;
+
     setLoading(true);
-  
+
     try {
-      // Crear usuario en Firebase Authentication
       const userCredential = await auth().createUserWithEmailAndPassword(
         email.trim(),
         password
       );
-  
+
       if (userCredential.user) {
-        console.log('Usuario creado en Auth:', userCredential.user.uid); // Log para debug
-  
-        // Actualizar el displayName en Authentication
         await userCredential.user.updateProfile({
           displayName: name.trim()
         });
-  
-        // Guardar datos del usuario en Realtime Database
-        const userRef = db().ref(`/users/${userCredential.user.uid}`);
-        
-        await userRef.set({
+
+        const userData: User = {
           name: name.trim(),
           email: email.trim(),
-          createdAt: db.ServerValue.TIMESTAMP,
-          lastLogin: db.ServerValue.TIMESTAMP,
+          role: isTeacher ? 'teacher' : 'student',
+          createdAt: Date.now(),
+          lastLogin: Date.now(),
           uid: userCredential.user.uid
-        });
-  
-        // Verificar que los datos se guardaron correctamente
-        const snapshot = await userRef.once('value');
-        console.log('Datos guardados en DB:', snapshot.val()); // Log para debug
-  
-        setLoading(false); // Aseguramos que loading se desactive
+        };
+
+        await db()
+          .ref(`/users/${userCredential.user.uid}`)
+          .set(userData);
+
+        setLoading(false);
         
         Alert.alert(
           '¡Éxito!',
@@ -72,15 +70,20 @@ export const RegisterScreen: React.FC = () => {
           [
             {
               text: 'Continuar',
-              onPress: () => navigation.replace('MainTabs')
+              onPress: () => {
+                // Navegar a MainTabs después del registro exitoso
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'MainTabs' }],
+                });
+              }
             }
           ],
           { cancelable: false }
         );
       }
     } catch (error: any) {
-      console.error('Error completo:', error); // Log para debug
-      setLoading(false); // Aseguramos que loading se desactive en caso de error
+      setLoading(false);
       
       let errorMessage = 'Error al crear la cuenta';
       switch (error.code) {
@@ -133,6 +136,22 @@ export const RegisterScreen: React.FC = () => {
             editable={!loading}
           />
           
+          <CustomButton
+            title={showSecretCode ? "Registrarse como alumno" : "¿Eres profesor?"}
+            onPress={() => setShowSecretCode(!showSecretCode)}
+            variant="secondary"
+          />
+
+          {showSecretCode && (
+            <CustomInput
+              placeholder="Código de profesor"
+              value={secretCode}
+              onChangeText={setSecretCode}
+              editable={!loading}
+              secureTextEntry
+            />
+          )}
+          
           <View style={styles.buttonContainer}>
             {loading ? (
               <View style={styles.loadingContainer}>
@@ -147,7 +166,7 @@ export const RegisterScreen: React.FC = () => {
                 />
                 <CustomButton
                   title="Volver"
-                  onPress={() => navigation.replace('Login')}
+                  onPress={() => navigation.navigate('Login')}
                   variant="secondary"
                 />
               </>

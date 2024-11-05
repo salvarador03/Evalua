@@ -26,13 +26,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "@react-native-firebase/app",
-        {
-          "android_package_name": "com.evalua.app"
-        }
-      ],
-      "@react-native-firebase/auth",
+      ["@react-native-firebase/app"],
+      ["@react-native-firebase/auth"],
       [
         "expo-build-properties",
         {
@@ -44,6 +39,11 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "08ad6f62-08af-4a00-b186-66f1e0870d55"
+      }
+    }
   }
 }

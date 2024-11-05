@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import auth from "@react-native-firebase/auth";
 import db from "@react-native-firebase/database";
@@ -18,8 +27,7 @@ interface UserData {
   displayName?: string;
 }
 
-type ProfileScreenNavigationProp =
-  NativeStackNavigationProp<RootStackParamList>;
+type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const ProfileScreen: React.FC = () => {
   const [userData, setUserData] = useState<UserData>({
@@ -71,12 +79,10 @@ export const ProfileScreen: React.FC = () => {
     try {
       const currentUser = auth().currentUser;
       if (currentUser) {
-        // Actualizar en Firebase Database
         await db()
           .ref(`/users/${currentUser.uid}`)
           .update({ name: tempName.trim() });
 
-        // Actualizar en Firebase Auth
         await currentUser.updateProfile({
           displayName: tempName.trim(),
         });
@@ -149,90 +155,105 @@ export const ProfileScreen: React.FC = () => {
     <BackgroundContainer
       source={require("../../assets/images/surfer-1836366_1280.jpg")}
     >
-      {/* Botón de cerrar sesión en la esquina superior derecha */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Ionicons name="log-out" size={30} color="#ff4444" />
       </TouchableOpacity>
 
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <UserAvatar name={userData.displayName || userData.name} size={80} />
-          <Text style={[typography.title, styles.welcomeText]}>
-            {userData.displayName || userData.name}
-          </Text>
-        </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView 
+          contentContainerStyle={{ flexGrow: 1 }} 
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <UserAvatar name={userData.displayName || userData.name} size={80} />
+              <Text style={[typography.title, styles.welcomeText]}>
+                {userData.displayName || userData.name}
+              </Text>
+            </View>
 
-        <View style={styles.form}>
-          <CustomInput
-            placeholder="Nombre"
-            value={isEditing ? tempName : userData.displayName || userData.name}
-            onChangeText={setTempName}
-            editable={isEditing}
-          />
-          <CustomInput
-            placeholder="Email"
-            value={userData.email}
-            editable={false}
-            onChangeText={() => {}}
-          />
-
-          {isChangingPassword ? (
-            <>
+            <View style={styles.form}>
               <CustomInput
-                placeholder="Contraseña actual"
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-                secureTextEntry
+                placeholder="Nombre"
+                value={isEditing ? tempName : userData.displayName || userData.name}
+                onChangeText={setTempName}
+                editable={isEditing}
+                placeholderTextColor="#fff"
               />
               <CustomInput
-                placeholder="Nueva contraseña"
-                value={newPassword}
-                onChangeText={setNewPassword}
-                secureTextEntry
+                placeholder="Email"
+                value={userData.email}
+                editable={false}
+                onChangeText={() => {}}
+                placeholderTextColor="#fff"
               />
-              <CustomButton
-                title="Guardar nueva contraseña"
-                onPress={handleChangePassword}
-              />
-              <CustomButton
-                title="Cancelar"
-                onPress={() => {
-                  setIsChangingPassword(false);
-                  setCurrentPassword("");
-                  setNewPassword("");
-                }}
-                variant="secondary"
-              />
-            </>
-          ) : isEditing ? (
-            <>
-              <CustomButton
-                title="Guardar cambios"
-                onPress={handleUpdateProfile}
-              />
-              <CustomButton
-                title="Cancelar"
-                onPress={() => {
-                  setIsEditing(false);
-                  setTempName(userData.name);
-                }}
-                variant="secondary"
-              />
-            </>
-          ) : (
-            <>
-              <CustomButton
-                title="Editar perfil"
-                onPress={() => setIsEditing(true)}
-              />
-              <CustomButton
-                title="Cambiar contraseña"
-                onPress={() => setIsChangingPassword(true)}
-              />
-            </>
-          )}
-        </View>
-      </View>
+
+              {isChangingPassword ? (
+                <View style={styles.passwordSection}>
+                  <CustomInput
+                    placeholder="Contraseña actual"
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    secureTextEntry
+                    placeholderTextColor="#fff"
+                  />
+                  <CustomInput
+                    placeholder="Nueva contraseña"
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    secureTextEntry
+                    placeholderTextColor="#fff"
+                  />
+                  <View style={styles.buttonGroup}>
+                    <CustomButton
+                      title="Guardar nueva contraseña"
+                      onPress={handleChangePassword}
+                    />
+                    <CustomButton
+                      title="Cancelar"
+                      onPress={() => {
+                        setIsChangingPassword(false);
+                        setCurrentPassword("");
+                        setNewPassword("");
+                      }}
+                      variant="secondary"
+                    />
+                  </View>
+                </View>
+              ) : isEditing ? (
+                <View style={styles.buttonGroup}>
+                  <CustomButton
+                    title="Guardar cambios"
+                    onPress={handleUpdateProfile}
+                  />
+                  <CustomButton
+                    title="Cancelar"
+                    onPress={() => {
+                      setIsEditing(false);
+                      setTempName(userData.name);
+                    }}
+                    variant="secondary"
+                  />
+                </View>
+              ) : (
+                <View style={styles.buttonGroup}>
+                  <CustomButton
+                    title="Editar perfil"
+                    onPress={() => setIsEditing(true)}
+                  />
+                  <CustomButton
+                    title="Cambiar contraseña"
+                    onPress={() => setIsChangingPassword(true)}
+                  />
+                </View>
+              )}
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </BackgroundContainer>
   );
 };
@@ -256,22 +277,23 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
   form: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
     padding: 20,
     borderRadius: 20,
     minHeight: 250,
-    justifyContent: 'space-between'
+  },
+  passwordSection: {
+    marginTop: 10,
+  },
+  buttonGroup: {
+    marginTop: 20,
+    gap: 10,
   },
   logoutButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     right: 20,
     padding: 8,
     borderRadius: 8,
     zIndex: 1,
-  },
-  logoutText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
+  }
 });

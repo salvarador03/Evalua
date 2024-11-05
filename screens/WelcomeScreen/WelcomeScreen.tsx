@@ -1,10 +1,8 @@
-// src/screens/WelcomeScreen.tsx
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BackgroundContainer } from '../../Components/BackgroundContainer/BackgroundContainer';
-import { CustomButton } from '../../Components/CustomButton/CustomButton';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { RootStackParamList } from '../../navigation/types';
@@ -28,9 +26,12 @@ export const WelcomeScreen: React.FC = () => {
         <Text style={typography.subtitle}>
           Sistema de cuestionario de autoevaluación en línea
         </Text>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Login")}>
-            <Text style={styles.buttonText}>Comenzar</Text>
-          </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={styles.buttonText}>Comenzar</Text>
+        </TouchableOpacity>
       </View>
     </BackgroundContainer>
   );
