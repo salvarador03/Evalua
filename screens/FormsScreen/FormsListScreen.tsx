@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { BackgroundContainer } from '../../Components/BackgroundContainer/BackgroundContainer';
 import { Ionicons } from '@expo/vector-icons';
 import { typography } from '../../theme/typography';
@@ -66,9 +66,14 @@ export const FormsListScreen: React.FC = () => {
           <View style={styles.cardHeader}>
             <Ionicons name="checkmark-circle" size={24} color="#056b05" />
             <Text style={styles.cardTitle}>
-              Cuestionario Completado
+              Cuestionario de Autoevaluación de la Alfabetización Física
             </Text>
           </View>
+          <Image 
+            source={require('../../assets/images/pregunta_cuestionario.png')} 
+            style={styles.questionnaire} 
+            resizeMode="contain"
+          />
           <Text style={styles.cardDescription}>
             Has completado este cuestionario el{' '}
             {new Date(formResponse.completedAt).toLocaleDateString()}
@@ -77,8 +82,10 @@ export const FormsListScreen: React.FC = () => {
             <Text style={styles.cardMeta}>Respuestas guardadas</Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('PhysicalLiteracyForm')}
+              style={styles.viewResultsButton}
             >
-              <Text style={styles.viewResults}>Ver resultados</Text>
+              <Text style={styles.viewResultsText}>Ver resultados</Text>
+              <Ionicons name="arrow-forward" size={20} color="#056b05" />
             </TouchableOpacity>
           </View>
         </>
@@ -93,6 +100,11 @@ export const FormsListScreen: React.FC = () => {
             Cuestionario de Autoevaluación de la Alfabetización Física
           </Text>
         </View>
+        <Image 
+          source={require('../../assets/images/pregunta_cuestionario.png')} 
+          style={styles.questionnaire} 
+          resizeMode="contain"
+        />
         <Text style={styles.cardDescription}>
           Evalúa tu forma física, actividad física, conocimientos y motivación 
           en comparación con otros niños de tu edad.
@@ -101,8 +113,10 @@ export const FormsListScreen: React.FC = () => {
           <Text style={styles.cardMeta}>6 preguntas • ~5 minutos</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('PhysicalLiteracyForm')}
+            style={styles.startButton}
           >
-            <Ionicons name="arrow-forward" size={20} color="#056b05" />
+            <Text style={styles.startButtonText}>Comenzar</Text>
+            <Ionicons name="arrow-forward" size={20} color="white" />
           </TouchableOpacity>
         </View>
       </>
@@ -131,12 +145,22 @@ export const FormsListScreen: React.FC = () => {
           />
         }
       >
-        <View style={styles.header}>
-          <Text style={[typography.title, styles.title]}>Formularios Disponibles</Text>
-          <Text style={styles.subtitle}>
-            Bienvenido/a a la sección de evaluación. Aquí podrás encontrar diferentes 
-            cuestionarios para evaluar tu desarrollo físico.
-          </Text>
+        <View style={styles.logoContainer}>
+          <View style={styles.logoCard}>
+            <View style={styles.logosWrapper}>
+              <Image 
+                source={require('../../assets/images/logo-uex.png')} 
+                style={styles.logo} 
+                resizeMode="contain"
+              />
+              <View style={styles.logoDivider} />
+              <Image 
+                source={require('../../assets/images/ulisboa.png')} 
+                style={styles.logoLisboa} 
+                resizeMode="contain"
+              />
+            </View>
+          </View>
         </View>
 
         <View style={styles.cardsContainer}>
@@ -153,21 +177,46 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  header: {
-    padding: 20,
+  logoContainer: {
+    paddingHorizontal: 20,
     paddingTop: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 20,
-    margin: 20,
-  },
-  title: {
-    color: '#056b05',
     marginBottom: 10,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 24,
+  logoCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 15,
+    padding: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  logosWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  logo: {
+    height: 45,
+    width: 140,
+  },
+  logoLisboa: {
+    height: 110,
+    width: 100,
+  },
+  logoDivider: {
+    width: 1,
+    height: '80%',
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 15,
+  },
+  questionnaire: {
+    width: '100%',
+    height: 200,
+    marginVertical: 15,
+    borderRadius: 10,
   },
   cardsContainer: {
     padding: 20,
@@ -175,11 +224,6 @@ const styles = StyleSheet.create({
   loadingContainer: {
     padding: 20,
     alignItems: 'center',
-  },
-  viewResults: {
-    color: '#056b05',
-    fontWeight: '500',
-    fontSize: 14,
   },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -214,6 +258,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 10,
+  },
+  cardMeta: {
+    fontSize: 12,
+    color: '#888',
   },
   refreshButton: {
     position: 'absolute',
@@ -229,8 +278,37 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     zIndex: 1,
   },
-  cardMeta: {
-    fontSize: 12,
-    color: '#888',
+  startButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#056b05',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  startButtonText: {
+    color: 'white',
+    fontWeight: '500',
+    fontSize: 14,
+  },
+  viewResultsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(5, 107, 5, 0.1)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+  viewResultsText: {
+    color: '#056b05',
+    fontWeight: '500',
+    fontSize: 14,
   },
 });

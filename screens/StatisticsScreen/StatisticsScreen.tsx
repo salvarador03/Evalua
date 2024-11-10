@@ -39,10 +39,10 @@ export const StatisticsScreen: React.FC = () => {
         const totalStudents = usersSnapshot.numChildren();
 
         const weeklyStats = [
-          { week: 'Sem 1', submissions: 15, averageScore: 7.5 },
-          { week: 'Sem 2', submissions: 18, averageScore: 8.0 },
-          { week: 'Sem 3', submissions: 12, averageScore: 7.8 },
-          { week: 'Sem 4', submissions: 20, averageScore: 8.2 },
+          { week: 'Semana 1', submissions: 15, averageScore: 7.5 },
+          { week: 'Semana 2', submissions: 18, averageScore: 8.0 },
+          { week: 'Semana 3', submissions: 12, averageScore: 7.8 },
+          { week: 'Semana 4', submissions: 20, averageScore: 8.2 },
         ];
         
         setStats({

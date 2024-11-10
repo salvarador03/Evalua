@@ -1,4 +1,5 @@
 // src/screens/Forms/data/questions.ts
+import { Language } from '../../../types/language';
 export interface Question {
     id: number;
     text: string;
@@ -6,7 +7,6 @@ export interface Question {
     max: string;
   }
   
-  export type Language = 'es' | 'en' | 'pt' | 'br';
   type Questions = Record<Language, Question[]>;
   
   export const questions: Questions = {
@@ -86,7 +86,7 @@ export interface Question {
         max: 'Excellent',
       },
     ],
-    pt: [
+    "pt-PT": [
       {
         id: 1,
         text: 'Em comparação com as crianças da minha idade, a minha forma física global é:',
@@ -124,7 +124,7 @@ export interface Question {
         max: 'Excelente',
       },
     ],
-    br: [
+    "pt-BR": [
       {
         id: 1,
         text: 'Em comparação com as crianças da minha idade, minha forma física global é:',

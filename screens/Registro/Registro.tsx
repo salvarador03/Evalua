@@ -191,10 +191,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
   },
   loadingText: {
     color: '#fff',
     marginTop: 10,
     fontSize: 16,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  title: {
+    ...typography.title,
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+    marginBottom: 30,
+  },
+  inputText: {
+    color: '#fff',
   },
 });

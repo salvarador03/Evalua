@@ -142,13 +142,29 @@ export const ProfileScreen: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await auth().signOut();
-      navigation.replace("Login");
-    } catch (error) {
-      Alert.alert("Error", "No se pudo cerrar sesión");
-    }
+  const handleLogout = () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que quieres cerrar sesión?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await auth().signOut();
+              navigation.replace('Login');
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo cerrar sesión');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (

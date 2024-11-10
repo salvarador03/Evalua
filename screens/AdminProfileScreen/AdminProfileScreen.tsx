@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 16,
     borderRadius: 15,
-    marginTop: 'auto',
+    marginTop: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
