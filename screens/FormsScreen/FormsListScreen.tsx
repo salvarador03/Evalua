@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { BackgroundContainer } from '../../Components/BackgroundContainer/BackgroundContainer';
 import { Ionicons } from '@expo/vector-icons';
-import { typography } from '../../theme/typography';
 import { CompositeNavigationProp, useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -55,7 +54,7 @@ export const FormsListScreen: React.FC = () => {
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#056b05" />
+          <ActivityIndicator size="large" color="#9E7676" />
         </View>
       );
     }
@@ -64,7 +63,7 @@ export const FormsListScreen: React.FC = () => {
       return (
         <>
           <View style={styles.cardHeader}>
-            <Ionicons name="checkmark-circle" size={24} color="#056b05" />
+            <Ionicons name="checkmark-circle" size={24} color="#9E7676" />
             <Text style={styles.cardTitle}>
               Cuestionario de Autoevaluación de la Alfabetización Física
             </Text>
@@ -85,7 +84,7 @@ export const FormsListScreen: React.FC = () => {
               style={styles.viewResultsButton}
             >
               <Text style={styles.viewResultsText}>Ver resultados</Text>
-              <Ionicons name="arrow-forward" size={20} color="#056b05" />
+              <Ionicons name="arrow-forward" size={20} color="#9E7676" />
             </TouchableOpacity>
           </View>
         </>
@@ -95,7 +94,7 @@ export const FormsListScreen: React.FC = () => {
     return (
       <>
         <View style={styles.cardHeader}>
-          <Ionicons name="fitness" size={24} color="#056b05" />
+          <Ionicons name="fitness" size={24} color="#9E7676" />
           <Text style={styles.cardTitle}>
             Cuestionario de Autoevaluación de la Alfabetización Física
           </Text>
@@ -125,13 +124,13 @@ export const FormsListScreen: React.FC = () => {
 
   return (
     <BackgroundContainer
-      source={require('../../assets/images/surfer-1836366_1280.jpg')}
+      source={require('../../assets/images/fondo_app.jpg')}
     >
       <TouchableOpacity 
         style={styles.refreshButton}
         onPress={onRefresh}
       >
-        <Ionicons name="refresh" size={24} color="#056b05" />
+        <Ionicons name="refresh" size={24} color="#9E7676" />
       </TouchableOpacity>
 
       <ScrollView 
@@ -140,8 +139,8 @@ export const FormsListScreen: React.FC = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#056b05']}
-            tintColor="#056b05"
+            colors={['#9E7676']}
+            tintColor="#9E7676"
           />
         }
       >
@@ -176,6 +175,7 @@ export const FormsListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   content: {
     flex: 1,
+    paddingBottom: 80, // Añadido para evitar que el contenido se corte
   },
   logoContainer: {
     paddingHorizontal: 20,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   logoDivider: {
     width: 1,
     height: '80%',
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#DFCCCC', // Actualizado al nuevo color secundario
     marginHorizontal: 15,
   },
   questionnaire: {
@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
   },
   cardsContainer: {
     padding: 20,
+    paddingBottom: 100, // Aumentado para dar más espacio al final
   },
   loadingContainer: {
     padding: 20,
@@ -245,12 +246,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#056b05',
+    color: '#9E7676', // Actualizado al nuevo color primario
     flex: 1,
   },
   cardDescription: {
     fontSize: 14,
-    color: '#666',
+    color: '#594545', // Actualizado al nuevo color de texto
     lineHeight: 20,
     marginBottom: 15,
   },
@@ -259,10 +260,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 10,
+    paddingBottom: 10, // Añadido para dar más espacio al botón
   },
   cardMeta: {
     fontSize: 12,
-    color: '#888',
+    color: '#B4AAAA', // Actualizado al nuevo color inactivo
   },
   refreshButton: {
     position: 'absolute',
@@ -281,7 +283,7 @@ const styles = StyleSheet.create({
   startButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#056b05',
+    backgroundColor: '#9E7676', // Actualizado al nuevo color primario
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
@@ -301,13 +303,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(5, 107, 5, 0.1)',
+    backgroundColor: 'rgba(158, 118, 118, 0.1)', // Actualizado al nuevo color primario con opacidad
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
   },
   viewResultsText: {
-    color: '#056b05',
+    color: '#9E7676', // Actualizado al nuevo color primario
     fontWeight: '500',
     fontSize: 14,
   },

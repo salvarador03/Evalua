@@ -8,8 +8,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import auth from "@react-native-firebase/auth";
 import db from "@react-native-firebase/database";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,16 +18,13 @@ import { CustomInput } from "../../Components/CustomInput/CustomInput";
 import { CustomButton } from "../../Components/CustomButton/CustomButton";
 import { UserAvatar } from "../../Components/UserAvatar/UserAvatar";
 import { typography } from "../../theme/typography";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../navigation/types";
+import { useAuth } from "../../context/AuthContext";
 
 interface UserData {
   name: string;
   email: string;
   displayName?: string;
 }
-
-type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const ProfileScreen: React.FC = () => {
   const [userData, setUserData] = useState<UserData>({
@@ -40,13 +37,15 @@ export const ProfileScreen: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const [isLoading, setIsLoading] = useState(false);
+  const { signOut, loading: authLoading } = useAuth();
 
   useEffect(() => {
     loadUserData();
   }, []);
 
   const loadUserData = async () => {
+    setIsLoading(true);
     try {
       const currentUser = auth().currentUser;
       if (currentUser) {
@@ -67,6 +66,8 @@ export const ProfileScreen: React.FC = () => {
     } catch (error) {
       console.error("Error loading user data:", error);
       Alert.alert("Error", "No se pudieron cargar los datos del usuario");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -76,16 +77,18 @@ export const ProfileScreen: React.FC = () => {
       return;
     }
 
+    setIsLoading(true);
     try {
       const currentUser = auth().currentUser;
       if (currentUser) {
-        await db()
-          .ref(`/users/${currentUser.uid}`)
-          .update({ name: tempName.trim() });
-
-        await currentUser.updateProfile({
-          displayName: tempName.trim(),
-        });
+        await Promise.all([
+          db()
+            .ref(`/users/${currentUser.uid}`)
+            .update({ name: tempName.trim() }),
+          currentUser.updateProfile({
+            displayName: tempName.trim(),
+          })
+        ]);
 
         setUserData((prev) => ({
           ...prev,
@@ -98,6 +101,8 @@ export const ProfileScreen: React.FC = () => {
     } catch (error) {
       console.error("Error updating profile:", error);
       Alert.alert("Error", "No se pudo actualizar el perfil");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -115,6 +120,7 @@ export const ProfileScreen: React.FC = () => {
       return;
     }
 
+    setIsLoading(true);
     try {
       const user = auth().currentUser;
       if (!user?.email) {
@@ -139,27 +145,28 @@ export const ProfileScreen: React.FC = () => {
         "Error",
         "No se pudo actualizar la contraseña. Verifica tu contraseña actual."
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleLogout = () => {
     Alert.alert(
-      'Cerrar Sesión',
-      '¿Estás seguro de que quieres cerrar sesión?',
+      "Cerrar Sesión",
+      "¿Estás seguro de que quieres cerrar sesión?",
       [
         {
-          text: 'Cancelar',
-          style: 'cancel',
+          text: "Cancelar",
+          style: "cancel",
         },
         {
-          text: 'Cerrar Sesión',
-          style: 'destructive',
+          text: "Cerrar Sesión",
+          style: "destructive",
           onPress: async () => {
             try {
-              await auth().signOut();
-              navigation.replace('Login');
+              await signOut();
             } catch (error) {
-              Alert.alert('Error', 'No se pudo cerrar sesión');
+              console.error("Error during logout:", error);
             }
           },
         },
@@ -167,21 +174,39 @@ export const ProfileScreen: React.FC = () => {
     );
   };
 
+  if (isLoading) {
+    return (
+      <BackgroundContainer source={require("../../assets/images/fondo_app.jpg")}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#056b05" />
+          <Text style={styles.loadingText}>Cargando...</Text>
+        </View>
+      </BackgroundContainer>
+    );
+  }
+
   return (
-    <BackgroundContainer
-      source={require("../../assets/images/surfer-1836366_1280.jpg")}
-    >
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out" size={30} color="#ff4444" />
+    <BackgroundContainer source={require("../../assets/images/fondo_app.jpg")}>
+      <TouchableOpacity 
+        style={styles.logoutButton} 
+        onPress={handleLogout}
+        disabled={authLoading}
+      >
+        {authLoading ? (
+          <ActivityIndicator color="#ff4444" size="small" />
+        ) : (
+          <Ionicons name="log-out" size={30} color="#ff4444" />
+        )}
       </TouchableOpacity>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
+        style={styles.container}
       >
-        <ScrollView 
-          contentContainerStyle={{ flexGrow: 1 }} 
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
             <View style={styles.header}>
@@ -227,6 +252,7 @@ export const ProfileScreen: React.FC = () => {
                     <CustomButton
                       title="Guardar nueva contraseña"
                       onPress={handleChangePassword}
+                      disabled={isLoading}
                     />
                     <CustomButton
                       title="Cancelar"
@@ -236,6 +262,7 @@ export const ProfileScreen: React.FC = () => {
                         setNewPassword("");
                       }}
                       variant="secondary"
+                      disabled={isLoading}
                     />
                   </View>
                 </View>
@@ -244,6 +271,7 @@ export const ProfileScreen: React.FC = () => {
                   <CustomButton
                     title="Guardar cambios"
                     onPress={handleUpdateProfile}
+                    disabled={isLoading}
                   />
                   <CustomButton
                     title="Cancelar"
@@ -252,6 +280,7 @@ export const ProfileScreen: React.FC = () => {
                       setTempName(userData.name);
                     }}
                     variant="secondary"
+                    disabled={isLoading}
                   />
                 </View>
               ) : (
@@ -259,10 +288,12 @@ export const ProfileScreen: React.FC = () => {
                   <CustomButton
                     title="Editar perfil"
                     onPress={() => setIsEditing(true)}
+                    disabled={isLoading}
                   />
                   <CustomButton
                     title="Cambiar contraseña"
                     onPress={() => setIsChangingPassword(true)}
+                    disabled={isLoading}
                   />
                 </View>
               )}
@@ -275,6 +306,13 @@ export const ProfileScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
   content: {
     flex: 1,
     padding: 20,
@@ -311,5 +349,15 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     zIndex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#fff",
+    marginTop: 10,
+    fontSize: 16,
   }
 });

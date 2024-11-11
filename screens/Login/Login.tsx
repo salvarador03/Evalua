@@ -1,137 +1,269 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { useNavigation, StackActions } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BackgroundContainer } from '../../Components/BackgroundContainer/BackgroundContainer';
-import { CustomInput } from '../../Components/CustomInput/CustomInput';
-import { CustomButton } from '../../Components/CustomButton/CustomButton';
-import { typography } from '../../theme/typography';
-import { RootStackParamList } from '../../navigation/types';
-import auth from '@react-native-firebase/auth';
-import db from '@react-native-firebase/database';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { BackgroundContainer } from "../../Components/BackgroundContainer/BackgroundContainer";
+import { CustomInput } from "../../Components/CustomInput/CustomInput";
+import { CustomButton } from "../../Components/CustomButton/CustomButton";
+import { typography } from "../../theme/typography";
+import { RootStackParamList } from "../../navigation/types";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { DateButton } from "../../Components/DateButton/DateButton";
+import { useAuth } from "../../context/AuthContext";
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+type LoginScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Login"
+>;
 
 export const LoginScreen: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [classCode, setClassCode] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isLoginMode, setIsLoginMode] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const navigation = useNavigation<LoginScreenNavigationProp>();
+  const { signInAsGuest, signIn, loading } = useAuth();
+
+// Modificar solo la función handleGuestAccess en LoginScreen
+const handleGuestAccess = async () => {
+  console.log('[LoginScreen] Starting guest access', { guestName, classCode });
+  if (isSubmitting) {
+    console.log('[LoginScreen] Already submitting, returning');
+    return;
+  }
+
+  if (!guestName.trim() || !classCode.trim()) {
+    console.log('[LoginScreen] Missing required fields');
+    Alert.alert("Error", "Por favor completa todos los campos");
+    return;
+  }
+
+  setIsSubmitting(true);
+  console.log('[LoginScreen] Calling signInAsGuest');
+  try {
+    await signInAsGuest(guestName.trim(), classCode.trim(), dateOfBirth);
+    console.log('[LoginScreen] Guest access successful');
+  } catch (error: any) {
+    console.error('[LoginScreen] Error in guest access:', error);
+    Alert.alert(
+      "Error",
+      error.message || "Verifica el código de clase e intenta nuevamente"
+    );
+  } finally {
+    console.log('[LoginScreen] Setting isSubmitting to false');
+    setIsSubmitting(false);
+  }
+};
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+    if (isSubmitting) return;
+
+    if (!email.trim() || !password) {
+      Alert.alert("Error", "Por favor completa todos los campos");
       return;
     }
 
-    setLoading(true);
-
+    setIsSubmitting(true);
     try {
-      const response = await auth().signInWithEmailAndPassword(email, password);
-
-      if (response.user) {
-        // Actualizar último login
-        const userRef = db().ref(`/users/${response.user.uid}`);
-        await userRef.update({
-          lastLogin: db.ServerValue.TIMESTAMP
-        });
-
-        // Obtener rol del usuario y guardar en el estado global si es necesario
-        const snapshot = await userRef.once('value');
-        const userData = snapshot.val();
-        
-        // Navegar a MainTabs sin importar el rol
-        navigation.dispatch(
-          StackActions.replace('MainTabs')
-        );
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Revisa tus credenciales e intenta nuevamente');
+      await signIn(email.trim(), password);
+    } catch (error: any) {
+      console.error('Error en login:', error);
+      Alert.alert(
+        "Error", 
+        "Credenciales incorrectas. Por favor verifica e intenta nuevamente"
+      );
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleRegister = () => {
-    navigation.navigate('Registro');
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDateOfBirth(selectedDate);
+    }
   };
 
-  return (
-    <BackgroundContainer
-      source={require('../../assets/images/surfer-1836366_1280.jpg')}
-    >
-      <View style={styles.content}>
-        <Text style={typography.title}>Inicio sesión</Text>
-        <View style={styles.form}>
-          <CustomInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            editable={!loading}
-          />
-          <CustomInput
-            placeholder="Contraseña"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!loading}
-          />
+  const isLoading = loading || isSubmitting;
 
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#056b05" />
-              <Text style={styles.loadingText}>Iniciando sesión...</Text>
+  return (
+    <BackgroundContainer source={require("../../assets/images/fondo_app.jpg")}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.content}>
+            <Text style={[typography.title, styles.title]}>
+              {isLoginMode ? "Inicio sesión" : "Acceso Invitado"}
+            </Text>
+
+            <View style={styles.form}>
+              {!isLoginMode ? (
+                <>
+                  <CustomInput
+                    placeholder="Nombre"
+                    value={guestName}
+                    onChangeText={setGuestName}
+                    editable={!isLoading}
+                  />
+
+                  <DateButton
+                    date={dateOfBirth}
+                    onPress={() => setShowDatePicker(true)}
+                    disabled={isLoading}
+                  />
+
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={dateOfBirth}
+                      mode="date"
+                      display="default"
+                      onChange={handleDateChange}
+                      maximumDate={new Date()}
+                    />
+                  )}
+
+                  <CustomInput
+                    placeholder="Código de clase"
+                    value={classCode}
+                    onChangeText={setClassCode}
+                    editable={!isLoading}
+                  />
+
+                  {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="large" color="#056b05" />
+                      <Text style={styles.loadingText}>Accediendo...</Text>
+                    </View>
+                  ) : (
+                    <CustomButton
+                      title="Acceder como invitado"
+                      onPress={handleGuestAccess}
+                      disabled={isLoading}
+                    />
+                  )}
+                </>
+              ) : (
+                <>
+                  <CustomInput
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    editable={!isLoading}
+                  />
+
+                  <CustomInput
+                    placeholder="Contraseña"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    editable={!isLoading}
+                  />
+
+                  {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="large" color="#056b05" />
+                      <Text style={styles.loadingText}>Iniciando sesión...</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <CustomButton 
+                        title="Iniciar Sesión" 
+                        onPress={handleLogin}
+                        disabled={isLoading}
+                      />
+                      <CustomButton
+                        title="Registrarse"
+                        onPress={() => navigation.navigate("Registro")}
+                        variant="secondary"
+                        disabled={isLoading}
+                      />
+                    </>
+                  )}
+                </>
+              )}
+
+              {!isLoading && (
+                <CustomButton
+                  title={
+                    isLoginMode ? "Volver al acceso invitado" : "¿Ya tienes cuenta?"
+                  }
+                  onPress={() => {
+                    setIsLoginMode(!isLoginMode);
+                    setEmail("");
+                    setPassword("");
+                    setGuestName("");
+                    setClassCode("");
+                    setDateOfBirth(new Date());
+                  }}
+                  variant="secondary"
+                />
+              )}
             </View>
-          ) : (
-            <>
-              <CustomButton title="Iniciar Sesión" onPress={handleLogin} />
-              <CustomButton
-                title="Registrarse"
-                onPress={handleRegister}
-                variant="secondary"
-              />
-            </>
-          )}
-        </View>
-      </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </BackgroundContainer>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 30,
+    paddingVertical: 40,
   },
   form: {
     marginTop: 40,
+    gap: 15,
   },
   loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 10,
     marginVertical: 10,
   },
   loadingText: {
-    color: '#fff',
+    color: "#fff",
     marginTop: 10,
     fontSize: 16,
-    textAlign: 'center',
-    fontWeight: '500',
+    textAlign: "center",
+    fontWeight: "500",
   },
   title: {
-    ...typography.title,
-    color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    color: "#fff",
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
-  },
-  inputText: {
-    color: '#fff',
   },
 });

@@ -428,7 +428,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
   if (loading) {
     return (
       <BackgroundContainer
-        source={require("../../assets/images/surfer-1836366_1280.jpg")}
+        source={require('../../assets/images/fondo_app.jpg')}
       >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4ade80" />
@@ -441,7 +441,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
     console.log("Mostrando selección de idioma"); // Debug log
     return (
       <BackgroundContainer
-        source={require("../../assets/images/surfer-1836366_1280.jpg")}
+        source={require('../../assets/images/fondo_app.jpg')}
       >
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.languageSelectionContainer}>
@@ -455,7 +455,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
   if (formResponse) {
     return (
       <BackgroundContainer
-        source={require("../../assets/images/surfer-1836366_1280.jpg")}
+        source={require('../../assets/images/fondo_app.jpg')}
       >
         <View style={styles.overlay}>
           <ScrollView
@@ -471,7 +471,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
   return (
     <BackgroundContainer
-      source={require("../../assets/images/surfer-1836366_1280.jpg")}
+      source={require('../../assets/images/fondo_app.jpg')}
     >
       <View style={styles.overlay}>
         <ScrollView

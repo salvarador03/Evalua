@@ -1,3 +1,4 @@
+// screens/MainScreen.tsx
 import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,38 +8,38 @@ import { ProfileScreen } from '../ProfileScreen/ProfileScreen';
 import { AdminProfileScreen } from '../AdminProfileScreen/AdminProfileScreen';
 import { StudentsScreen } from '../StudentsScreen/StudentsScreen';
 import { StatisticsScreen } from '../StatisticsScreen/StatisticsScreen';
-import auth from '@react-native-firebase/auth';
-import db from '@react-native-firebase/database';
+import { useAuth } from '../../context/AuthContext';
 
 const Tab = createBottomTabNavigator();
 
+// Definimos los colores del sistema
+const COLORS = {
+  primary: '#9E7676', // Color principal (el marrón que usas)
+  secondary: '#DFCCCC', // Color secundario (un tono más claro del marrón)
+  background: '#F5EBEB', // Color de fondo
+  text: '#594545', // Color de texto
+  inactive: '#B4AAAA', // Color para elementos inactivos
+};
+
 export const MainScreen: React.FC = () => {
-  const [userRole, setUserRole] = useState<'teacher' | 'student' | null>(null);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserRole = async () => {
-      const user = auth().currentUser;
-      if (user) {
-        const snapshot = await db()
-          .ref(`/users/${user.uid}`)
-          .once('value');
-        const userData = snapshot.val();
-        setUserRole(userData?.role);
-        setLoading(false);
-      }
-    };
-
-    fetchUserRole();
-  }, []);
+    console.log('[MainScreen] User data:', user);
+    setLoading(false);
+  }, [user]);
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#056b05" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
+
+  const isGuest = user?.role === 'guest';
+  const isTeacher = user?.role === 'teacher';
 
   return (
     <Tab.Navigator
@@ -58,8 +59,19 @@ export const MainScreen: React.FC = () => {
           return <Ionicons name={iconName as any} size={size} color={color} />;
         },
         headerShown: false,
-        tabBarActiveTintColor: '#056b05',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.inactive,
+        tabBarStyle: {
+          backgroundColor: COLORS.background,
+          borderTopColor: COLORS.secondary,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
       })}
     >
       <Tab.Screen
@@ -68,7 +80,7 @@ export const MainScreen: React.FC = () => {
         options={{ title: 'Formularios' }}
       />
       
-      {userRole === 'teacher' && (
+      {isTeacher && (
         <>
           <Tab.Screen
             name="Students"
@@ -83,11 +95,13 @@ export const MainScreen: React.FC = () => {
         </>
       )}
 
-      <Tab.Screen
-        name="Profile"
-        component={userRole === 'teacher' ? AdminProfileScreen : ProfileScreen}
-        options={{ title: 'Perfil' }}
-      />
+      {!isGuest && (
+        <Tab.Screen
+          name="Profile"
+          component={isTeacher ? AdminProfileScreen : ProfileScreen}
+          options={{ title: 'Perfil' }}
+        />
+      )}
     </Tab.Navigator>
   );
 };

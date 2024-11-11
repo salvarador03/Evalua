@@ -74,7 +74,7 @@ export const StudentsScreen: React.FC = () => {
 
   return (
     <BackgroundContainer
-      source={require("../../assets/images/surfer-1836366_1280.jpg")}
+      source={require('../../assets/images/fondo_app.jpg')}
     >
       <View style={styles.overlay}>
         <View style={styles.header}>

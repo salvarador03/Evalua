@@ -1,22 +1,13 @@
-// src/screens/ProfileScreen/AdminProfileScreen.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { BackgroundContainer } from '../../Components/BackgroundContainer/BackgroundContainer';
 import auth from '@react-native-firebase/auth';
-import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, MainTabParamList } from '../../navigation/types';
-import { CompositeNavigationProp } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-
-type AdminProfileScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'Profile'>,
-  NativeStackNavigationProp<RootStackParamList>
->;
+import { useAuth } from '../../context/AuthContext';
+import { CustomButton } from '../../Components/CustomButton/CustomButton';
 
 export const AdminProfileScreen: React.FC = () => {
-  const navigation = useNavigation<AdminProfileScreenNavigationProp>();
+  const { signOut } = useAuth();
   const user = auth().currentUser;
 
   const handleLogout = () => {
@@ -33,10 +24,9 @@ export const AdminProfileScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await auth().signOut();
-              // Actualizado para usar la nueva estructura de navegación
-              navigation.navigate('WelcomeScreen');
+              await signOut();
             } catch (error) {
+              console.error('Error during logout:', error);
               Alert.alert('Error', 'No se pudo cerrar sesión');
             }
           },
@@ -59,7 +49,7 @@ export const AdminProfileScreen: React.FC = () => {
 
   return (
     <BackgroundContainer
-      source={require('../../assets/images/surfer-1836366_1280.jpg')}
+      source={require('../../assets/images/fondo_app.jpg')}
     >
       <View style={styles.overlay}>
         <View style={styles.header}>
@@ -73,35 +63,35 @@ export const AdminProfileScreen: React.FC = () => {
         <View style={styles.content}>
           <View style={styles.profileInfo}>
             <View style={styles.avatarContainer}>
-              <Ionicons name="person-circle" size={80} color="#056b05" />
+              <Ionicons name="person-circle" size={80} color="#9E7676" />
             </View>
             <Text style={styles.name}>{user?.displayName || 'Profesor'}</Text>
             <Text style={styles.email}>{user?.email || 'No disponible'}</Text>
             <View style={styles.roleContainer}>
-              <Ionicons name="shield-checkmark" size={20} color="#056b05" />
+              <Ionicons name="shield-checkmark" size={20} color="#9E7676" />
               <Text style={styles.roleText}>Cuenta de Administrador</Text>
             </View>
           </View>
 
           <View style={styles.optionsContainer}>
             <TouchableOpacity style={styles.optionItem} onPress={handleSettings}>
-              <Ionicons name="settings-outline" size={24} color="#056b05" />
+              <Ionicons name="settings-outline" size={24} color="#9E7676" />
               <Text style={styles.optionText}>Configuración</Text>
               <Ionicons 
                 name="chevron-forward" 
                 size={24} 
-                color="#056b05" 
+                color="#9E7676" 
                 style={styles.optionArrow} 
               />
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.optionItem} onPress={handleNotifications}>
-              <Ionicons name="notifications-outline" size={24} color="#056b05" />
+              <Ionicons name="notifications-outline" size={24} color="#9E7676" />
               <Text style={styles.optionText}>Notificaciones</Text>
               <Ionicons 
                 name="chevron-forward" 
                 size={24} 
-                color="#056b05" 
+                color="#9E7676" 
                 style={styles.optionArrow} 
               />
             </TouchableOpacity>
@@ -110,21 +100,26 @@ export const AdminProfileScreen: React.FC = () => {
               style={[styles.optionItem, styles.lastOptionItem]} 
               onPress={handleHelp}
             >
-              <Ionicons name="help-circle-outline" size={24} color="#056b05" />
+              <Ionicons name="help-circle-outline" size={24} color="#9E7676" />
               <Text style={styles.optionText}>Ayuda</Text>
               <Ionicons 
                 name="chevron-forward" 
                 size={24} 
-                color="#056b05" 
+                color="#9E7676" 
                 style={styles.optionArrow} 
               />
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#fff" />
-            <Text style={styles.logoutText}>Cerrar Sesión</Text>
-          </TouchableOpacity>
+          <View style={styles.logoutContainer}>
+            <CustomButton
+              title="Cerrar Sesión"
+              onPress={handleLogout}
+              variant="gradient"
+              size="large"
+              icon={<Ionicons name="log-out-outline" size={24} color="#fff" />}
+            />
+          </View>
         </View>
       </View>
     </BackgroundContainer>
@@ -140,7 +135,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(5, 107, 5, 0.9)',
+    backgroundColor: 'rgba(158, 118, 118, 0.9)',
     paddingHorizontal: 20,
     paddingVertical: 15,
     paddingTop: 50,
@@ -196,7 +191,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   avatarContainer: {
-    backgroundColor: 'rgba(5, 107, 5, 0.1)',
+    backgroundColor: 'rgba(158, 118, 118, 0.1)',
     borderRadius: 50,
     padding: 10,
     marginBottom: 16,
@@ -204,7 +199,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#056b05',
+    color: '#9E7676',
     marginBottom: 8,
   },
   email: {
@@ -215,14 +210,14 @@ const styles = StyleSheet.create({
   roleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(5, 107, 5, 0.1)',
+    backgroundColor: 'rgba(158, 118, 118, 0.1)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 15,
     marginTop: 8,
   },
   roleText: {
-    color: '#056b05',
+    color: '#9E7676',
     marginLeft: 8,
     fontWeight: '600',
     fontSize: 14,
@@ -246,7 +241,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(5, 107, 5, 0.1)',
+    borderBottomColor: 'rgba(158, 118, 118, 0.1)',
   },
   lastOptionItem: {
     borderBottomWidth: 0,
@@ -260,27 +255,8 @@ const styles = StyleSheet.create({
   optionArrow: {
     marginLeft: 'auto',
   },
-  logoutButton: {
-    backgroundColor: '#d32f2f',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 15,
+  logoutContainer: {
     marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  logoutText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
+    paddingHorizontal: 20,
+  }
 });
