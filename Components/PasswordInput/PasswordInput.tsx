@@ -2,68 +2,52 @@ import React, { useState } from 'react';
 import { 
   TextInput, 
   StyleSheet, 
-  TextInputProps, 
   View,
-  Text,
-  StyleProp,
-  ViewStyle,
-  TextStyle,
+  TouchableOpacity,
+  Platform,
   Animated,
-  Platform
+  Text,
+  TextInputProps
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-interface CustomInputProps extends TextInputProps {
+interface PasswordInputProps extends Omit<TextInputProps, 'secureTextEntry'> {
   value: string;
   onChangeText: (text: string) => void;
   error?: string;
-  containerStyle?: StyleProp<ViewStyle>;
-  inputStyle?: StyleProp<TextStyle>;
 }
 
-export const CustomInput: React.FC<CustomInputProps> = ({
+export const PasswordInput: React.FC<PasswordInputProps> = ({
   value,
   onChangeText,
   error,
-  containerStyle,
-  inputStyle,
-  placeholder,
+  placeholder = "Contraseña",
   placeholderTextColor = 'rgba(255, 255, 255, 0.7)',
+  editable = true,
   ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [lineAnimation] = useState(new Animated.Value(0));
-  const [labelAnimation] = useState(new Animated.Value(0));
 
   const handleFocus = () => {
     setIsFocused(true);
-    Animated.parallel([
-      Animated.timing(lineAnimation, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: false,
-      }),
-      Animated.timing(labelAnimation, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: false,
-      })
-    ]).start();
+    Animated.timing(lineAnimation, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
   };
 
   const handleBlur = () => {
     setIsFocused(false);
-    Animated.parallel([
+    if (!value) {
       Animated.timing(lineAnimation, {
-        toValue: value ? 1 : 0,
-        duration: 200,
-        useNativeDriver: false,
-      }),
-      Animated.timing(labelAnimation, {
         toValue: 0,
         duration: 200,
         useNativeDriver: false,
-      })
-    ]).start();
+      }).start();
+    }
   };
 
   const lineWidth = lineAnimation.interpolate({
@@ -71,42 +55,42 @@ export const CustomInput: React.FC<CustomInputProps> = ({
     outputRange: ['0%', '100%'],
   });
 
-  const labelStyle = {
-    opacity: labelAnimation,
-    transform: [
-      {
-        translateY: labelAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [10, 0]
-        })
-      }
-    ]
-  };
-
   return (
-    <View style={[styles.container, containerStyle]}>
-      <Animated.Text style={[styles.floatingLabel, labelStyle]}>
-        {placeholder}
-      </Animated.Text>
-
-      <TextInput
-        style={[
-          styles.input,
-          inputStyle,
-          Platform.select({
-            ios: styles.inputIOS,
-            android: styles.inputAndroid,
-          })
-        ]}
-        value={value}
-        onChangeText={onChangeText}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        placeholder={isFocused ? '' : placeholder}
-        placeholderTextColor={placeholderTextColor}
-        selectionColor="rgba(255, 255, 255, 0.9)"
-        {...props}
-      />
+    <View style={styles.container}>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={[
+            styles.input,
+            Platform.select({
+              ios: styles.inputIOS,
+              android: styles.inputAndroid,
+            }),
+          ]}
+          value={value}
+          onChangeText={onChangeText}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          placeholderTextColor={placeholderTextColor}
+          selectionColor="rgba(255, 255, 255, 0.9)"
+          secureTextEntry={!showPassword}
+          editable={editable}
+          {...props}
+        />
+        
+        <TouchableOpacity 
+          style={styles.passwordToggle}
+          onPress={() => setShowPassword(!showPassword)}
+          activeOpacity={0.7}
+          disabled={!editable}
+        >
+          <Ionicons 
+            name={showPassword ? "eye-off" : "eye"} 
+            size={24} 
+            color={editable ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.5)"}
+          />
+        </TouchableOpacity>
+      </View>
       
       <View style={styles.baseLine} />
       
@@ -135,22 +119,13 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 16,
     paddingBottom: 24,
-    paddingTop: 16, // Espacio para el label flotante
   },
-  floatingLabel: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.9)',
-    backgroundColor: 'transparent',
-    fontFamily: Platform.select({
-      ios: 'System',
-      android: 'sans-serif-medium',
-    }),
-    letterSpacing: 0.4,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   input: {
+    flex: 1,
     height: 56,
     fontSize: Platform.select({
       ios: 19,
@@ -159,6 +134,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     paddingHorizontal: 0,
     paddingVertical: 12,
+    paddingRight: 45,
     fontWeight: Platform.select({
       ios: '500',
       android: '400'
@@ -170,6 +146,13 @@ const styles = StyleSheet.create({
   },
   inputAndroid: {
     fontFamily: 'sans-serif-medium',
+  },
+  passwordToggle: {
+    position: 'absolute',
+    right: 0,
+    height: '100%',
+    paddingHorizontal: 10,
+    justifyContent: 'center',
   },
   baseLine: {
     position: 'absolute',

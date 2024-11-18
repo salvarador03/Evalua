@@ -28,6 +28,7 @@ import type { User, StudentUser, TeacherUser } from "../../types/user";
 import { DateButton } from "../../Components/DateButton/DateButton";
 import { useAuth } from "../../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { PasswordInput } from "../../Components/PasswordInput/PasswordInput";
 
 const windowHeight = Dimensions.get("window").height;
 
@@ -62,23 +63,59 @@ export const RegisterScreen: React.FC = () => {
     }
   };
 
-  const validateStudentFields = () => {
+  const validateStudentFields = async () => {
     if (!classCode.trim()) {
       Alert.alert("Error", "El código de clase es obligatorio");
       return false;
     }
-    if (!dateOfBirth) {
-      Alert.alert("Error", "La fecha de nacimiento es obligatoria");
+
+    try {
+      const classSnapshot = await db()
+        .ref("/classCodes")
+        .orderByChild("code")
+        .equalTo(classCode.trim())
+        .once("value");
+
+      const classData = classSnapshot.val();
+
+      if (!classData) {
+        Alert.alert(
+          "Código no válido",
+          "El código de clase ingresado no existe. Por favor, verifica e intenta nuevamente.",
+          [
+            {
+              text: "OK",
+              onPress: () => setClassCode(""), // Limpiamos el campo
+            },
+          ]
+        );
+        return false;
+      }
+
+      if (!dateOfBirth) {
+        Alert.alert("Error", "La fecha de nacimiento es obligatoria");
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error validating class code:", error);
+      Alert.alert(
+        "Error",
+        "No se pudo verificar el código de clase. Por favor, intenta nuevamente."
+      );
       return false;
     }
-    return true;
   };
 
   const calculateAge = (birthDate: Date): number => {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
     return age;
@@ -89,90 +126,123 @@ export const RegisterScreen: React.FC = () => {
       Alert.alert("Error", "Todos los campos son obligatorios");
       return;
     }
-
+  
     if (password.length < 6) {
       Alert.alert("Error", "La contraseña debe tener al menos 6 caracteres");
       return;
     }
-
+  
     const isTeacher = showSecretCode && secretCode === TEACHER_SECRET_CODE;
-
+  
     // Validar campos específicos de estudiante
-    if (!isTeacher && !validateStudentFields()) {
+    if (!isTeacher && !(await validateStudentFields())) {
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
+      console.log("Iniciando proceso de registro...");
+      
+      // 1. Crear usuario en Authentication
       const userCredential = await auth().createUserWithEmailAndPassword(
         email.trim(),
         password
       );
-
+  
+      console.log("Usuario creado en Auth:", userCredential.user?.uid);
+  
       if (userCredential.user) {
+        // 2. Actualizar perfil
         await userCredential.user.updateProfile({
           displayName: name.trim(),
         });
-
-        let userData: User;
-
-        if (isTeacher) {
-          // Crear usuario profesor
-          userData = {
-            uid: userCredential.user.uid,
-            name: name.trim(),
-            email: email.trim(),
-            role: 'teacher',
-            createdAt: Date.now(),
-            lastLogin: Date.now(),
-          } as TeacherUser;
-        } else {
-          // Crear usuario estudiante
-          userData = {
-            uid: userCredential.user.uid,
-            name: name.trim(),
-            email: email.trim(),
-            role: 'student',
-            dateOfBirth: dateOfBirth.toISOString().split("T")[0],
-            age: calculateAge(dateOfBirth),
-            classCode: classCode.trim(),
-            createdAt: Date.now(),
-            lastLogin: Date.now(),
-          } as StudentUser;
-        }
-
-        await db().ref(`/users/${userCredential.user.uid}`).set(userData);
-
-        if (isTeacher) {
-          setRegisteredUser({
-            id: userCredential.user.uid,
-            name: name.trim(),
-          });
-          setShowClassCodeManager(true);
-        } else {
-          await AsyncStorage.setItem("userData", JSON.stringify(userData));
-          setUser(userData);
+  
+        console.log("Perfil actualizado");
+  
+        // 3. Preparar datos de usuario
+        const userData: TeacherUser | StudentUser = isTeacher 
+          ? {
+              uid: userCredential.user.uid,
+              name: name.trim(),
+              email: email.trim(),
+              role: "teacher",
+              createdAt: Date.now(),
+              lastLogin: Date.now(),
+              countryRole: {
+                country: "España",
+                language: "es",
+                flag: "spain"
+              }
+            }
+          : {
+              uid: userCredential.user.uid,
+              name: name.trim(),
+              email: email.trim(),
+              role: "student",
+              dateOfBirth: dateOfBirth.toISOString().split("T")[0],
+              age: calculateAge(dateOfBirth),
+              classCode: classCode.trim(),
+              createdAt: Date.now(),
+              lastLogin: Date.now()
+            };
+  
+        console.log("Datos de usuario preparados:", userData);
+  
+        // 4. Guardar en la base de datos
+        try {
+          await db()
+            .ref(`/users/${userCredential.user.uid}`)
+            .set(userData);
+  
+          console.log("Usuario guardado en la base de datos");
+  
+          if (isTeacher) {
+            setRegisteredUser({
+              id: userCredential.user.uid,
+              name: name.trim(),
+            });
+            setShowClassCodeManager(true);
+          } else {
+            await AsyncStorage.setItem("userData", JSON.stringify(userData));
+            setUser(userData);
+          }
+        } catch (dbError) {
+          console.error("Error guardando en base de datos:", dbError);
+          
+          // Si falla el guardado en la base de datos, eliminar el usuario de Authentication
+          await userCredential.user.delete();
+          
+          throw new Error("Error al guardar los datos del usuario: " + 
+            (dbError instanceof Error ? dbError.message : 'Error desconocido'));
         }
       }
     } catch (error: any) {
+      console.error("Error completo:", error);
+      
       let errorMessage = "Error al crear la cuenta";
-      switch (error.code) {
-        case "auth/email-already-in-use":
-          errorMessage = "Este email ya está registrado";
-          break;
-        case "auth/invalid-email":
-          errorMessage = "El email no es válido";
-          break;
-        case "auth/weak-password":
-          errorMessage = "La contraseña es muy débil";
-          break;
-        case "auth/network-request-failed":
-          errorMessage = "Error de conexión. Verifica tu internet";
-          break;
-        default:
-          errorMessage = "Error al crear la cuenta. Por favor, intenta nuevamente.";
+      
+      if (error.code) {
+        switch (error.code) {
+          case "auth/email-already-in-use":
+            errorMessage = "Este email ya está registrado";
+            break;
+          case "auth/invalid-email":
+            errorMessage = "El email no es válido";
+            break;
+          case "auth/weak-password":
+            errorMessage = "La contraseña es muy débil";
+            break;
+          case "auth/network-request-failed":
+            errorMessage = "Error de conexión. Verifica tu internet";
+            break;
+          default:
+            errorMessage = `Error: ${error.message || 'Error desconocido'}`;
+        }
+      } else {
+        errorMessage = error.message || "Error al crear la cuenta. Por favor, intenta nuevamente.";
       }
+      
       Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
@@ -184,23 +254,23 @@ export const RegisterScreen: React.FC = () => {
       if (registeredUser) {
         const userSnapshot = await db()
           .ref(`/users/${registeredUser.id}`)
-          .once('value');
-        
+          .once("value");
+
         const userData = userSnapshot.val();
         if (userData) {
-          await AsyncStorage.setItem('userData', JSON.stringify(userData));
+          await AsyncStorage.setItem("userData", JSON.stringify(userData));
           setUser(userData);
         }
       }
     } catch (error) {
-      console.error('Error updating user data:', error);
+      console.error("Error updating user data:", error);
     } finally {
       setShowClassCodeManager(false);
     }
   };
 
   return (
-    <BackgroundContainer source={require("../../assets/images/fondo_app.jpg")}>
+    <BackgroundContainer source={require("../../assets/images/fondo.svg")}>
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -230,11 +300,9 @@ export const RegisterScreen: React.FC = () => {
                   editable={!loading}
                 />
 
-                <CustomInput
-                  placeholder="Contraseña"
+                <PasswordInput
                   value={password}
                   onChangeText={setPassword}
-                  secureTextEntry
                   editable={!loading}
                 />
 

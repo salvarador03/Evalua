@@ -1,4 +1,4 @@
-// navigation/NavigationRoot.tsx
+// NavigationRoot.tsx
 import React from "react";
 import { View, ActivityIndicator } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -6,15 +6,16 @@ import { WelcomeScreen } from "../screens/WelcomeScreen/WelcomeScreen";
 import { MainScreen } from "../screens/MainScreen/MainScreen";
 import { LoginScreen } from "../screens/Login/Login";
 import { RegisterScreen } from "../screens/Registro/Registro";
+import { ClassCodeScreen } from "../screens/ClassCodeScreen/ClassCodeScreen";
 import { RootStackParamList } from "./types";
 import { useAuth } from "../context/AuthContext";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const NavigationRoot: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isPartialUpdate } = useAuth();
 
-  if (loading) {
+  if (loading && !isPartialUpdate) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#056b05" />
@@ -23,9 +24,7 @@ export const NavigationRoot: React.FC = () => {
   }
 
   return (
-    <Stack.Navigator
-      screenOptions={{ headerShown: false }}
-    >
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!user ? (
         <>
           <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
@@ -33,11 +32,10 @@ export const NavigationRoot: React.FC = () => {
           <Stack.Screen name="Registro" component={RegisterScreen} />
         </>
       ) : (
-        <Stack.Screen
-          name="MainTabs"
-          component={MainScreen}
-          options={{ headerShown: false }}
-        />
+        <>
+          <Stack.Screen name="MainTabs" component={MainScreen} />
+          <Stack.Screen name="ClassCodes" component={ClassCodeScreen} />
+        </>
       )}
     </Stack.Navigator>
   );

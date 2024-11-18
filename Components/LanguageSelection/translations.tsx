@@ -1,4 +1,4 @@
-// types/language.ts
+//Components/LanguageSelection/Translations
 
 export type Language = "es" | "en" | "pt-PT" | "pt-BR";
 
@@ -47,6 +47,10 @@ export interface TranslationText {
   comparativeTitle: string;
   groupMedian: string;
   requiredAnswer: string;
+
+  couldNotCalculateStats: string;
+  formAlreadyCompleted: string;
+  languageSelectionError: string;
 }
 
 export interface Translations {
@@ -56,6 +60,8 @@ export interface Translations {
 export const translations: Record<Language, TranslationText> = {
   "es": {
     welcome: "¡Bienvenido!",
+    languageSelectionError: "No se pudo guardar la selección de idioma",
+    formAlreadyCompleted: "Ya has completado este formulario anteriormente.",
     selectLanguage: "Selecciona tu idioma",
     startButton: "Comenzar",
     question: "Pregunta",
@@ -63,6 +69,7 @@ export const translations: Record<Language, TranslationText> = {
     next: "Siguiente",
     previous: "Anterior",
     finish: "Terminar",
+    couldNotCalculateStats: "No se pudieron calcular las estadísticas. Por favor, intenta de nuevo más tarde.",
     selectLevel: "Selecciona tu nivel",
     intermediate: "Intermedio",
     required: "Requerido",
@@ -91,6 +98,8 @@ export const translations: Record<Language, TranslationText> = {
   },
   "en": {
     welcome: "Welcome!",
+    formAlreadyCompleted: "You have already completed this form.",
+    languageSelectionError: "Could not save language selection",
     selectLanguage: "Select your language",
     startButton: "Start",
     question: "Question",
@@ -104,6 +113,7 @@ export const translations: Record<Language, TranslationText> = {
     loading: "Loading...",
     languageName: "English",
     countryName: "United States",
+    couldNotCalculateStats: "Could not calculate statistics. Please try again later.",
     tellUsAboutPhysical: "Tell us about your physical activity!",
     pleaseSelectValue: "Please select a value before continuing.",
     incompleteAnswers: "Incomplete Answers",
@@ -126,6 +136,8 @@ export const translations: Record<Language, TranslationText> = {
   },
   "pt-PT": {
     welcome: "Bem-vindo!",
+    formAlreadyCompleted: "Você já completou este formulário anteriormente.",
+    languageSelectionError: "Não foi possível guardar a seleção do idioma",
     selectLanguage: "Selecione seu idioma",
     startButton: "Começar",
     question: "Pergunta",
@@ -138,6 +150,7 @@ export const translations: Record<Language, TranslationText> = {
     required: "Obrigatório",
     loading: "Carregando...",
     languageName: "Português",
+    couldNotCalculateStats: "Não foi possível calcular as estatísticas. Por favor, tente novamente mais tarde.",
     countryName: "Portugal",
     tellUsAboutPhysical: "Conte-nos sobre a sua atividade física!",
     pleaseSelectValue: "Por favor, selecione um valor antes de continuar.",
@@ -162,6 +175,8 @@ export const translations: Record<Language, TranslationText> = {
   "pt-BR": {
     welcome: "Bem-vindo!",
     selectLanguage: "Selecione seu idioma",
+    languageSelectionError: "Não foi possível salvar a seleção do idioma",
+    formAlreadyCompleted: "Já completou este formulário anteriormente.",
     startButton: "Começar",
     question: "Pergunta",
     of: "de",
@@ -182,6 +197,7 @@ export const translations: Record<Language, TranslationText> = {
     confirmSubmit: "Tem certeza que deseja enviar suas respostas?",
     cancel: "Cancelar",
     submit: "Enviar",
+    couldNotCalculateStats: "Não foi possível calcular as estatísticas. Por favor, tente novamente mais tarde.",
     success: "Sucesso!",
     answersSubmitted: "Suas respostas foram salvas com sucesso.",
     error: "Erro",

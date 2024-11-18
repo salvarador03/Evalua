@@ -55,7 +55,7 @@ export default function Registro() {
   return (
     <Pressable style={styles.container} onPress={Keyboard.dismiss}>
       <ImageBackground
-        source={require('../../assets/images/fondo_app.jpg')}
+        source={require('../../assets/images/fondo.svg')}
         style={styles.backgroundImage}
         imageStyle={{ opacity: 0.7 }}
       >

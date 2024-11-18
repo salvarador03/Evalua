@@ -1,4 +1,3 @@
-// screens/MainScreen.tsx
 import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,19 +5,19 @@ import { View, ActivityIndicator } from 'react-native';
 import { FormsStackNavigator } from '../../navigation/FormsStackNavigator';
 import { ProfileScreen } from '../ProfileScreen/ProfileScreen';
 import { AdminProfileScreen } from '../AdminProfileScreen/AdminProfileScreen';
+import { GuestProfileScreen } from '../GuestProfileScreen/GuestProfileScreen';
 import { StudentsScreen } from '../StudentsScreen/StudentsScreen';
 import { StatisticsScreen } from '../StatisticsScreen/StatisticsScreen';
 import { useAuth } from '../../context/AuthContext';
 
 const Tab = createBottomTabNavigator();
 
-// Definimos los colores del sistema
 const COLORS = {
-  primary: '#9E7676', // Color principal (el marrón que usas)
-  secondary: '#DFCCCC', // Color secundario (un tono más claro del marrón)
-  background: '#F5EBEB', // Color de fondo
-  text: '#594545', // Color de texto
-  inactive: '#B4AAAA', // Color para elementos inactivos
+  primary: '#9E7676',
+  secondary: '#DFCCCC',
+  background: '#F5EBEB',
+  text: '#594545',
+  inactive: '#B4AAAA',
 };
 
 export const MainScreen: React.FC = () => {
@@ -40,6 +39,12 @@ export const MainScreen: React.FC = () => {
 
   const isGuest = user?.role === 'guest';
   const isTeacher = user?.role === 'teacher';
+
+  const getProfileComponent = () => {
+    if (isTeacher) return AdminProfileScreen;
+    if (isGuest) return GuestProfileScreen;
+    return ProfileScreen;
+  };
 
   return (
     <Tab.Navigator
@@ -79,7 +84,7 @@ export const MainScreen: React.FC = () => {
         component={FormsStackNavigator}
         options={{ title: 'Formularios' }}
       />
-      
+
       {isTeacher && (
         <>
           <Tab.Screen
@@ -95,13 +100,11 @@ export const MainScreen: React.FC = () => {
         </>
       )}
 
-      {!isGuest && (
-        <Tab.Screen
-          name="Profile"
-          component={isTeacher ? AdminProfileScreen : ProfileScreen}
-          options={{ title: 'Perfil' }}
-        />
-      )}
+      <Tab.Screen
+        name="Profile"
+        component={getProfileComponent()}
+        options={{ title: 'Perfil' }}
+      />
     </Tab.Navigator>
   );
 };

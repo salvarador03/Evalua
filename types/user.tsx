@@ -1,5 +1,13 @@
 // src/types/user.ts
 
+import { Language } from './language';
+
+export interface CountryRole {
+  country: string;
+  language: Language;
+  flag: string;
+}
+
 interface BaseUser {
   uid: string;
   name: string;
@@ -7,6 +15,7 @@ interface BaseUser {
   role: 'student' | 'teacher' | 'guest';
   createdAt: number;
   lastLogin: number;
+  countryRole?: CountryRole;
 }
 
 interface StudentUser extends BaseUser {
@@ -18,6 +27,8 @@ interface StudentUser extends BaseUser {
 
 interface TeacherUser extends BaseUser {
   role: 'teacher';
+  age?: number; // Opcional para profesores
+  dateOfBirth?: string; // Opcional para profesores
 }
 
 interface GuestUser extends BaseUser {

@@ -1,0 +1,57 @@
+<svg viewBox="0 0 360 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradiente principal de fondo -->
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffdbdb"/>
+      <stop offset="50%" style="stop-color:#ffe4e1"/>
+      <stop offset="100%" style="stop-color:#ffd6cc"/>
+    </linearGradient>
+    
+    <!-- Gradiente para formas -->
+    <linearGradient id="shapeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" style="stop-color:#ffc5b9"/>
+    <stop offset="100%" style="stop-color:#ffcdb6"/>
+    </linearGradient>
+        
+    <!-- Patrón de triángulos -->
+    <pattern id="triangleGrid" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+    <path d="M0,0 L15,25 L30,0 Z" fill="none" stroke="#ffc5b9" stroke-width="0.5"/>
+    </pattern>
+ </defs>
+  <!-- Fondo base con gradiente que cubre todo -->
+  <rect x="0" y="0" width="360" height="800" fill="url(#mainGradient)"/>
+  <!-- Capa de patrón geométrico que cubre todo -->
+  <rect x="0" y="0" width="360" height="800" fill="url(#triangleGrid)" opacity="0.3"/>
+  <!-- Formas grandes superiores -->
+  <path d="M-50,0 Q100,-50 200,100 T400,200" fill="url(#shapeGradient)" opacity="0.4"/>
+  <circle cx="300" cy="50" r="100" fill="#ffc5b9" opacity="0.3"/>
+  <!-- Formas centrales -->
+  <path d="M-30,300 Q100,250 150,350 T400,400" fill="#ffd6cc" opacity="0.5"/>
+  <circle cx="50" cy="400" r="80" fill="#ffe4e1" opacity="0.4"/>
+  <!-- Elementos decorativos dispersos -->
+  <g opacity="0.6">
+    <circle cx="280" cy="350" r="40" fill="#ffc5b9"/>
+    <circle cx="100" cy="200" r="30" fill="#ffcdb6"/>
+    <circle cx="200" cy="500" r="50" fill="#ffd6cc"/>
+    <circle cx="50" cy="600" r="45" fill="#ffe4e1"/>
+    <circle cx="300" cy="650" r="35" fill="#ffc5b9"/>
+  </g>
+  <!-- Formas orgánicas inferiores -->
+  <path d="M-50,600 Q100,550 200,650 T400,700" fill="url(#shapeGradient)" opacity="0.5"/>
+  <path d="M-30,700 Q150,650 250,750 T400,800" fill="#ffd6cc" opacity="0.4"/>
+  <!-- Elementos adicionales para llenar espacios -->
+  <g opacity="0.3">
+    <rect x="0" y="100" width="100" height="100" fill="#ffeae6"/>
+    <rect x="250" y="450" width="80" height="80" fill="#ffd1cc"/>
+    <rect x="50" y="700" width="120" height="60" fill="#ffc5b9"/>
+  </g>
+  <!-- Elementos decorativos pequeños -->
+  <g opacity="0.4">
+    <circle cx="30" cy="150" r="15" fill="#ffc5b9"/>
+    <circle cx="330" cy="250" r="20" fill="#ffd6cc"/>
+    <circle cx="180" cy="450" r="25" fill="#ffcdb6"/>
+    <circle cx="280" cy="550" r="15" fill="#ffe4e1"/>
+    <circle cx="150" cy="650" r="20" fill="#ffc5b9"/> 
+    <circle cx="320" cy="750" r="25" fill="#ffd6cc"/>
+  </g>
+</svg>

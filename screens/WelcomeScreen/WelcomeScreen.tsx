@@ -63,7 +63,7 @@ export const WelcomeScreen: React.FC = () => {
 
   return (
     <BackgroundContainer
-      source={require('../../assets/images/fondo_app.jpg')}
+      source={require('../../assets/images/fondo.svg')}
     >
       <View style={styles.overlay}>
         <Animated.View style={[styles.logoContainer, { transform: [{ scale: logoScale }] }]}>
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.title,
-    fontSize: 38,
+    fontSize: 33,
     color: '#fff',
     textAlign: 'center',
     letterSpacing: 2,

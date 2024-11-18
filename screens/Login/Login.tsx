@@ -19,6 +19,8 @@ import { RootStackParamList } from "../../navigation/types";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { DateButton } from "../../Components/DateButton/DateButton";
 import { useAuth } from "../../context/AuthContext";
+import { PasswordInput } from "../../Components/PasswordInput/PasswordInput";
+import db from "@react-native-firebase/database"; // Añadida esta importación
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -38,36 +40,85 @@ export const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const { signInAsGuest, signIn, loading } = useAuth();
 
-// Modificar solo la función handleGuestAccess en LoginScreen
-const handleGuestAccess = async () => {
-  console.log('[LoginScreen] Starting guest access', { guestName, classCode });
-  if (isSubmitting) {
-    console.log('[LoginScreen] Already submitting, returning');
-    return;
-  }
-
-  if (!guestName.trim() || !classCode.trim()) {
-    console.log('[LoginScreen] Missing required fields');
-    Alert.alert("Error", "Por favor completa todos los campos");
-    return;
-  }
-
-  setIsSubmitting(true);
-  console.log('[LoginScreen] Calling signInAsGuest');
-  try {
-    await signInAsGuest(guestName.trim(), classCode.trim(), dateOfBirth);
-    console.log('[LoginScreen] Guest access successful');
-  } catch (error: any) {
-    console.error('[LoginScreen] Error in guest access:', error);
-    Alert.alert(
-      "Error",
-      error.message || "Verifica el código de clase e intenta nuevamente"
-    );
-  } finally {
-    console.log('[LoginScreen] Setting isSubmitting to false');
-    setIsSubmitting(false);
-  }
-};
+  // Modificar solo la función handleGuestAccess en LoginScreen
+  const handleGuestAccess = async () => {
+    console.log("[LoginScreen] Starting guest access", {
+      guestName,
+      classCode,
+    });
+    if (isSubmitting) {
+      console.log("[LoginScreen] Already submitting, returning");
+      return;
+    }
+  
+    // Validaciones del frontend
+    if (!guestName.trim()) {
+      Alert.alert("Error", "Por favor ingresa tu nombre");
+      return;
+    }
+  
+    if (!classCode.trim()) {
+      Alert.alert("Error", "Por favor ingresa el código de clase");
+      return;
+    }
+  
+    setIsSubmitting(true);
+    console.log("[LoginScreen] Calling signInAsGuest");
+  
+    try {
+      // Primero verificamos el código de clase
+      const classSnapshot = await db()
+        .ref('/classCodes')
+        .orderByChild('code')
+        .equalTo(classCode.trim())
+        .once('value');
+  
+      const classData = classSnapshot.val();
+      
+      if (!classData) {
+        Alert.alert(
+          "Código no válido",
+          "El código de clase ingresado no existe. Por favor, verifica e intenta nuevamente.",
+          [
+            { 
+              text: "OK",
+              onPress: () => setClassCode("")  // Limpiamos el campo
+            }
+          ]
+        );
+        return;
+      }
+  
+      // Si el código es válido, procedemos con el registro
+      await signInAsGuest(guestName.trim(), classCode.trim(), dateOfBirth);
+      console.log("[LoginScreen] Guest access successful");
+      
+    } catch (error: any) {
+      console.error("[LoginScreen] Error in guest access:", error);
+      
+      // Manejo específico de errores
+      if (error.message === "Código de clase no válido") {
+        Alert.alert(
+          "Código no válido",
+          "El código de clase ingresado no es válido. Por favor, verifica e intenta nuevamente.",
+          [
+            { 
+              text: "OK",
+              onPress: () => setClassCode("")  // Limpiamos el campo
+            }
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Error",
+          "Ha ocurrido un error al intentar acceder. Por favor, intenta nuevamente."
+        );
+      }
+    } finally {
+      console.log("[LoginScreen] Setting isSubmitting to false");
+      setIsSubmitting(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (isSubmitting) return;
@@ -81,9 +132,9 @@ const handleGuestAccess = async () => {
     try {
       await signIn(email.trim(), password);
     } catch (error: any) {
-      console.error('Error en login:', error);
+      console.error("Error en login:", error);
       Alert.alert(
-        "Error", 
+        "Error",
         "Credenciales incorrectas. Por favor verifica e intenta nuevamente"
       );
     } finally {
@@ -101,8 +152,8 @@ const handleGuestAccess = async () => {
   const isLoading = loading || isSubmitting;
 
   return (
-    <BackgroundContainer source={require("../../assets/images/fondo_app.jpg")}>
-      <KeyboardAvoidingView 
+    <BackgroundContainer source={require("../../assets/images/fondo.svg")}>
+      <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
@@ -173,23 +224,23 @@ const handleGuestAccess = async () => {
                     editable={!isLoading}
                   />
 
-                  <CustomInput
-                    placeholder="Contraseña"
+                  <PasswordInput
                     value={password}
                     onChangeText={setPassword}
-                    secureTextEntry
                     editable={!isLoading}
                   />
 
                   {isLoading ? (
                     <View style={styles.loadingContainer}>
                       <ActivityIndicator size="large" color="#056b05" />
-                      <Text style={styles.loadingText}>Iniciando sesión...</Text>
+                      <Text style={styles.loadingText}>
+                        Iniciando sesión...
+                      </Text>
                     </View>
                   ) : (
                     <>
-                      <CustomButton 
-                        title="Iniciar Sesión" 
+                      <CustomButton
+                        title="Iniciar Sesión"
                         onPress={handleLogin}
                         disabled={isLoading}
                       />
@@ -207,7 +258,9 @@ const handleGuestAccess = async () => {
               {!isLoading && (
                 <CustomButton
                   title={
-                    isLoginMode ? "Volver al acceso invitado" : "¿Ya tienes cuenta?"
+                    isLoginMode
+                      ? "Volver al acceso invitado"
+                      : "¿Ya tienes cuenta?"
                   }
                   onPress={() => {
                     setIsLoginMode(!isLoginMode);

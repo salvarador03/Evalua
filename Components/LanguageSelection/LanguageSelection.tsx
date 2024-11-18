@@ -1,15 +1,80 @@
+// Components/LanguageSelection.tsx
 import React from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, SafeAreaView } from "react-native";
-import { translations } from "./translations";
+import { View, Text, TouchableOpacity, Image, StyleSheet, SafeAreaView, Alert } from "react-native";
+import { useAuth } from "../../context/AuthContext";
 import { Language } from "../../types/language";
+import { User } from "../../types/user";
+
+const countryConfigs = {
+  "es": {
+    country: "España",
+    language: "es" as Language,
+    flag: "spain"
+  },
+  "en": {
+    country: "United States",
+    language: "en" as Language,
+    flag: "usa"
+  },
+  "pt-PT": {
+    country: "Portugal",
+    language: "pt-PT" as Language,
+    flag: "portugal"
+  },
+  "pt-BR": {
+    country: "Brasil",
+    language: "pt-BR" as Language,
+    flag: "brazil"
+  }
+};
 
 export interface LanguageSelectionScreenProps {
   onLanguageSelect: (lang: Language) => void | Promise<void>;
+  isStandalone?: boolean;
 }
 
 export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = ({ 
-  onLanguageSelect 
+  onLanguageSelect,
+  isStandalone = false
 }) => {
+  const { user, updateUserProfile } = useAuth();
+
+  const handleCountrySelection = async (language: Language) => {
+    try {
+      // Si hay un usuario, actualizamos su perfil
+      if (user) {
+        const selectedCountry = countryConfigs[language];
+        
+        // Solo actualizamos si el countryRole es diferente
+        if (!user.countryRole || 
+            user.countryRole.language !== selectedCountry.language || 
+            user.countryRole.country !== selectedCountry.country) {
+          
+          const updatedUser: User = {
+            ...user,
+            countryRole: {
+              country: selectedCountry.country,
+              language: selectedCountry.language,
+              flag: selectedCountry.flag
+            }
+          };
+
+          await updateUserProfile(updatedUser);
+        }
+      }
+
+      // Siempre llamamos a onLanguageSelect, independientemente del usuario
+      await onLanguageSelect(language);
+      
+    } catch (error) {
+      console.error('Error al actualizar el rol de país:', error);
+      Alert.alert(
+        'Error',
+        'No se pudo actualizar el país seleccionado. Por favor, intenta nuevamente.'
+      );
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -33,7 +98,7 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
             <View style={styles.row}>
               <TouchableOpacity
                 style={styles.flagButton}
-                onPress={() => onLanguageSelect("es")}
+                onPress={() => handleCountrySelection("es")}
               >
                 <Image
                   source={require("../../assets/flags/spain.png")}
@@ -43,7 +108,7 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
 
               <TouchableOpacity
                 style={styles.flagButton}
-                onPress={() => onLanguageSelect("en")}
+                onPress={() => handleCountrySelection("en")}
               >
                 <Image
                   source={require("../../assets/flags/usa.png")}
@@ -55,7 +120,7 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
             <View style={styles.row}>
               <TouchableOpacity
                 style={styles.flagButton}
-                onPress={() => onLanguageSelect("pt-PT")}
+                onPress={() => handleCountrySelection("pt-PT")}
               >
                 <Image
                   source={require("../../assets/flags/portugal.png")}
@@ -65,7 +130,7 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
 
               <TouchableOpacity
                 style={styles.flagButton}
-                onPress={() => onLanguageSelect("pt-BR")}
+                onPress={() => handleCountrySelection("pt-BR")}
               >
                 <Image
                   source={require("../../assets/flags/brazil.png")}
@@ -93,22 +158,22 @@ const styles = StyleSheet.create({
     },
     welcomeContainer: {
       alignItems: 'center',
-      marginBottom: 40, // Aumentado para dar más espacio
+      marginBottom: 40,
       width: '100%',
     },
     welcomeTitle: {
-      fontSize: 24, // Aumentado de 20
+      fontSize: 24,
       fontWeight: 'bold',
       color: '#1f2937',
       textAlign: 'center',
-      marginBottom: 20, // Aumentado de 15
-      lineHeight: 32, // Aumentado de 28
+      marginBottom: 20,
+      lineHeight: 32,
     },
     welcomeSubtitle: {
-      fontSize: 16, // Aumentado de 14
+      fontSize: 16,
       color: '#6b7280',
       textAlign: 'center',
-      lineHeight: 24, // Aumentado de 20
+      lineHeight: 24,
     },
     gridContainer: {
       width: '100%',
@@ -118,13 +183,13 @@ const styles = StyleSheet.create({
       flexDirection: 'row',
       justifyContent: 'center',
       width: '100%',
-      marginBottom: 16, // Aumentado de 12
+      marginBottom: 16,
     },
     flagButton: {
       backgroundColor: 'white',
-      borderRadius: 16, // Aumentado de 12
-      padding: 12, // Aumentado de 8
-      marginHorizontal: 8, // Aumentado de 6
+      borderRadius: 16,
+      padding: 12,
+      marginHorizontal: 8,
       shadowColor: '#000',
       shadowOffset: {
         width: 0,
@@ -135,8 +200,8 @@ const styles = StyleSheet.create({
       elevation: 2,
     },
     flagImage: {
-      width: 65, // Aumentado de 50
-      height: 45, // Aumentado de 35
-      borderRadius: 8, // Aumentado de 6
+      width: 65,
+      height: 45,
+      borderRadius: 8,
     }
-  });
+});
