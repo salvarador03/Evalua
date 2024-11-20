@@ -1,4 +1,3 @@
-// Components/FormScreen/ResultsView.tsx
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,8 +14,8 @@ interface FormStats {
   totalUsers: number;
   min: number;
   max: number;
-  distanceFromMedian: number;  // Nuevo
-  percentageFromMedian: number;  // Nuevo
+  distanceFromMedian: number;
+  percentageFromMedian: number;
 }
 
 interface ResultsViewProps {
@@ -27,12 +26,12 @@ interface ResultsViewProps {
 }
 
 interface RouteParams {
-  studentData: {
+  studentData?: {
     name: string;
     email: string;
     uid: string;
   };
-  isTeacherView: boolean;
+  isTeacherView?: boolean;
   formResponse: FormResponse;
   language: Language;
   answers: (number | null)[];
@@ -45,7 +44,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   stats,
 }) => {
   const route = useRoute();
-  const { studentData, isTeacherView } = route.params as RouteParams;
+  const { studentData, isTeacherView = false } = (route.params as RouteParams) || {};
   const [activeSection, setActiveSection] = useState<'responses' | 'comparison'>('responses');
   const [fadeAnim] = useState(new Animated.Value(1));
 
@@ -67,7 +66,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
 
   const renderStudentHeader = () => {
     if (!isTeacherView || !studentData) return null;
-
+    
     return (
       <View style={styles.studentHeader}>
         <View style={styles.studentInfo}>
@@ -167,7 +166,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         const stat = stats[index];
         const userAnswer = answers[index];
         if (!stat || userAnswer === null) return null;
-  
+
         return (
           <View key={index} style={styles.comparisonCard}>
             <View style={styles.questionContainer}>
@@ -179,14 +178,39 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
               userScore={userAnswer}
               userData={{
                 name: studentData?.name || '',
-                classCode: formResponse.classCode || 'default',  // Valor por defecto
-                country: formResponse.country || 'Sin país',     // Valor por defecto
-                age: formResponse.age || 0                       // Valor por defecto
+                classCode: formResponse.classCode || 'default',
+                country: formResponse.country || 'Sin país',
+                age: formResponse.age || 0
               }}
-              allResponses={[/* aquí necesitas pasar todas las respuestas relevantes */]}
+              allResponses={[]}
             />
-  
-            {/* Resto del código permanece igual */}
+
+            <View style={styles.statsCard}>
+              <View style={styles.statItem}>
+                <Ionicons name="analytics" size={20} color="#9E7676" />
+                <Text style={styles.statText}>
+                  Mediana: {stat.median.toFixed(1)}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Ionicons name="arrow-down" size={20} color="#9E7676" />
+                <Text style={styles.statText}>
+                  Por debajo: {stat.belowMedian}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Ionicons name="arrow-up" size={20} color="#9E7676" />
+                <Text style={styles.statText}>
+                  Por encima: {stat.aboveMedian}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Ionicons name="people" size={20} color="#9E7676" />
+                <Text style={styles.statText}>
+                  Total: {stat.totalUsers}
+                </Text>
+              </View>
+            </View>
           </View>
         );
       })}
