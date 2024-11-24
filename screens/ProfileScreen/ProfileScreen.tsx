@@ -206,7 +206,7 @@ export const ProfileScreen: React.FC = () => {
 
   if (isLoading && !isEditing) {
     return (
-      <BackgroundContainer source={require('../../assets/images/fondo.svg')}>
+      <BackgroundContainer source={require('../../assets/images/p_fondo.webp')}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#9E7676" />
         </View>
@@ -215,7 +215,7 @@ export const ProfileScreen: React.FC = () => {
   }
 
   return (
-    <BackgroundContainer source={require('../../assets/images/fondo.svg')}>
+    <BackgroundContainer source={require('../../assets/images/p_fondo.webp')}>
       <View style={styles.overlay}>
         <View style={styles.header}>
           <Text style={styles.title}>Mi Perfil</Text>

@@ -1,4 +1,4 @@
-// components/LanguageSelector/LanguageSelector.tsx
+/*// components/LanguageSelector/LanguageSelector.tsx
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
 import type { Language } from '../../screens/FormsScreen/data/questions';
@@ -9,10 +9,10 @@ interface LanguageSelectorProps {
 }
 
 const FLAGS = {
-  es: require('../../assets/flags/spain.png'),    // bandera española
-  en: require('../../assets/flags/usa.png'),      // bandera americana en lugar de UK
-  pt: require('../../assets/flags/portugal.png'), // bandera portuguesa
-  br: require('../../assets/flags/brazil.png'),   // bandera brasileña
+  es: require('../../assets/flags/spain.webp'),    // bandera española
+  en: require('../../assets/flags/usa.webp'),      // bandera americana en lugar de UK
+  pt: require('../../assets/flags/portugal.webp'), // bandera portuguesa
+  br: require('../../assets/flags/brazil.webp'),   // bandera brasileña
 };
 
 const LANGUAGE_NAMES = {
@@ -105,3 +105,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+*/

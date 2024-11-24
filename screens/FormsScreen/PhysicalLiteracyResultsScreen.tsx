@@ -17,35 +17,26 @@ export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigati
   useEffect(() => {
     const loadStats = async () => {
       try {
-        console.log('[ResultsScreen] Loading stats...');
-        console.log('[ResultsScreen] Form response:', formResponse);
-        console.log('[ResultsScreen] Language:', language);
-        console.log('[ResultsScreen] Answers:', answers);
 
         const snapshot = await db().ref("/form_responses").once("value");
-        console.log('[ResultsScreen] Got database snapshot');
 
         const allResponses: any[] = [];
         snapshot.forEach((childSnapshot) => {
           const response = childSnapshot.child("physical_literacy").val();
           if (response && response.answers) {
-            console.log('[ResultsScreen] Found valid response:', response);
             allResponses.push(response);
           }
           return undefined;
         });
 
-        console.log('[ResultsScreen] Total responses found:', allResponses.length);
 
         const calculatedStats = answers.map((userAnswer, questionIndex) => {
           const values = allResponses
             .map((response) => response.answers[questionIndex])
             .filter((value): value is number => value !== null && !isNaN(value));
 
-          console.log(`[ResultsScreen] Question ${questionIndex + 1} values:`, values);
 
           if (values.length === 0) {
-            console.log(`[ResultsScreen] No values for question ${questionIndex + 1}`);
             return {
               median: 0,
               belowMedian: 0,
@@ -84,7 +75,6 @@ export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigati
             percentageFromMedian
           };
 
-          console.log(`[ResultsScreen] Stats for question ${questionIndex + 1}:`, stats);
           return stats;
         });
 

@@ -8,6 +8,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -20,12 +21,11 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { DateButton } from "../../Components/DateButton/DateButton";
 import { useAuth } from "../../context/AuthContext";
 import { PasswordInput } from "../../Components/PasswordInput/PasswordInput";
-import db from "@react-native-firebase/database"; // Añadida esta importación
+import db from "@react-native-firebase/database";
+import auth from '@react-native-firebase/auth';
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "Login"
->;
+// Corrección en la definición del tipo de navegación
+type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
 
 export const LoginScreen: React.FC = () => {
   const [guestName, setGuestName] = useState("");
@@ -36,22 +36,17 @@ export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const { signInAsGuest, signIn, loading } = useAuth();
 
-  // Modificar solo la función handleGuestAccess en LoginScreen
   const handleGuestAccess = async () => {
-    console.log("[LoginScreen] Starting guest access", {
-      guestName,
-      classCode,
-    });
+
     if (isSubmitting) {
-      console.log("[LoginScreen] Already submitting, returning");
       return;
     }
   
-    // Validaciones del frontend
     if (!guestName.trim()) {
       Alert.alert("Error", "Por favor ingresa tu nombre");
       return;
@@ -63,10 +58,8 @@ export const LoginScreen: React.FC = () => {
     }
   
     setIsSubmitting(true);
-    console.log("[LoginScreen] Calling signInAsGuest");
   
     try {
-      // Primero verificamos el código de clase
       const classSnapshot = await db()
         .ref('/classCodes')
         .orderByChild('code')
@@ -79,34 +72,21 @@ export const LoginScreen: React.FC = () => {
         Alert.alert(
           "Código no válido",
           "El código de clase ingresado no existe. Por favor, verifica e intenta nuevamente.",
-          [
-            { 
-              text: "OK",
-              onPress: () => setClassCode("")  // Limpiamos el campo
-            }
-          ]
+          [{ text: "OK", onPress: () => setClassCode("") }]
         );
         return;
       }
   
-      // Si el código es válido, procedemos con el registro
       await signInAsGuest(guestName.trim(), classCode.trim(), dateOfBirth);
-      console.log("[LoginScreen] Guest access successful");
       
     } catch (error: any) {
       console.error("[LoginScreen] Error in guest access:", error);
       
-      // Manejo específico de errores
       if (error.message === "Código de clase no válido") {
         Alert.alert(
           "Código no válido",
           "El código de clase ingresado no es válido. Por favor, verifica e intenta nuevamente.",
-          [
-            { 
-              text: "OK",
-              onPress: () => setClassCode("")  // Limpiamos el campo
-            }
-          ]
+          [{ text: "OK", onPress: () => setClassCode("") }]
         );
       } else {
         Alert.alert(
@@ -115,7 +95,6 @@ export const LoginScreen: React.FC = () => {
         );
       }
     } finally {
-      console.log("[LoginScreen] Setting isSubmitting to false");
       setIsSubmitting(false);
     }
   };
@@ -142,6 +121,30 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
+  const handlePasswordReset = async () => {
+    if (!email.trim()) {
+      Alert.alert("Error", "Por favor ingresa tu email para recuperar la contraseña");
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      await auth().sendPasswordResetEmail(email.trim());
+      Alert.alert(
+        "Correo enviado",
+        "Se ha enviado un enlace de recuperación a tu correo electrónico"
+      );
+    } catch (error: any) {
+      console.error("Error al enviar email de recuperación:", error);
+      Alert.alert(
+        "Error",
+        "No se pudo enviar el correo de recuperación. Verifica que el email sea correcto."
+      );
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
@@ -149,10 +152,10 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
-  const isLoading = loading || isSubmitting;
+  const isLoading = loading || isSubmitting || isResettingPassword;
 
   return (
-    <BackgroundContainer source={require("../../assets/images/fondo.svg")}>
+    <BackgroundContainer source={require("../../assets/images/p_fondo.webp")}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
@@ -202,7 +205,7 @@ export const LoginScreen: React.FC = () => {
 
                   {isLoading ? (
                     <View style={styles.loadingContainer}>
-                      <ActivityIndicator size="large" color="#056b05" />
+                      <ActivityIndicator size="large" color="#9E7676" />
                       <Text style={styles.loadingText}>Accediendo...</Text>
                     </View>
                   ) : (
@@ -230,11 +233,23 @@ export const LoginScreen: React.FC = () => {
                     editable={!isLoading}
                   />
 
+                  <TouchableOpacity 
+                    onPress={handlePasswordReset}
+                    disabled={isLoading}
+                    style={styles.forgotPasswordContainer}
+                  >
+                    <Text style={styles.forgotPasswordText}>
+                      ¿Olvidaste tu contraseña?
+                    </Text>
+                  </TouchableOpacity>
+
                   {isLoading ? (
                     <View style={styles.loadingContainer}>
-                      <ActivityIndicator size="large" color="#056b05" />
+                      <ActivityIndicator size="large" color="#9E7676" />
                       <Text style={styles.loadingText}>
-                        Iniciando sesión...
+                        {isResettingPassword 
+                          ? "Enviando correo..." 
+                          : "Iniciando sesión..."}
                       </Text>
                     </View>
                   ) : (
@@ -318,5 +333,17 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
+  },
+  forgotPasswordContainer: {
+    alignSelf: 'center',
+    marginTop: -5,
+    marginBottom: 10,
+    padding: 5,
+  },
+  forgotPasswordText: {
+    color: '#fff',
+    fontSize: 14,
+    textDecorationLine: 'underline',
+    opacity: 0.9,
   },
 });

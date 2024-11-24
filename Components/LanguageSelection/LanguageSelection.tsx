@@ -101,7 +101,7 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
                 onPress={() => handleCountrySelection("es")}
               >
                 <Image
-                  source={require("../../assets/flags/spain.png")}
+                  source={require("../../assets/flags/spain.webp")}
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
@@ -111,7 +111,7 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
                 onPress={() => handleCountrySelection("en")}
               >
                 <Image
-                  source={require("../../assets/flags/usa.png")}
+                  source={require("../../assets/flags/usa.webp")}
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
@@ -123,7 +123,7 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
                 onPress={() => handleCountrySelection("pt-PT")}
               >
                 <Image
-                  source={require("../../assets/flags/portugal.png")}
+                  source={require("../../assets/flags/portugal.webp")}
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
@@ -133,7 +133,7 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
                 onPress={() => handleCountrySelection("pt-BR")}
               >
                 <Image
-                  source={require("../../assets/flags/brazil.png")}
+                  source={require("../../assets/flags/brazil.webp")}
                   style={styles.flagImage}
                 />
               </TouchableOpacity>

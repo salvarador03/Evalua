@@ -28,7 +28,6 @@ export default function Registro() {
     try {
       await db().ref(`/users/${response.user.uid}`).set({ name });
     } catch (e) {
-      console.log('Error en createProfile:', e);
       throw e; // Re-lanzar el error para que sea capturado en registerAndGoToMainFlow
     }
   }
@@ -55,7 +54,7 @@ export default function Registro() {
   return (
     <Pressable style={styles.container} onPress={Keyboard.dismiss}>
       <ImageBackground
-        source={require('../../assets/images/fondo.svg')}
+        source={require('../../assets/images/p_fondo.webp')}
         style={styles.backgroundImage}
         imageStyle={{ opacity: 0.7 }}
       >

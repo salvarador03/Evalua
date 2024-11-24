@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Language } from '../../types/language';
-import { FormResponse } from '../../types/form';
-import { questions } from './data/questions';
-import { useRoute } from '@react-navigation/native';
-import ComparisonChart from './ComparisonChart';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Language } from "../../types/language";
+import { FormResponse } from "../../types/form";
+import { questions } from "./data/questions";
+import { useRoute } from "@react-navigation/native";
+import ComparisonChart from "./ComparisonChart";
+import db from "@react-native-firebase/database";
 
 interface FormStats {
   median: number;
@@ -30,6 +38,7 @@ interface RouteParams {
     name: string;
     email: string;
     uid: string;
+    classCode?: string;
   };
   isTeacherView?: boolean;
   formResponse: FormResponse;
@@ -44,11 +53,59 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   stats,
 }) => {
   const route = useRoute();
-  const { studentData, isTeacherView = false } = (route.params as RouteParams) || {};
-  const [activeSection, setActiveSection] = useState<'responses' | 'comparison'>('responses');
+  const { studentData, isTeacherView = false } =
+    (route.params as RouteParams) || {};
+  const [activeSection, setActiveSection] = useState<
+    "responses" | "comparison"
+  >("responses");
   const [fadeAnim] = useState(new Animated.Value(1));
+  const [studentClassCode, setStudentClassCode] = useState<string>("");
 
-  const switchSection = (section: 'responses' | 'comparison') => {
+  // Eliminar el segundo useEffect y modificar el primero
+  useEffect(() => {
+    const loadStudentClassCode = async () => {
+      if (isTeacherView && studentData?.uid) {
+        try {
+          const guestRef = await db()
+            .ref(`/guests/${studentData.uid}`)
+            .once("value");
+          const guestData = guestRef.val();
+
+
+          if (guestData?.classCode) {
+            setStudentClassCode(guestData.classCode);
+          }
+        } catch (error) {
+          console.error("Error loading student class code:", error);
+        }
+      }
+    };
+
+    loadStudentClassCode();
+  }, [isTeacherView, studentData?.uid]);
+
+  const getCorrectClassCode = async (): Promise<string> => {
+    // Si es guest, obtener el código de Firebase
+    if (formResponse.isGuest && formResponse.userId) {
+      try {
+        const guestRef = await db()
+          .ref(`/guests/${formResponse.userId}`)
+          .once("value");
+        const guestData = guestRef.val();
+
+        if (guestData?.classCode) {
+          return guestData.classCode;
+        }
+      } catch (error) {
+        console.error("Error getting guest class code:", error);
+      }
+    }
+
+    // Si no se pudo obtener el código de Firebase o no es guest
+    return formResponse?.classCode || "";
+  };
+
+  const switchSection = (section: "responses" | "comparison") => {
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -59,19 +116,24 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         toValue: 1,
         duration: 150,
         useNativeDriver: true,
-      })
+      }),
     ]).start();
     setActiveSection(section);
   };
 
   const renderStudentHeader = () => {
     if (!isTeacherView || !studentData) return null;
-    
+
     return (
       <View style={styles.studentHeader}>
         <View style={styles.studentInfo}>
           <Text style={styles.studentName}>{studentData.name}</Text>
           <Text style={styles.studentEmail}>{studentData.email}</Text>
+          {studentData.classCode && (
+            <Text style={styles.studentClassCode}>
+              Código de clase: {studentData.classCode}
+            </Text>
+          )}
         </View>
         <View style={styles.teacherBadge}>
           <Ionicons name="school" size={20} color="#fff" />
@@ -86,39 +148,43 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
       <TouchableOpacity
         style={[
           styles.navButton,
-          activeSection === 'responses' && styles.navButtonActive
+          activeSection === "responses" && styles.navButtonActive,
         ]}
-        onPress={() => switchSection('responses')}
+        onPress={() => switchSection("responses")}
       >
-        <Ionicons 
-          name="star" 
-          size={32} 
-          color={activeSection === 'responses' ? '#FFF' : '#9E7676'} 
+        <Ionicons
+          name="star"
+          size={32}
+          color={activeSection === "responses" ? "#FFF" : "#9E7676"}
         />
-        <Text style={[
-          styles.navButtonText,
-          activeSection === 'responses' && styles.navButtonTextActive
-        ]}>
-          {isTeacherView ? 'Respuestas del Alumno' : 'Mis Respuestas'}
+        <Text
+          style={[
+            styles.navButtonText,
+            activeSection === "responses" && styles.navButtonTextActive,
+          ]}
+        >
+          {isTeacherView ? "Respuestas del Alumno" : "Mis Respuestas"}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[
           styles.navButton,
-          activeSection === 'comparison' && styles.navButtonActive
+          activeSection === "comparison" && styles.navButtonActive,
         ]}
-        onPress={() => switchSection('comparison')}
+        onPress={() => switchSection("comparison")}
       >
-        <Ionicons 
-          name="people" 
-          size={32} 
-          color={activeSection === 'comparison' ? '#FFF' : '#9E7676'} 
+        <Ionicons
+          name="people"
+          size={32}
+          color={activeSection === "comparison" ? "#FFF" : "#9E7676"}
         />
-        <Text style={[
-          styles.navButtonText,
-          activeSection === 'comparison' && styles.navButtonTextActive
-        ]}>
+        <Text
+          style={[
+            styles.navButtonText,
+            activeSection === "comparison" && styles.navButtonTextActive,
+          ]}
+        >
           Comparar con Otros
         </Text>
       </TouchableOpacity>
@@ -138,7 +204,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             <View style={styles.answerContainer}>
               <Ionicons name="trophy" size={32} color="#FFD700" />
               <Text style={styles.answerValue}>
-                {userAnswer !== null ? userAnswer.toString() : '-'}
+                {userAnswer !== null ? userAnswer.toString() : "-"}
               </Text>
               <Text style={styles.pointsText}>puntos</Text>
             </View>
@@ -146,11 +212,11 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
               <View style={styles.teacherNote}>
                 <Ionicons name="information-circle" size={20} color="#9E7676" />
                 <Text style={styles.teacherNoteText}>
-                  {userAnswer !== null && userAnswer > 7 
-                    ? 'Respuesta satisfactoria'
+                  {userAnswer !== null && userAnswer > 7
+                    ? "Respuesta satisfactoria"
                     : userAnswer !== null && userAnswer < 4
-                    ? 'Requiere atención'
-                    : 'Respuesta promedio'}
+                    ? "Requiere atención"
+                    : "Respuesta promedio"}
                 </Text>
               </View>
             )}
@@ -160,70 +226,39 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     </View>
   );
 
-  const renderComparison = () => (
-    <View style={styles.comparisonContainer}>
-      {questions[language].map((question, index) => {
-        const stat = stats[index];
-        const userAnswer = answers[index];
-        if (!stat || userAnswer === null) return null;
+  const renderComparison = () => {
+    return questions[language].map((_, index) => {
+      const effectiveUserId = isTeacherView
+        ? studentData?.uid
+        : formResponse.userId;
 
-        return (
-          <View key={index} style={styles.comparisonCard}>
-            <View style={styles.questionContainer}>
-              <Ionicons name="help-circle" size={24} color="#9E7676" />
-              <Text style={styles.questionText}>{question.text}</Text>
-            </View>
-            
-            <ComparisonChart
-              userScore={userAnswer}
-              userData={{
-                name: studentData?.name || '',
-                classCode: formResponse.classCode || 'default',
-                country: formResponse.country || 'Sin país',
-                age: formResponse.age || 0
-              }}
-              allResponses={[]}
-            />
+      return (
+        <ComparisonChart
+          key={index}
+          userScore={answers[index] || 0}
+          userData={{
+            userId: effectiveUserId || "",
+            name: studentData?.name || "",
+            classCode: studentData?.classCode || "",
+            country: formResponse.country || "",
+            age: formResponse.age || 0,
+          }}
+          formResponse={formResponse} // Añadir esto
+          questionIndex={index}
+        />
+      );
+    });
+  };
 
-            <View style={styles.statsCard}>
-              <View style={styles.statItem}>
-                <Ionicons name="analytics" size={20} color="#9E7676" />
-                <Text style={styles.statText}>
-                  Mediana: {stat.median.toFixed(1)}
-                </Text>
-              </View>
-              <View style={styles.statItem}>
-                <Ionicons name="arrow-down" size={20} color="#9E7676" />
-                <Text style={styles.statText}>
-                  Por debajo: {stat.belowMedian}
-                </Text>
-              </View>
-              <View style={styles.statItem}>
-                <Ionicons name="arrow-up" size={20} color="#9E7676" />
-                <Text style={styles.statText}>
-                  Por encima: {stat.aboveMedian}
-                </Text>
-              </View>
-              <View style={styles.statItem}>
-                <Ionicons name="people" size={20} color="#9E7676" />
-                <Text style={styles.statText}>
-                  Total: {stat.totalUsers}
-                </Text>
-              </View>
-            </View>
-          </View>
-        );
-      })}
-    </View>
-  );
-  
   return (
     <View style={styles.container}>
       {renderStudentHeader()}
       {renderNavigationButtons()}
       <ScrollView style={styles.content}>
         <Animated.View style={{ opacity: fadeAnim }}>
-          {activeSection === 'responses' ? renderResponses() : renderComparison()}
+          {activeSection === "responses"
+            ? renderResponses()
+            : renderComparison()}
         </Animated.View>
       </ScrollView>
     </View>
@@ -233,79 +268,83 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   studentHeader: {
-    backgroundColor: 'rgba(158, 118, 118, 0.9)',
+    backgroundColor: "rgba(158, 118, 118, 0.9)",
     padding: 18,
     paddingTop: 50,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   studentInfo: {
     flex: 1,
   },
   studentName: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   studentEmail: {
     fontSize: 14,
-    color: '#fff',
+    color: "#fff",
     opacity: 0.9,
   },
+  studentClassCode: {
+    fontSize: 14,
+    color: "#fff",
+    opacity: 0.9,
+    marginTop: 4,
+  },
   teacherBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
   teacherBadgeText: {
-    color: '#fff',
+    color: "#fff",
     marginLeft: 6,
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 12,
   },
   navContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   navButton: {
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    width: '45%',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginHorizontal: 4,
   },
   navButtonActive: {
-    backgroundColor: '#9E7676',
+    backgroundColor: "#9E7676",
   },
   navButtonText: {
-    marginTop: 8,
-    fontSize: 16,
-    color: '#9E7676',
-    fontWeight: 'bold',
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#9E7676",
   },
   navButtonTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
   content: {
     flex: 1,
@@ -315,108 +354,59 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   responseCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   questionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     marginBottom: 12,
   },
   questionText: {
     flex: 1,
     fontSize: 16,
-    color: '#594545',
+    color: "#594545",
   },
   answerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 12,
-    backgroundColor: 'rgba(158, 118, 118, 0.1)',
+    backgroundColor: "rgba(158, 118, 118, 0.1)",
     padding: 16,
     borderRadius: 12,
   },
   answerValue: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#9E7676',
+    fontWeight: "bold",
+    color: "#9E7676",
   },
   pointsText: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   teacherNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(158, 118, 118, 0.1)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(158, 118, 118, 0.1)",
     padding: 10,
     borderRadius: 8,
     marginTop: 8,
     gap: 8,
   },
   teacherNoteText: {
-    color: '#594545',
+    color: "#594545",
     fontSize: 14,
     flex: 1,
   },
-  comparisonContainer: {
-    gap: 16,
-  },
-  comparisonCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  statsCard: {
-    marginTop: 16,
-    backgroundColor: 'rgba(158, 118, 118, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 8,
-  },
-  statText: {
-    fontSize: 16,
-    color: '#594545',
-  },
-  chartContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: 'rgba(158, 118, 118, 0.1)',
-    borderRadius: 12,
-  },
-  chartTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#594545',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  noDataText: {
-    textAlign: 'center',
-    color: '#594545',
-    fontSize: 14,
-    padding: 20,
-  }
 });
 
 export default ResultsView;

@@ -17,22 +17,22 @@ import PhysicalLiteracySlider from "../../Components/PhysicalLiteracySlider/Phys
 
 // Imágenes para niños (6-12)
 const childQuestionImages = [
-  require("../../assets/images/preguntas/kids/primera_pregunta.jpg"),
-  require("../../assets/images/preguntas/kids/segunda_pregunta.jpg"),
-  require("../../assets/images/preguntas/kids/tercera_pregunta.jpg"),
-  require("../../assets/images/preguntas/kids/cuarta_pregunta.jpg"),
-  require("../../assets/images/preguntas/kids/quinta_pregunta.jpg"),
-  require("../../assets/images/preguntas/kids/sexta_pregunta.jpeg"),
+  require("../../assets/images/preguntas/kids/primera_pregunta.webp"),
+  require("../../assets/images/preguntas/kids/segunda_pregunta.webp"),
+  require("../../assets/images/preguntas/kids/tercera_pregunta.webp"),
+  require("../../assets/images/preguntas/kids/cuarta_pregunta.webp"),//
+  require("../../assets/images/preguntas/kids/quinta_pregunta.webp"),
+  require("../../assets/images/preguntas/kids/sexta_pregunta.webp"),
 ];
 
 // Imágenes para adolescentes (12-18)
 const teenQuestionImages = [
-  require("../../assets/images/preguntas/teen/primera_pregunta.jpg"),
-  require("../../assets/images/preguntas/teen/segunda_pregunta.jpeg"),
-  require("../../assets/images/preguntas/teen/tercera_pregunta.jpg"),
-  require("../../assets/images/preguntas/teen/cuarta_pregunta.jpeg"),
-  require("../../assets/images/preguntas/teen/quinta_pregunta.jpeg"),
-  require("../../assets/images/preguntas/teen/sexta_pregunta.jpg"),
+  require("../../assets/images/preguntas/teen/primera_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/segunda_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/tercera_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/cuarta_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/quinta_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/sexta_pregunta.webp"),
 ];
 
 interface FormContentProps {
@@ -130,7 +130,6 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
     const shouldReset = userAge > 0 && currentQuestion > 0;
     
     if (shouldReset) {
-      console.log('Resetting form due to age change:', userAge, 'Is teen:', isTeenUser);
       // Reiniciar respuestas
       onAnswerChange(new Array(6).fill(null));
       // Volver a la primera pregunta
@@ -140,8 +139,6 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
 
   // Monitorear cambios en el tipo de cuestionario
   useEffect(() => {
-    console.log('Question type changed:', isTeenUser ? 'Teen' : 'Child');
-    console.log('Current questions type:', isTeenUser ? 'Teen Questions' : 'Child Questions');
   }, [isTeenUser]);
 
   // Memoizar la función canProceedToNext

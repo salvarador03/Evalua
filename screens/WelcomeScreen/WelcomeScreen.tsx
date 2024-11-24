@@ -63,20 +63,20 @@ export const WelcomeScreen: React.FC = () => {
 
   return (
     <BackgroundContainer
-      source={require('../../assets/images/fondo.svg')}
+      source={require('../../assets/images/p_fondo.webp')}
     >
       <View style={styles.overlay}>
         <Animated.View style={[styles.logoContainer, { transform: [{ scale: logoScale }] }]}>
           <View style={styles.logoCard}>
             <View style={styles.logosWrapper}>
               <Image 
-                source={require('../../assets/images/logo-uex.png')} 
+                source={require('../../assets/images/logo-uex.webp')} 
                 style={styles.logo} 
                 resizeMode="contain"
               />
               <View style={styles.logoDivider} />
               <Image 
-                source={require('../../assets/images/ulisboa.png')} 
+                source={require('../../assets/images/ulisboa.webp')} 
                 style={styles.logoLisboa} 
                 resizeMode="contain"
               />

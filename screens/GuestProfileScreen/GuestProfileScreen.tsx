@@ -228,7 +228,7 @@ export const GuestProfileScreen: React.FC = () => {
   };
 
   return (
-    <BackgroundContainer source={require('../../assets/images/fondo.svg')}>
+    <BackgroundContainer source={require('../../assets/images/p_fondo.webp')}>
       <View style={styles.overlay}>
         <View style={styles.header}>
           <Text style={styles.title}>Perfil de Invitado</Text>

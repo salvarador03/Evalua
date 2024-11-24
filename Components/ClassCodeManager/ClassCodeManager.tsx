@@ -1,10 +1,18 @@
 // Components/ClassCodeManager.tsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Alert, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { CustomInput } from '../CustomInput/CustomInput';
-import { CustomButton } from '../CustomButton/CustomButton';
-import { Ionicons } from '@expo/vector-icons';
-import db from '@react-native-firebase/database';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import { CustomInput } from "../CustomInput/CustomInput";
+import { CustomButton } from "../CustomButton/CustomButton";
+import { Ionicons } from "@expo/vector-icons";
+import db from "@react-native-firebase/database";
 
 interface ClassCode {
   id: string;
@@ -21,9 +29,12 @@ interface Props {
   teacherName: string;
 }
 
-export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) => {
-  const [newCode, setNewCode] = useState('');
-  const [description, setDescription] = useState('');
+export const ClassCodeManager: React.FC<Props> = ({
+  teacherId,
+  teacherName,
+}) => {
+  const [newCode, setNewCode] = useState("");
+  const [description, setDescription] = useState("");
   const [classCodes, setClassCodes] = useState<ClassCode[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -32,27 +43,27 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
     if (!teacherId) return;
 
     try {
-      console.log('Loading class codes for teacher:', teacherId);
       const snapshot = await db()
-        .ref('/classCodes')
-        .orderByChild('teacherId')
+        .ref("/classCodes")
+        .orderByChild("teacherId")
         .equalTo(teacherId)
-        .once('value');
+        .once("value");
 
       const data = snapshot.val();
-      console.log('Fetched data:', data);
 
       if (data) {
-        const codesArray = Object.entries(data).map(([id, code]) => ({
-          id,
-          ...(code as any),
-        })).sort((a, b) => b.createdAt - a.createdAt);
+        const codesArray = Object.entries(data)
+          .map(([id, code]) => ({
+            id,
+            ...(code as any),
+          }))
+          .sort((a, b) => b.createdAt - a.createdAt);
         setClassCodes(codesArray);
       } else {
         setClassCodes([]);
       }
     } catch (error) {
-      console.error('Error loading class codes:', error);
+      console.error("Error loading class codes:", error);
       setClassCodes([]);
     } finally {
       setInitialLoading(false);
@@ -65,12 +76,12 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
 
   const handleAddClassCode = async () => {
     if (!teacherId || !teacherName) {
-      Alert.alert('Error', 'Información del profesor no disponible');
+      Alert.alert("Error", "Información del profesor no disponible");
       return;
     }
 
     if (!newCode.trim()) {
-      Alert.alert('Error', 'Por favor ingresa un código de clase');
+      Alert.alert("Error", "Por favor ingresa un código de clase");
       return;
     }
 
@@ -78,13 +89,13 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
 
     try {
       const snapshot = await db()
-        .ref('/classCodes')
-        .orderByChild('code')
+        .ref("/classCodes")
+        .orderByChild("code")
         .equalTo(newCode.trim())
-        .once('value');
+        .once("value");
 
       if (snapshot.exists()) {
-        Alert.alert('Error', 'Este código de clase ya existe');
+        Alert.alert("Error", "Este código de clase ya existe");
         return;
       }
 
@@ -97,15 +108,15 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
         active: true,
       };
 
-      await db().ref('/classCodes').push(classCodeData);
+      await db().ref("/classCodes").push(classCodeData);
 
-      setNewCode('');
-      setDescription('');
-      Alert.alert('Éxito', 'Código de clase creado correctamente');
+      setNewCode("");
+      setDescription("");
+      Alert.alert("Éxito", "Código de clase creado correctamente");
       await loadClassCodes();
     } catch (error) {
-      console.error('Error creating class code:', error);
-      Alert.alert('Error', 'No se pudo crear el código de clase');
+      console.error("Error creating class code:", error);
+      Alert.alert("Error", "No se pudo crear el código de clase");
     } finally {
       setLoading(false);
     }
@@ -113,27 +124,27 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
 
   const handleDeleteCode = async (codeId: string) => {
     Alert.alert(
-      'Eliminar Código',
-      '¿Estás seguro de que quieres eliminar este código de clase?',
+      "Eliminar Código",
+      "¿Estás seguro de que quieres eliminar este código de clase?",
       [
         {
-          text: 'Cancelar',
-          style: 'cancel'
+          text: "Cancelar",
+          style: "cancel",
         },
         {
-          text: 'Eliminar',
-          style: 'destructive',
+          text: "Eliminar",
+          style: "destructive",
           onPress: async () => {
             try {
               await db().ref(`/classCodes/${codeId}`).remove();
-              Alert.alert('Éxito', 'Código eliminado correctamente');
+              Alert.alert("Éxito", "Código eliminado correctamente");
               await loadClassCodes();
             } catch (error) {
-              console.error('Error deleting code:', error);
-              Alert.alert('Error', 'No se pudo eliminar el código');
+              console.error("Error deleting code:", error);
+              Alert.alert("Error", "No se pudo eliminar el código");
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -141,13 +152,16 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
   const toggleCodeStatus = async (code: ClassCode) => {
     try {
       await db().ref(`/classCodes/${code.id}`).update({
-        active: !code.active
+        active: !code.active,
       });
-      Alert.alert('Éxito', `Código ${!code.active ? 'activado' : 'desactivado'} correctamente`);
+      Alert.alert(
+        "Éxito",
+        `Código ${!code.active ? "activado" : "desactivado"} correctamente`
+      );
       await loadClassCodes();
     } catch (error) {
-      console.error('Error toggling code status:', error);
-      Alert.alert('Error', 'No se pudo actualizar el estado del código');
+      console.error("Error toggling code status:", error);
+      Alert.alert("Error", "No se pudo actualizar el estado del código");
     }
   };
 
@@ -170,14 +184,19 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
           Creado: {new Date(item.createdAt).toLocaleDateString()}
         </Text>
         <TouchableOpacity
-          style={[styles.statusButton, item.active ? styles.activeButton : styles.inactiveButton]}
+          style={[
+            styles.statusButton,
+            item.active ? styles.activeButton : styles.inactiveButton,
+          ]}
           onPress={() => toggleCodeStatus(item)}
         >
-          <Text style={[
-            styles.statusText,
-            { color: item.active ? '#056b05' : '#FF4444' }
-          ]}>
-            {item.active ? 'Activo' : 'Inactivo'}
+          <Text
+            style={[
+              styles.statusText,
+              { color: item.active ? "#056b05" : "#FF4444" },
+            ]}
+          >
+            {item.active ? "Activo" : "Inactivo"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -196,12 +215,15 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
             style={styles.input}
             placeholderTextColor="#666"
             inputStyle={{
-              color: '#333',
-              backgroundColor: '#F5EBEB',
+              color: "#333",
+              backgroundColor: "#F5EBEB",
             }}
           />
           <CustomInput
-            placeholder="Descripción (opcional)"
+            placeholder="Descripción (ej: Clase de 4º ESO, Grupo avanzado de atletismo, Curso 2024...)"
+            // O alguna de estas alternativas:
+            // placeholder="Descripción (ej: 4º ESO - Grupo A, Equipo juvenil, Clase de tarde...)"
+            // placeholder="Descripción (ej: Educación Física 2ºB, Actividades deportivas, Grupo de competición...)"
             value={description}
             onChangeText={setDescription}
             editable={!loading}
@@ -209,8 +231,8 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
             multiline
             placeholderTextColor="#666"
             inputStyle={{
-              color: '#333',
-              backgroundColor: '#F5EBEB',
+              color: "#333",
+              backgroundColor: "#F5EBEB",
             }}
           />
           <CustomButton
@@ -231,7 +253,7 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
         ) : (
           <FlatList
             data={classCodes}
-            keyExtractor={item => item.id}
+            keyExtractor={(item) => item.id}
             renderItem={renderCodeItem}
             showsVerticalScrollIndicator={true}
             contentContainerStyle={styles.listContent}
@@ -251,18 +273,18 @@ export const ClassCodeManager: React.FC<Props> = ({ teacherId, teacherName }) =>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   formContainer: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     paddingHorizontal: 16,
     paddingTop: 16,
   },
   form: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     padding: 16,
     borderRadius: 15,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -275,7 +297,7 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#9E7676',
+    borderColor: "#9E7676",
     borderRadius: 8,
   },
   listContainer: {
@@ -284,10 +306,10 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginBottom: 12,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
   },
@@ -297,16 +319,16 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 20,
   },
   codeItem: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     padding: 16,
     borderRadius: 15,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -316,33 +338,33 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   codeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   codeText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#9E7676',
+    fontWeight: "bold",
+    color: "#9E7676",
   },
   deleteButton: {
     padding: 4,
   },
   descriptionText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 8,
   },
   codeFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 8,
   },
   dateText: {
     fontSize: 12,
-    color: '#888',
+    color: "#888",
   },
   statusButton: {
     paddingHorizontal: 12,
@@ -350,24 +372,24 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   activeButton: {
-    backgroundColor: 'rgba(5, 107, 5, 0.1)',
+    backgroundColor: "rgba(5, 107, 5, 0.1)",
   },
   inactiveButton: {
-    backgroundColor: 'rgba(255, 68, 68, 0.1)',
+    backgroundColor: "rgba(255, 68, 68, 0.1)",
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   emptyContainer: {
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderRadius: 15,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   emptyText: {
-    color: '#666',
-    fontStyle: 'italic',
+    color: "#666",
+    fontStyle: "italic",
   },
 });

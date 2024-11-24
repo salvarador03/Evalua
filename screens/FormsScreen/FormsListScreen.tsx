@@ -9,7 +9,10 @@ import {
   Alert,
   Linking,
   RefreshControl,
-  StyleSheet
+  StyleSheet,
+  SafeAreaView,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { BackgroundContainer } from "../../Components/BackgroundContainer/BackgroundContainer";
 import { Ionicons } from "@expo/vector-icons";
@@ -108,7 +111,7 @@ const INSTITUTIONS: Institution[] = [
     description:
       "Centro de investigación deportiva líder en España, especializado en desarrollo motor y actividad física juvenil. Pioneros en metodologías de evaluación física y programas de intervención temprana.",
     country: "España",
-    logo: require("../../assets/images/logo-uex.png"),
+    logo: require("../../assets/images/logo-uex.webp"),
     website: "https://www.unex.es",
     stats: {
       founded: "1973",
@@ -121,7 +124,7 @@ const INSTITUTIONS: Institution[] = [
     description:
       "Referente internacional en investigación del movimiento humano y desarrollo motor. Sede de importantes estudios sobre alfabetización física y desarrollo motor en jóvenes.",
     country: "Portugal",
-    logo: require("../../assets/images/ulisboa.png"),
+    logo: require("../../assets/images/ulisboa.webp"),
     website: "https://www.ulisboa.pt",
     stats: {
       founded: "1911",
@@ -435,13 +438,13 @@ export const FormsListScreen: React.FC = () => {
                     ? "Franja de edad: 6-12 años"
                     : user?.age && user.age > 12 && user.age <= 18
                     ? "Franja de edad: 12-18 años"
-                    : "Edades: 6-18 años"}
+                    : "Edades: 6-12 años"}
                 </Text>
               </View>
             </View>
           </View>
           <Image
-            source={require("../../assets/images/foto_primer_form.jpg")}
+            source={require("../../assets/images/foto_primer_form.webp")}
             style={styles.questionnaire}
             resizeMode="contain"
           />
@@ -471,17 +474,20 @@ export const FormsListScreen: React.FC = () => {
               <View style={styles.ageRangeContainer}>
                 <Ionicons name="people-outline" size={16} color="#9E7676" />
                 <Text style={styles.ageRangeText}>
-                  {user?.age && user.age >= 6 && user.age <= 12
+                  {user?.age && user.age >= 6 && user.age <= 12 && user.age < 6
                     ? "Franja de edad: 6-12 años"
-                    : user?.age && user.age > 12 && user.age <= 18
+                    : user?.age &&
+                      user.age > 12 &&
+                      user.age <= 18 &&
+                      user.age > 18
                     ? "Franja de edad: 12-18 años"
-                    : "Edades: 6-18 años"}
+                    : "Edades: 12-18 años"}
                 </Text>
               </View>
             </View>
           </View>
           <Image
-            source={require("../../assets/images/foto_primer_form.jpg")}
+            source={require("../../assets/images/foto_primer_form.webp")}
             style={styles.questionnaire}
             resizeMode="contain"
           />
@@ -513,8 +519,6 @@ export const FormsListScreen: React.FC = () => {
       setRefreshing(false);
     });
   }, []);
-  
-  
 
   const renderTabs = () => (
     <View style={styles.tabContainer}>
@@ -555,46 +559,48 @@ export const FormsListScreen: React.FC = () => {
   );
 
   return (
-    <BackgroundContainer source={require("../../assets/images/fondo.svg")}>
-      <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
-        <Ionicons name="refresh" size={24} color="#9E7676" />
-      </TouchableOpacity>
+    <BackgroundContainer source={require("../../assets/images/p_fondo.webp")}>
+      <SafeAreaView style={styles.safeArea}>
+        <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+          <Ionicons name="refresh" size={24} color="#9E7676" />
+        </TouchableOpacity>
 
-      {renderTabs()}
+        {renderTabs()}
 
-      <ScrollView
-        style={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#9E7676"]}
-            tintColor="#9E7676"
-          />
-        }
-      >
-        <View style={styles.logoContainer}>
-          <View style={styles.logoCard}>
-            <View style={styles.logosWrapper}>
-              <Image
-                source={require("../../assets/images/logo-uex.png")}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-              <View style={styles.logoDivider} />
-              <Image
-                source={require("../../assets/images/ulisboa.png")}
-                style={styles.logoLisboa}
-                resizeMode="contain"
-              />
+        <ScrollView
+          style={styles.content}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#9E7676"]}
+              tintColor="#9E7676"
+            />
+          }
+        >
+          <View style={styles.logoContainer}>
+            <View style={styles.logoCard}>
+              <View style={styles.logosWrapper}>
+                <Image
+                  source={require("../../assets/images/logo-uex.webp")}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/ulisboa.webp")}
+                  style={styles.logoLisboa}
+                  resizeMode="contain"
+                />
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.cardsContainer}>
-          {activeTab === "form" ? renderFormCard() : renderAboutContent()}
-        </View>
-      </ScrollView>
+          <View style={styles.cardsContainer}>
+            {activeTab === "form" ? renderFormCard() : renderAboutContent()}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </BackgroundContainer>
   );
 };
@@ -604,9 +610,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 80,
   },
+  safeArea: {
+    flex: 1,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
   logoContainer: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 10, // Reducido de 20 a 10
     marginBottom: 10,
   },
   logoCard: {
@@ -733,7 +743,7 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     position: "absolute",
-    top: 40,
+    top: Platform.OS === "ios" ? 10 : (StatusBar.currentHeight || 0) + 10,
     right: 20,
     backgroundColor: "white",
     padding: 10,
@@ -743,7 +753,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    zIndex: 1,
+    zIndex: 10,
   },
   startButton: {
     flexDirection: "row",
@@ -778,11 +788,10 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontSize: 14,
   },
-  // Nuevos estilos para las secciones de información
   tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    marginTop: 60,
+    flexDirection: "row",
+    backgroundColor: "white",
+    marginTop: Platform.OS === "ios" ? 50 : (StatusBar.currentHeight || 0) + 40,
     marginHorizontal: 20,
     borderRadius: 15,
     padding: 5,
@@ -791,175 +800,208 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    zIndex: 5,
   },
   tab: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 10,
     borderRadius: 10,
     gap: 8,
   },
   activeTab: {
-    backgroundColor: 'rgba(158, 118, 118, 0.1)',
+    backgroundColor: "rgba(158, 118, 118, 0.1)",
   },
   tabText: {
     fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
+    color: "#666",
+    fontWeight: "500",
   },
   activeTabText: {
-    color: '#9E7676',
+    color: "#9E7676",
   },
   sectionContainer: {
     marginTop: 20,
     marginBottom: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 15,
+    padding: 15,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#9E7676",
-    marginBottom: 15,
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#594545",
+    marginBottom: 20,
     paddingHorizontal: 5,
+    textAlign: "center",
   },
   institutionCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 15,
-    padding: 15,
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 20,
     marginBottom: 15,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  institutionLogo: {
-    height: 60,
-    width: "100%",
-    marginBottom: 10,
-  },
-  institutionInfo: {
-    gap: 5,
-  },
-  institutionName: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#594545",
-  },
-  institutionCountry: {
-    fontSize: 14,
-    color: "#9E7676",
-    fontWeight: "500",
-  },
-  institutionDescription: {
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 20,
-    marginTop: 5,
-  },
-  institutionStats: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: "rgba(158, 118, 118, 0.1)",
-    borderRadius: 10,
-    gap: 5,
-  },
-  institutionStatItem: {
-    fontSize: 13,
-    color: "#594545",
-  },
-  creatorsScroll: {
-    flexGrow: 0,
-    paddingBottom: 10,
-  },
-  creatorCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 15,
-    padding: 15,
-    marginRight: 15,
-    width: 250,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  creatorImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    alignSelf: "center",
-    marginBottom: 10,
-  },
-  creatorInfo: {
-    alignItems: "center",
-    gap: 5,
-  },
-  creatorName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#594545",
-  },
-  creatorRole: {
-    fontSize: 14,
-    color: "#9E7676",
-    fontWeight: "500",
-  },
-  creatorInstitution: {
-    fontSize: 13,
-    color: "#666",
-    textAlign: "center",
-  },
-  creatorDepartment: {
-    fontSize: 12,
-    color: "#888",
-    textAlign: "center",
-    fontStyle: "italic",
-  },
-  socialLinks: {
-    flexDirection: "row",
-    gap: 15,
-    marginTop: 10,
-  },
-  socialButton: {
-    padding: 8,
-    backgroundColor: "rgba(158, 118, 118, 0.1)",
-    borderRadius: 20,
-  },
-  publicationCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 15,
-    padding: 15,
-    marginBottom: 10,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: "rgba(158, 118, 118, 0.1)",
+  },
+  institutionLogo: {
+    height: 70,
+    width: "100%",
+    marginBottom: 15,
+  },
+  institutionInfo: {
+    gap: 8,
+  },
+  institutionName: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#594545",
+    marginBottom: 4,
+  },
+  institutionCountry: {
+    fontSize: 15,
+    color: "#9E7676",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  institutionDescription: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 22,
+    marginVertical: 10,
+  },
+  institutionStats: {
+    marginTop: 15,
+    padding: 12,
+    backgroundColor: "rgba(158, 118, 118, 0.1)",
+    borderRadius: 10,
+    gap: 8,
+  },
+  institutionStatItem: {
+    fontSize: 14,
+    color: "#594545",
+    fontWeight: "500",
+  },
+  creatorsScroll: {
+    marginVertical: 10,
+    paddingBottom: 15,
+  },
+  creatorCard: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 20,
+    marginRight: 15,
+    width: 280,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: "rgba(158, 118, 118, 0.1)",
+  },
+  creatorImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    alignSelf: "center",
+    marginBottom: 15,
+    backgroundColor: "#F5F5F5",
+  },
+  creatorInfo: {
+    alignItems: "center",
+    gap: 8,
+  },
+  creatorName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#594545",
+    textAlign: "center",
+  },
+  creatorRole: {
+    fontSize: 15,
+    color: "#9E7676",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  creatorInstitution: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginTop: 4,
+  },
+  creatorDepartment: {
+    fontSize: 13,
+    color: "#888",
+    textAlign: "center",
+    fontStyle: "italic",
+    marginBottom: 8,
+  },
+  socialLinks: {
+    flexDirection: "row",
+    gap: 20,
+    marginTop: 15,
+    justifyContent: "center",
+  },
+  socialButton: {
+    padding: 10,
+    backgroundColor: "rgba(158, 118, 118, 0.1)",
+    borderRadius: 25,
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  publicationCard: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 15,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: "rgba(158, 118, 118, 0.1)",
   },
   publicationTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 17,
+    fontWeight: "700",
     color: "#594545",
-    marginBottom: 5,
+    marginBottom: 8,
+    lineHeight: 24,
   },
   publicationAuthors: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#9E7676",
-    marginBottom: 3,
+    marginBottom: 6,
+    fontWeight: "500",
   },
   publicationMeta: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#666",
     fontStyle: "italic",
+    marginBottom: 8,
   },
   publicationDOI: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#9E7676",
-    marginTop: 5,
+    marginTop: 8,
     textDecorationLine: "underline",
-  }
+    fontWeight: "500",
+  },
 });
 
 export default FormsListScreen;

@@ -23,6 +23,7 @@ import type {
 import auth from "@react-native-firebase/auth";
 import db, { FirebaseDatabaseTypes } from "@react-native-firebase/database";
 import { languageToCountry, type FormResponse } from "../../types/form";
+import { Notification } from '../../types/notification';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { translations } from "../../Components/LanguageSelection/translations";
 import { LanguageSelectionScreen } from "../../Components/LanguageSelection/LanguageSelection";
@@ -83,7 +84,6 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log("Iniciando inicialización...");
         let currentUserId = user?.uid || "";
         
         // 1. Inicializar userId
@@ -119,7 +119,6 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
           setHasSelectedLanguage(true);
           setShowLanguageSelection(false);
         } else if (savedLanguage && languageSelected === "true") {
-          console.log("Usando idioma guardado:", savedLanguage);
           setLanguage(savedLanguage as Language);
           setHasSelectedLanguage(true);
           setShowLanguageSelection(false);
@@ -209,6 +208,28 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createFormCompletionNotification = async () => {
+    if (!language || !userId) return;
+    
+    const notification: Notification = {
+      id: `form_completed_${Date.now()}`,
+      title: translations[language].formCompletedTitle || '¡Formulario completado!',
+      message: translations[language].formCompletedMessage || 
+        'Si no ves los resultados, por favor recarga la página.',
+      timestamp: Date.now(),
+      read: false,
+      type: 'form_completed'
+    };
+  
+    try {
+      await db()
+        .ref(`/notifications/${userId}/${notification.id}`)
+        .set(notification);
+    } catch (error) {
+      console.error('Error creating form completion notification:', error);
     }
   };
 
@@ -323,6 +344,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
       setFormResponse(response);
       await calculateStats();
+      await createFormCompletionNotification();
 
       Alert.alert(
         translations[language].success,
@@ -339,7 +361,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
   if (!initialized || loading) {
     return (
-      <BackgroundContainer source={require("../../assets/images/fondo.svg")}>
+      <BackgroundContainer source={require("../../assets/images/p_fondo.webp")}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4ade80" />
         </View>
@@ -349,7 +371,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
   if (showLanguageSelection && !formResponse && !language) {
     return (
-      <BackgroundContainer source={require("../../assets/images/fondo.svg")}>
+      <BackgroundContainer source={require("../../assets/images/p_fondo.webp")}>
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.languageSelectionContainer}>
             <LanguageSelectionScreen
@@ -364,7 +386,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
   if (userAge === null) {
     return (
-      <BackgroundContainer source={require("../../assets/images/fondo.svg")}>
+      <BackgroundContainer source={require("../../assets/images/p_fondo.webp")}>
         <View style={styles.loadingContainer}>
           <Text style={styles.errorText}>
             Error: No se pudo determinar la edad del usuario
@@ -376,7 +398,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
   if (formResponse) {
     return (
-      <BackgroundContainer source={require("../../assets/images/fondo.svg")}>
+      <BackgroundContainer source={require("../../assets/images/p_fondo.webp")}>
         <View style={styles.overlay}>
           <ScrollView
             style={styles.content}
@@ -395,7 +417,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
   }
 
   return (
-    <BackgroundContainer source={require("../../assets/images/fondo.svg")}>
+    <BackgroundContainer source={require("../../assets/images/p_fondo.webp")}>
       <View style={styles.overlay}>
         <ScrollView
           ref={scrollViewRef}

@@ -8,6 +8,7 @@ import { AdminProfileScreen } from '../AdminProfileScreen/AdminProfileScreen';
 import { GuestProfileScreen } from '../GuestProfileScreen/GuestProfileScreen';
 import { StudentsScreen } from '../StudentsScreen/StudentsScreen';
 import { StatisticsScreen } from '../StatisticsScreen/StatisticsScreen';
+import { NotificationsScreen } from '../NotificationScreen/NotificationScreen';
 import { useAuth } from '../../context/AuthContext';
 
 const Tab = createBottomTabNavigator();
@@ -25,7 +26,6 @@ export const MainScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('[MainScreen] User data:', user);
     setLoading(false);
   }, [user]);
 
@@ -57,6 +57,8 @@ export const MainScreen: React.FC = () => {
             iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Statistics') {
             iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+          } else if (route.name === 'Notifications') {
+            iconName = focused ? 'notifications' : 'notifications-outline';
           } else {
             iconName = focused ? 'person' : 'person-outline';
           }
@@ -99,6 +101,12 @@ export const MainScreen: React.FC = () => {
           />
         </>
       )}
+
+      <Tab.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ title: 'Notificaciones' }}
+      />
 
       <Tab.Screen
         name="Profile"

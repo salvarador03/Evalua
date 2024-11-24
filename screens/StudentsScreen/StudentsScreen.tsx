@@ -24,6 +24,17 @@ import { Language } from "../../types/language";
 import { MainTabParamList, RootStackParamList } from "../../navigation/types";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
+const COLORS = {
+  primary: "#9E7676",
+  secondary: "#DFCCCC",
+  background: "#F5EBEB",
+  text: "#594545",
+  inactive: "#B4AAAA",
+  success: "#4CAF50",
+  warning: "#FFB442",
+  error: "#FF4646",
+};
+
 // Tipo de navegación compuesta
 type StudentScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList>,
@@ -84,6 +95,14 @@ export const StudentsScreen: React.FC = () => {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [teacherClassCode, setTeacherClassCode] = useState<string>("");
+  const [availableClassCodes, setAvailableClassCodes] = useState<ClassCode[]>(
+    []
+  );
+  const [showCodePicker, setShowCodePicker] = useState(false);
+  const currentCode = availableClassCodes.find(
+    (c) => c.code === selectedClassCode
+  );
+  const [selectedClassCode, setSelectedClassCode] = useState<string>("");
 
   interface ClassCode {
     id: string;
@@ -120,6 +139,43 @@ export const StudentsScreen: React.FC = () => {
     setFilteredStudents(filtered);
     setCurrentPage(1);
   }, [searchQuery, students]);
+
+  // Modifica estas funciones y efectos
+  const loadClassCodes = async () => {
+    try {
+      const currentUser = auth().currentUser;
+      if (!currentUser) return;
+
+      const classCodesSnapshot = await db()
+        .ref("classCodes")
+        .orderByChild("teacherId")
+        .equalTo(currentUser.uid)
+        .once("value");
+
+      const classCodesData = classCodesSnapshot.val();
+      if (!classCodesData) {
+        setAvailableClassCodes([]);
+        return;
+      }
+
+      const codes = Object.entries(classCodesData).map(
+        ([id, data]: [string, any]) => ({
+          id,
+          ...data,
+        })
+      );
+
+      setAvailableClassCodes(codes);
+
+      // Solo establecer el código seleccionado si no hay ninguno
+      if (!selectedClassCode && codes.length > 0) {
+        setSelectedClassCode(codes[0].code);
+      }
+    } catch (error) {
+      console.error("Error loading class codes:", error);
+      Alert.alert("Error", "No se pudieron cargar los códigos de clase");
+    }
+  };
 
   const fetchTeacherClassCode = async () => {
     try {
@@ -166,21 +222,25 @@ export const StudentsScreen: React.FC = () => {
   };
 
   const fetchStudents = async () => {
+    if (!selectedClassCode) return;
+
     try {
-      const [usersSnapshot, guestsSnapshot, responsesSnapshot] = await Promise.all([
-        db().ref("/users").once("value"),
-        db()
-          .ref("/guests")
-          .orderByChild("classCode")
-          .equalTo(teacherClassCode)
-          .once("value"),
-        db().ref("/form_responses").once("value"),
-      ]);
-  
+      setLoading(true);
+      const [usersSnapshot, guestsSnapshot, responsesSnapshot] =
+        await Promise.all([
+          db().ref("/users").once("value"),
+          db()
+            .ref("/guests")
+            .orderByChild("classCode")
+            .equalTo(selectedClassCode)
+            .once("value"),
+          db().ref("/form_responses").once("value"),
+        ]);
+
       const studentsData = usersSnapshot.val() || {};
       const guestsData = guestsSnapshot.val() || {};
       const responsesData = responsesSnapshot.val() || {};
-  
+
       // Process registered students
       const registeredStudents = Object.entries(studentsData)
         .filter(
@@ -199,9 +259,9 @@ export const StudentsScreen: React.FC = () => {
           countryRole: data.countryRole,
           age: data.age,
           dateOfBirth: data.dateOfBirth,
-          createdAt: data.createdAt
+          createdAt: data.createdAt,
         }));
-  
+
       // Process guest students with all fields
       const guestStudents = Object.entries(guestsData).map(
         ([uid, data]: [string, any]) => ({
@@ -217,14 +277,14 @@ export const StudentsScreen: React.FC = () => {
           age: data.age,
           dateOfBirth: data.dateOfBirth,
           createdAt: data.createdAt,
-          classDetails: data.classDetails
+          classDetails: data.classDetails,
         })
       );
-  
-      const allStudents = [...registeredStudents, ...guestStudents].sort((a, b) =>
-        a.name.localeCompare(b.name)
+
+      const allStudents = [...registeredStudents, ...guestStudents].sort(
+        (a, b) => a.name.localeCompare(b.name)
       );
-  
+
       setStudents(allStudents);
     } catch (error) {
       console.error("Error fetching students:", error);
@@ -236,6 +296,148 @@ export const StudentsScreen: React.FC = () => {
       setLoading(false);
     }
   };
+  // Agregar efecto para cargar códigos
+  useEffect(() => {
+    loadClassCodes();
+  }, []);
+
+  // Modificar efecto para cargar estudiantes cuando cambie el código
+  useEffect(() => {
+    if (selectedClassCode) {
+      fetchStudents();
+    }
+  }, [selectedClassCode]);
+
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      await loadClassCodes();
+      if (selectedClassCode) {
+        await fetchStudents();
+      }
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      Alert.alert(
+        "Error",
+        "No se pudieron actualizar los datos. Por favor, inténtalo de nuevo."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Modificación del botón en el renderClassCodeSelector
+  const renderClassCodeSelector = () => (
+    <View style={styles.classCodeSelectorContainer}>
+      <View style={styles.classCodeSelectorHeader}>
+        <View style={styles.selectorDropdown}>
+          <Ionicons name="school-outline" size={20} color={COLORS.primary} />
+          <View style={styles.dropdownContainer}>
+            <Text style={styles.selectorLabel}>Clase actual:</Text>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setShowCodePicker(true)}
+            >
+              <Text style={styles.selectedCodeText}>
+                {selectedClassCode
+                  ? availableClassCodes.find(
+                      (c) => c.code === selectedClassCode
+                    )?.code
+                  : "Seleccionar clase"}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color={COLORS.text} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={handleRefresh}
+            disabled={loading}
+          >
+            <Ionicons
+              name="refresh"
+              size={20}
+              color={loading ? COLORS.inactive : COLORS.primary}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerManageButton}
+            onPress={() => navigation.navigate("ClassCodes")}
+          >
+            <Text style={styles.manageButtonText}>Gestionar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {selectedClassCode && (
+        <View style={styles.classInfoContainer}>
+          <View style={styles.classStatusContainer}>
+            <Text style={styles.classDescription}>
+              {availableClassCodes.find((c) => c.code === selectedClassCode)
+                ?.description || "Sin descripción"}
+            </Text>
+          </View>
+          <View style={styles.studentCountContainer}>
+            <Text style={styles.studentCount}>
+              {students.filter((s) => s.classCode === selectedClassCode).length}
+            </Text>
+            <Text style={styles.studentCountLabel}>alumnos</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Modal del selector */}
+      <Modal
+        visible={showCodePicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCodePicker(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowCodePicker(false)}
+        >
+          <View style={styles.codePickerContainer}>
+            <Text style={styles.codePickerTitle}>Seleccionar Clase</Text>
+            {availableClassCodes.map((code) => (
+              <TouchableOpacity
+                key={code.id}
+                style={styles.codeOption}
+                onPress={() => {
+                  setSelectedClassCode(code.code);
+                  setShowCodePicker(false);
+                }}
+              >
+                <View style={styles.codeOptionContent}>
+                  <View style={styles.codeMainInfo}>
+                    <Text style={styles.codeText}>{code.code}</Text>
+                  </View>
+                  <Text style={styles.codeDescription} numberOfLines={1}>
+                    {code.description || "Sin descripción"}
+                  </Text>
+                </View>
+                {selectedClassCode === code.code && (
+                  <Ionicons name="checkmark" size={24} color={COLORS.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </View>
+  );
+
+  // Añade este efecto para actualizar al volver de la pantalla de gestión
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      loadClassCodes();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const getPaginatedData = () => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -248,7 +450,9 @@ export const StudentsScreen: React.FC = () => {
   const handleDeleteStudent = async (student: Student) => {
     Alert.alert(
       "Confirmar eliminación",
-      `¿Estás seguro de que deseas eliminar a ${student.name}${student.isGuest ? ' (Usuario Invitado)' : ''}?`,
+      `¿Estás seguro de que deseas eliminar a ${student.name}${
+        student.isGuest ? " (Usuario Invitado)" : ""
+      }?`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -256,7 +460,7 @@ export const StudentsScreen: React.FC = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              const path = student.isGuest ? 'guests' : 'users';
+              const path = student.isGuest ? "guests" : "users";
               await Promise.all([
                 db().ref(`/${path}/${student.uid}`).remove(),
                 db().ref(`/form_responses/${student.uid}`).remove(),
@@ -361,23 +565,23 @@ export const StudentsScreen: React.FC = () => {
   };
 
   const handleViewResults = (student: Student) => {
-    const hasResponses = 
+    const hasResponses =
       student.formResponses &&
       student.formResponses.physical_literacy &&
       student.formResponses.physical_literacy.answers;
-  
+
     if (!hasResponses) {
       Alert.alert(
         "Sin respuestas",
-        student.isGuest 
+        student.isGuest
           ? "Los usuarios invitados deben completar el cuestionario para ver resultados"
           : "El estudiante debe completar el cuestionario para ver resultados"
       );
       return;
     }
-  
+
     const physicalLiteracyResponse = student.formResponses?.physical_literacy;
-  
+
     if (!physicalLiteracyResponse) {
       Alert.alert(
         "Sin respuestas",
@@ -385,11 +589,13 @@ export const StudentsScreen: React.FC = () => {
       );
       return;
     }
-  
-    const country = student.isGuest 
-      ? (physicalLiteracyResponse as any).country || student.countryRole?.country || "Unknown"
+
+    const country = student.isGuest
+      ? (physicalLiteracyResponse as any).country ||
+        student.countryRole?.country ||
+        "Unknown"
       : student.countryRole?.country || "Unknown";
-  
+
     navigation.navigate("Forms", {
       screen: "PhysicalLiteracyResults",
       params: {
@@ -406,9 +612,9 @@ export const StudentsScreen: React.FC = () => {
         studentData: {
           name: student.name,
           email: student.email,
-          uid: student.uid
+          uid: student.uid,
         },
-        isTeacherView: true  // Aseguramos que esto se pasa siempre como true
+        isTeacherView: true, // Aseguramos que esto se pasa siempre como true
       },
     });
   };
@@ -461,7 +667,7 @@ export const StudentsScreen: React.FC = () => {
       item.formResponses &&
       item.formResponses.physical_literacy &&
       item.formResponses.physical_literacy.answers;
-  
+
     return (
       <TouchableOpacity
         style={[
@@ -644,102 +850,125 @@ export const StudentsScreen: React.FC = () => {
           <View style={styles.editModalContent}>
             <ScrollView style={styles.editModalScroll}>
               <Text style={styles.editModalTitle}>
-                {selectedStudent?.isGuest ? 'Editar Usuario Invitado' : 'Editar Estudiante'}
+                {selectedStudent?.isGuest
+                  ? "Editar Usuario Invitado"
+                  : "Editar Estudiante"}
               </Text>
-              
+
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Nombre</Text>
                 <TextInput
                   style={styles.editInput}
                   value={localEditForm.name}
-                  onChangeText={(value) => setLocalEditForm(prev => ({ ...prev, name: value }))}
+                  onChangeText={(value) =>
+                    setLocalEditForm((prev) => ({ ...prev, name: value }))
+                  }
                   placeholder="Nombre del estudiante"
                   placeholderTextColor="#666"
                 />
               </View>
-    
+
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Email</Text>
                 <TextInput
                   style={styles.editInput}
                   value={localEditForm.email}
-                  onChangeText={(value) => setLocalEditForm(prev => ({ ...prev, email: value }))}
+                  onChangeText={(value) =>
+                    setLocalEditForm((prev) => ({ ...prev, email: value }))
+                  }
                   placeholder="Email del estudiante"
                   placeholderTextColor="#666"
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
               </View>
-    
+
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Edad</Text>
                 <TextInput
                   style={styles.editInput}
                   value={localEditForm.age}
-                  onChangeText={(value) => setLocalEditForm(prev => ({ ...prev, age: value }))}
+                  onChangeText={(value) =>
+                    setLocalEditForm((prev) => ({ ...prev, age: value }))
+                  }
                   placeholder="Edad"
                   placeholderTextColor="#666"
                   keyboardType="numeric"
                 />
               </View>
-    
+
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Fecha de Nacimiento</Text>
                 <TextInput
                   style={styles.editInput}
                   value={localEditForm.dateOfBirth}
-                  onChangeText={(value) => setLocalEditForm(prev => ({ ...prev, dateOfBirth: value }))}
+                  onChangeText={(value) =>
+                    setLocalEditForm((prev) => ({
+                      ...prev,
+                      dateOfBirth: value,
+                    }))
+                  }
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor="#666"
                 />
               </View>
-    
+
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>País</Text>
                 <TextInput
                   style={styles.editInput}
                   value={localEditForm.country}
-                  onChangeText={(value) => setLocalEditForm(prev => ({ ...prev, country: value }))}
+                  onChangeText={(value) =>
+                    setLocalEditForm((prev) => ({ ...prev, country: value }))
+                  }
                   placeholder="País (España, United States, Brasil, Portugal)"
                   placeholderTextColor="#666"
                 />
               </View>
-    
+
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Idioma</Text>
                 <TextInput
                   style={styles.editInput}
                   value={localEditForm.language}
-                  onChangeText={(value) => setLocalEditForm(prev => ({ ...prev, language: value }))}
+                  onChangeText={(value) =>
+                    setLocalEditForm((prev) => ({ ...prev, language: value }))
+                  }
                   placeholder="Código de idioma (es, en, pt-BR)"
                   placeholderTextColor="#666"
                 />
               </View>
-    
+
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Código de Clase</Text>
                 <TextInput
                   style={styles.editInput}
                   value={localEditForm.classCode}
-                  onChangeText={(value) => setLocalEditForm(prev => ({ ...prev, classCode: value }))}
+                  onChangeText={(value) =>
+                    setLocalEditForm((prev) => ({ ...prev, classCode: value }))
+                  }
                   placeholder="Código de clase"
                   placeholderTextColor="#666"
                 />
               </View>
-    
-              <View style={[styles.editButtonsContainer, { marginVertical: 20 }]}>
-                <TouchableOpacity 
+
+              <View
+                style={[styles.editButtonsContainer, { marginVertical: 20 }]}
+              >
+                <TouchableOpacity
                   style={[styles.editButton, styles.cancelButton]}
                   onPress={() => setShowEditModal(false)}
                 >
                   <Text style={styles.editButtonText}>Cancelar</Text>
                 </TouchableOpacity>
-    
-                <TouchableOpacity 
+
+                <TouchableOpacity
                   style={[styles.editButton, styles.saveButton]}
                   onPress={handleLocalSave}
                 >
-                  <Text style={[styles.editButtonText, { color: '#fff' }]}>Guardar</Text>
+                  <Text style={[styles.editButtonText, { color: "#fff" }]}>
+                    Guardar
+                  </Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -750,18 +979,12 @@ export const StudentsScreen: React.FC = () => {
   };
 
   return (
-    <BackgroundContainer source={require("../../assets/images/fondo.svg")}>
+    <BackgroundContainer source={require("../../assets/images/p_fondo.webp")}>
       <View style={styles.overlay}>
         <View style={styles.header}>
           <Text style={styles.title}>Gestión de Alumnos</Text>
-          <View style={styles.headerInfo}>
-            <Text style={styles.classCode}>Código: {teacherClassCode}</Text>
-            <View style={styles.teacherBadge}>
-              <Ionicons name="school" size={20} color="#fff" />
-              <Text style={styles.teacherBadgeText}>Profesor</Text>
-            </View>
-          </View>
         </View>
+        {renderClassCodeSelector()}
 
         <View style={styles.searchContainer}>
           <Ionicons
@@ -816,160 +1039,336 @@ export const StudentsScreen: React.FC = () => {
       </View>
     </BackgroundContainer>
   );
-  
-}
+};
 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    padding: 16,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "rgba(158, 118, 118, 0.9)",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    paddingTop: 50,
-    borderBottomRightRadius: 20,
-    borderBottomLeftRadius: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  editModalScroll: {
-    flexGrow: 1,
-  },
-  headerInfo: {
-    alignItems: "flex-end",
+    marginBottom: 16,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#fff",
+    color: COLORS.text,
+    marginBottom: 8,
   },
-  classCode: {
-    color: "#fff",
-    fontSize: 14,
-    marginBottom: 4,
+  // Selector de clase
+  classCodeSelectorContainer: {
+    backgroundColor: "white",
+    marginHorizontal: 10,
+    marginBottom: 10,
+    borderRadius: 12,
+    padding: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-  teacherBadge: {
+  classCodeSelectorHeader: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  selectorDropdown: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  dropdownContainer: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  selectorLabel: {
+    fontSize: 12,
+    color: COLORS.inactive,
+  },
+  dropdownButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#f8f8f8",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  selectedCodeText: {
+    fontSize: 16,
+    color: COLORS.text,
+    flex: 1,
+  },
+  headerManageButton: {
+    marginLeft: 12,
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#fff",
+    borderRadius: 16,
+    marginTop: 20,
   },
-  teacherBadgeText: {
-    color: "#fff",
-    marginLeft: 6,
-    fontWeight: "600",
+  classInfoContainer: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
   },
+  rotating: {
+    opacity: 0.7,
+    transform: [{ rotate: "45deg" }],
+  },
+  classStatusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  statusIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 14,
+    color: COLORS.inactive,
+  },
+  classDescription: {
+    fontSize: 14,
+    color: COLORS.text,
+    flex: 1,
+    marginLeft: 8,
+  },
+  studentCountContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  studentCount: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: COLORS.primary,
+  },
+  studentCountLabel: {
+    fontSize: 14,
+    color: COLORS.inactive,
+    marginLeft: 4,
+  },
+  // Modal de código
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  manageButtonText: {
+    // Añadido el estilo faltante
+    color: "white",
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  codePickerContainer: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 16,
+    width: "90%",
+    maxHeight: "80%",
+  },
+  codePickerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.text,
+    marginBottom: 16,
+  },
+  codeOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  codeOptionContent: {
+    flex: 1,
+    marginRight: 8,
+  },
+  headerButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  refreshButton: {
+    padding: 8,
+    marginTop: 20,
+    marginLeft: 19,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 8,
+  },
+  codeMainInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  codeText: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontWeight: "500",
+    marginRight: 8,
+  },
+  activeIndicator: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  activeIndicatorText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  codeDescription: {
+    fontSize: 14,
+    color: COLORS.inactive,
+  },
+  // Búsqueda
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    marginHorizontal: 10,
-    marginBottom: 10,
-    borderRadius: 25,
-    paddingHorizontal: 15,
+    backgroundColor: "white",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    height: 48,
+    elevation: 2,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 12,
     fontSize: 16,
-    color: "#333",
+    color: COLORS.text,
   },
   clearButton: {
-    padding: 5,
+    padding: 4,
+  },
+  // Lista y elementos
+  listContainer: {
+    paddingHorizontal: 4,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  listContainer: {
-    padding: 10,
-    flexGrow: 1,
-  },
-  studentCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 15,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
+  emptyContainer: {
     alignItems: "center",
+    justifyContent: "center",
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: COLORS.inactive,
+    textAlign: "center",
+  },
+  // Paginación
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  paginationButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  paginationButtonDisabled: {
+    opacity: 0.5,
+  },
+  paginationText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  // Tarjeta de estudiante
+  studentCard: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    elevation: 2,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    borderLeftWidth: 4,
-    borderLeftColor: "#9E7676",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   guestCard: {
-    borderLeftColor: "#FFB442",
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.warning,
+  },
+  noResponseCard: {
+    opacity: 0.8,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.inactive,
   },
   studentInfo: {
     flex: 1,
-    marginRight: 10,
   },
   nameContainer: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
     gap: 8,
-  },
-  studentName: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#9E7676",
     marginBottom: 4,
   },
+  studentName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.text,
+  },
+  studentEmail: {
+    fontSize: 13,
+    color: COLORS.inactive,
+  },
+  lastLogin: {
+    fontSize: 12,
+    color: COLORS.inactive,
+    marginTop: 4,
+  },
   guestBadge: {
-    backgroundColor: "#FFB442",
+    backgroundColor: COLORS.warning,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
   },
   guestBadgeText: {
-    color: "#fff",
+    color: "white",
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "500",
   },
-  studentEmail: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 4,
+  pendingBadge: {
+    backgroundColor: COLORS.inactive,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
   },
-  lastLogin: {
+  pendingBadgeText: {
+    color: "white",
     fontSize: 12,
-    color: "#888",
-    fontStyle: "italic",
+    fontWeight: "500",
   },
   actionButtons: {
     flexDirection: "row",
@@ -979,168 +1378,85 @@ const styles = StyleSheet.create({
   actionIcon: {
     padding: 8,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+  disabledIcon: {
+    opacity: 0.5,
   },
+  // Modal de acciones
   modalContent: {
     backgroundColor: "white",
-    borderRadius: 15,
-    padding: 20,
+    borderRadius: 12,
+    padding: 16,
     width: "80%",
     maxWidth: 400,
   },
   modalButton: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    backgroundColor: "rgba(158, 118, 118, 0.1)",
-    gap: 10,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   modalButtonText: {
+    marginLeft: 12,
     fontSize: 16,
-    color: "#9E7676",
-    fontWeight: "500",
-  },
-  noResponseContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 15,
-    marginHorizontal: 10,
-  },
-  noResponseText: {
-    fontSize: 16,
-    color: "#9E7676",
-    fontWeight: "600",
-    textAlign: "center",
-    marginTop: 12,
-  },
-  noResponseSubtext: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  noResponseCard: {
-    borderLeftColor: "#ccc",
-    opacity: 0.8,
-  },
-  pendingBadge: {
-    backgroundColor: "#FFB442",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  pendingBadgeText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  disabledIcon: {
-    opacity: 0.5,
+    color: COLORS.text,
   },
   deleteButton: {
-    backgroundColor: "#FF4646",
+    backgroundColor: COLORS.error,
   },
+  // Modal de edición
   editModalContent: {
     backgroundColor: "white",
-    borderRadius: 15,
+    borderRadius: 12,
     padding: 20,
     width: "90%",
-    maxWidth: 400,
+    maxWidth: 500,
+    maxHeight: "90%",
+  },
+  editModalScroll: {
+    flexGrow: 0,
   },
   editModalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#9E7676",
+    color: COLORS.text,
     marginBottom: 20,
-    textAlign: "center",
   },
   inputContainer: {
     marginBottom: 16,
   },
   inputLabel: {
     fontSize: 14,
-    color: "#594545",
-    marginBottom: 8,
+    color: COLORS.text,
+    marginBottom: 4,
   },
   editInput: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f8f8f8",
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: "#333",
-    borderWidth: 1,
-    borderColor: "#ddd",
+    color: COLORS.text,
   },
   editButtonsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
+    marginTop: 24,
   },
   editButton: {
     flex: 1,
-    padding: 12,
+    paddingVertical: 12,
     borderRadius: 8,
-    marginHorizontal: 8,
     alignItems: "center",
-  },
-  cancelButton: {
-    backgroundColor: "#f5f5f5",
-  },
-  saveButton: {
-    backgroundColor: "#9E7676",
+    marginHorizontal: 8,
   },
   editButtonText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#594545",
+    fontWeight: "500",
   },
-  paginationContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+  cancelButton: {
+    backgroundColor: "#f8f8f8",
   },
-  paginationButton: {
-    padding: 10,
-  },
-  paginationButtonDisabled: {
-    opacity: 0.5,
-  },
-  paginationText: {
-    marginHorizontal: 15,
-    fontSize: 16,
-    color: "#9E7676",
-    fontWeight: "600",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
+  saveButton: {
+    backgroundColor: COLORS.primary,
   },
 });

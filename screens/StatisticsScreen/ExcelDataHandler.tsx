@@ -14,16 +14,16 @@ interface BatchOperation {
 
 interface ExcelUserRow {
   "ID Usuario": string;
-  "Tipo": string;
-  "Nombre": string;
-  "Email": string;
+  Tipo: string;
+  Nombre: string;
+  Email: string;
   "Código de Clase": string;
   "Fecha de Registro": string;
   "Último Acceso": string;
-  "País": string;
-  "Idioma": string;
-  "Bandera": string;
-  "Edad": string;
+  País: string;
+  Idioma: string;
+  Bandera: string;
+  Edad: string;
   "Fecha de Nacimiento": string;
 }
 
@@ -31,7 +31,7 @@ interface ExcelResponseRow {
   "ID Usuario": string;
   "Tipo Usuario": string;
   "Tipo Formulario": string;
-  "País": string;
+  País: string;
   "Código de Clase": string;
   "Fecha de Respuesta": string;
   "Hora de Respuesta": string;
@@ -217,7 +217,6 @@ export class ExcelDataHandler {
         ];
 
         const granted = await PermissionsAndroid.requestMultiple(permissions);
-        console.log("Permisos Android 13+:", granted);
         return Object.values(granted).some(
           (permission) => permission === PermissionsAndroid.RESULTS.GRANTED
         );
@@ -233,7 +232,6 @@ export class ExcelDataHandler {
             buttonPositive: "OK",
           }
         );
-        console.log("Permiso almacenamiento:", writePermission);
         return writePermission === PermissionsAndroid.RESULTS.GRANTED;
       }
     } catch (err) {
@@ -351,7 +349,6 @@ export class ExcelDataHandler {
     try {
       const currentUser = database().app.auth().currentUser;
       if (!currentUser) {
-        console.log("No hay usuario autenticado");
         return false;
       }
 
@@ -361,9 +358,7 @@ export class ExcelDataHandler {
 
       const userData = userSnapshot.val();
       const hasAccess = userData?.role === "teacher";
-      console.log("Usuario actual:", currentUser.uid);
-      console.log("Rol del usuario:", userData?.role);
-      console.log("Tiene acceso:", hasAccess);
+
 
       return hasAccess;
     } catch (error) {
@@ -377,9 +372,10 @@ export class ExcelDataHandler {
     classCode: string,
     existingClassCodes: Record<string, ClassCode>
   ): Promise<ClassDetails | null> {
-    const classCodeEntry = Object.entries(existingClassCodes)
-      .find(([_, data]) => data.code === classCode);
-  
+    const classCodeEntry = Object.entries(existingClassCodes).find(
+      ([_, data]) => data.code === classCode
+    );
+
     if (classCodeEntry) {
       const [_, classData] = classCodeEntry;
       return {
@@ -387,10 +383,10 @@ export class ExcelDataHandler {
         code: classData.code,
         description: classData.description,
         teacherId: classData.teacherId,
-        teacherName: classData.teacherName
+        teacherName: classData.teacherName,
       };
     }
-    
+
     return null;
   }
 
@@ -399,38 +395,45 @@ export class ExcelDataHandler {
       // Verificación de permisos...
       const isTeacher = await this.verifyTeacherAccess();
       if (!isTeacher) {
-        throw new Error("No tienes permisos para importar datos. Se requiere rol de profesor.");
+        throw new Error(
+          "No tienes permisos para importar datos. Se requiere rol de profesor."
+        );
       }
-  
+
       const content = await RNFS.readFile(fileUri, "base64");
       const workbook = XLSX.read(content, { type: "base64" });
-  
-      console.log("Hojas encontradas:", workbook.SheetNames);
-  
-      const classCodesSnapshot = await database().ref('/classCodes').once('value');
+
+
+      const classCodesSnapshot = await database()
+        .ref("/classCodes")
+        .once("value");
       const existingClassCodes = classCodesSnapshot.val() || {};
-  
+
       // Procesar hoja de Usuarios
       if (workbook.Sheets["Usuarios"]) {
-        console.log("Procesando hoja de Usuarios");
-        const users = XLSX.utils.sheet_to_json<ExcelUserRow>(workbook.Sheets["Usuarios"], {
-          raw: false,
-          defval: "-",
-        });
-  
+        const users = XLSX.utils.sheet_to_json<ExcelUserRow>(
+          workbook.Sheets["Usuarios"],
+          {
+            raw: false,
+            defval: "-",
+          }
+        );
+
         const cleanUsers = users.filter(
           (user) => user["ID Usuario"] && user["ID Usuario"] !== "ID Usuario"
         );
-  
-        console.log(`Encontrados ${cleanUsers.length} usuarios válidos`);
-  
+
+
         // Procesar usuarios en lotes
         for (const user of cleanUsers) {
           try {
             const isGuest = user["Tipo"].toLowerCase() === "invitado";
             const path = isGuest ? "guests" : "users";
-            const classCode = user["Código de Clase"] === "-" ? undefined : user["Código de Clase"].trim();
-  
+            const classCode =
+              user["Código de Clase"] === "-"
+                ? undefined
+                : user["Código de Clase"].trim();
+
             // Base user data
             const userData: DatabaseUser = {
               uid: user["ID Usuario"].toString().trim(),
@@ -441,48 +444,58 @@ export class ExcelDataHandler {
               createdAt: this.parseDate(user["Fecha de Registro"]),
               lastLogin: this.parseDate(user["Último Acceso"]),
               age: user["Edad"] === "-" ? 0 : parseInt(user["Edad"]),
-              dateOfBirth: this.formatDate(user["Fecha de Nacimiento"])
+              dateOfBirth: this.formatDate(user["Fecha de Nacimiento"]),
             };
-  
+
             // Add countryRole if available
             if (user["País"] !== "-" && user["Idioma"] !== "-") {
               userData.countryRole = {
                 country: user["País"].trim(),
                 language: validateLanguage(user["Idioma"]),
-                flag: user["Bandera"] === "-" ? this.getFlagFromCountry(user["País"].trim()) : user["Bandera"].trim()
+                flag:
+                  user["Bandera"] === "-"
+                    ? this.getFlagFromCountry(user["País"].trim())
+                    : user["Bandera"].trim(),
               };
             }
-  
+
             // Add classDetails for guests
             if (isGuest && classCode) {
-              const classDetails = await this.findClassDetails(classCode, existingClassCodes);
+              const classDetails = await this.findClassDetails(
+                classCode,
+                existingClassCodes
+              );
               if (classDetails) {
                 (userData as DatabaseGuestUser).classDetails = classDetails;
               }
             }
-  
+
             await database().ref(`/${path}/${userData.uid}`).set(userData);
-            console.log(`Usuario ${userData.uid} guardado correctamente`);
           } catch (error) {
-            console.error(`Error procesando usuario ${user["ID Usuario"]}:`, error);
+            console.error(
+              `Error procesando usuario ${user["ID Usuario"]}:`,
+              error
+            );
           }
         }
       }
-  
+
       // Procesar hoja de Respuestas
       if (workbook.Sheets["Respuestas"]) {
-        console.log("Procesando hoja de Respuestas");
-        const responses = XLSX.utils.sheet_to_json<ExcelResponseRow>(workbook.Sheets["Respuestas"], {
-          raw: false,
-          defval: "-",
-        });
-  
-        const cleanResponses = responses.filter(
-          (response) => response["ID Usuario"] && response["ID Usuario"] !== "ID Usuario"
+        const responses = XLSX.utils.sheet_to_json<ExcelResponseRow>(
+          workbook.Sheets["Respuestas"],
+          {
+            raw: false,
+            defval: "-",
+          }
         );
-  
-        console.log(`Encontradas ${cleanResponses.length} respuestas válidas`);
-  
+
+        const cleanResponses = responses.filter(
+          (response) =>
+            response["ID Usuario"] && response["ID Usuario"] !== "ID Usuario"
+        );
+
+
         for (const response of cleanResponses) {
           try {
             const answersArray: number[] = [];
@@ -495,69 +508,84 @@ export class ExcelDataHandler {
                 }
               }
             }
-  
+
             if (answersArray.length > 0) {
               const responseData: DatabaseResponse = {
                 answers: answersArray,
-                completedAt: this.parseDateTime(response["Fecha de Respuesta"], response["Hora de Respuesta"]),
+                completedAt: this.parseDateTime(
+                  response["Fecha de Respuesta"],
+                  response["Hora de Respuesta"]
+                ),
                 language: validateLanguage(response["Idioma del Formulario"]),
                 isGuest: response["Es Invitado"]?.toLowerCase() === "sí",
-                country: response["País"] !== "-" ? response["País"].trim() : undefined,
-                userId: response["ID Usuario"].toString().trim()
+                country:
+                  response["País"] !== "-"
+                    ? response["País"].trim()
+                    : undefined,
+                userId: response["ID Usuario"].toString().trim(),
               };
-  
+
               await database()
-                .ref(`/form_responses/${responseData.userId}/${response["Tipo Formulario"]}`)
+                .ref(
+                  `/form_responses/${responseData.userId}/${response["Tipo Formulario"]}`
+                )
                 .set(responseData);
-  
-              console.log(`Respuesta de ${responseData.userId} guardada correctamente`);
             }
           } catch (error) {
-            console.error(`Error procesando respuesta ${response["ID Usuario"]}:`, error);
+            console.error(
+              `Error procesando respuesta ${response["ID Usuario"]}:`,
+              error
+            );
           }
         }
       }
-  
+
       Alert.alert("Éxito", "Datos importados correctamente");
     } catch (error) {
       console.error("Error detallado al importar:", error);
       Alert.alert(
         "Error",
         "Error al importar los datos: " +
-        (error instanceof Error ? error.message : String(error))
+          (error instanceof Error ? error.message : String(error))
       );
     }
   }
-  
 
-// Helper methods
-private static parseDate(dateStr: string): number {
-  try {
-    if (dateStr === "-") return Date.now();
+  // Helper methods
+  private static parseDate(dateStr: string): number {
+    try {
+      if (dateStr === "-") return Date.now();
+      const [day, month, year] = dateStr.split("/");
+      return new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day)
+      ).getTime();
+    } catch {
+      return Date.now();
+    }
+  }
+
+  private static parseDateTime(date: string, time: string): number {
+    try {
+      if (date === "-") return Date.now();
+      const [day, month, year] = date.split("/");
+      const dateTimeStr = `${year}-${month.padStart(2, "0")}-${day.padStart(
+        2,
+        "0"
+      )}T${time || "00:00:00"}`;
+      return new Date(dateTimeStr).getTime();
+    } catch {
+      return Date.now();
+    }
+  }
+
+  private static formatDate(dateStr: string): string | undefined {
+    if (!dateStr || dateStr === "-") return undefined;
+    if (dateStr.includes("-")) return dateStr; // Ya está en formato YYYY-MM-DD
     const [day, month, year] = dateStr.split("/");
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).getTime();
-  } catch {
-    return Date.now();
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   }
-}
-
-private static parseDateTime(date: string, time: string): number {
-  try {
-    if (date === "-") return Date.now();
-    const [day, month, year] = date.split("/");
-    const dateTimeStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${time || '00:00:00'}`;
-    return new Date(dateTimeStr).getTime();
-  } catch {
-    return Date.now();
-  }
-}
-
-private static formatDate(dateStr: string): string | undefined {
-  if (!dateStr || dateStr === "-") return undefined;
-  if (dateStr.includes("-")) return dateStr; // Ya está en formato YYYY-MM-DD
-  const [day, month, year] = dateStr.split("/");
-  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-}
 
   private static getFlagFromCountry(country: string): string {
     const countryFlags: Record<string, string> = {
@@ -687,6 +715,7 @@ private static formatDate(dateStr: string): string | undefined {
   }
 
   static async exportData(): Promise<void> {
+    let filePath = "";
     try {
       const hasPermission = await ExcelDataHandler.getStoragePermission();
       if (!hasPermission) {
@@ -775,9 +804,8 @@ private static formatDate(dateStr: string): string | undefined {
       const fileName = `datos_formularios_${
         new Date().toISOString().split("T")[0]
       }.xlsx`;
-      const filePath = ExcelDataHandler.getFilePath(fileName);
+      filePath = ExcelDataHandler.getFilePath(fileName);
 
-      console.log("Generando archivo en:", filePath);
 
       const wbout = write(wb, {
         type: "binary",
@@ -787,7 +815,6 @@ private static formatDate(dateStr: string): string | undefined {
       });
 
       await RNFS.writeFile(filePath, wbout, "ascii");
-      console.log("Archivo creado correctamente");
 
       // Preparar y compartir el archivo
       const base64Data = await RNFS.readFile(filePath, "base64");
@@ -801,21 +828,37 @@ private static formatDate(dateStr: string): string | undefined {
         saveToFiles: true,
       };
 
-      await Share.open(shareOptions);
-
-      // Limpiar archivo temporal
-      await RNFS.unlink(filePath);
-      console.log("Archivo temporal eliminado");
+      try {
+        await Share.open(shareOptions);
+        Alert.alert("Éxito", "Los datos han sido exportados correctamente");
+      } catch (shareError) {
+        // Solo mostrar error si no es una cancelación de compartir
+        if (
+          shareError instanceof Error &&
+          shareError.message !== "User did not share" &&
+          !shareError.message.includes("User canceled")
+        ) {
+          throw shareError;
+        }
+      }
     } catch (error) {
       console.error("Error en exportación:", error);
-      if (error instanceof Error && error.message === "User did not share") {
-        Alert.alert("Información", "Se canceló la exportación del archivo");
-      } else {
-        Alert.alert(
-          "Error",
-          "No se pudo exportar el archivo. Error: " +
-            (error instanceof Error ? error.message : String(error))
-        );
+      Alert.alert(
+        "Error",
+        "No se pudo exportar el archivo. Error: " +
+          (error instanceof Error ? error.message : String(error))
+      );
+    } finally {
+      // Limpiar el archivo temporal si existe
+      if (filePath) {
+        try {
+          const exists = await RNFS.exists(filePath);
+          if (exists) {
+            await RNFS.unlink(filePath);
+          }
+        } catch (cleanupError) {
+          console.error("Error al limpiar archivo temporal:", cleanupError);
+        }
       }
     }
   }
