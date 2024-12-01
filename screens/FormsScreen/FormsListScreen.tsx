@@ -30,17 +30,20 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../../context/AuthContext";
 import { Language } from "../../types/language";
 
-// Interfaces
+// Actualiza la interfaz Creator para incluir el tipo correcto de imageUrl
 interface Creator {
   name: string;
   role: string;
   institution: string;
-  department: string;
-  imageUrl: string;
+  email: string;
+  orcid: string;
+  imageUrl: any;
   socialLinks?: {
     linkedin?: string;
     researchGate?: string;
-    email?: string;
+    googleScholar?: string;
+    other?: string;
+    webOfScience?: string;
   };
 }
 
@@ -50,11 +53,6 @@ interface Institution {
   country: string;
   logo: any;
   website?: string;
-  stats?: {
-    founded: string;
-    students?: number;
-    ranking?: string;
-  };
 }
 
 interface Publication {
@@ -65,91 +63,125 @@ interface Publication {
   doi?: string;
 }
 
-// Data
+// Updated Data
 const CREATORS: Creator[] = [
   {
-    name: "Dr. María García",
-    role: "Investigadora Principal",
+    name: "José Carmelo Adsuar Sala",
+    role: "Investigador Principal",
+    institution: "University of Lisbon / University of Extremadura",
+    email: "jadssal@unex.es",
+    orcid: "https://orcid.org/0000-0001-7203-3168",
+    imageUrl: require("../../assets/images/foto_Adsuar_app-José-Adsuar.webp"),
+    socialLinks: {
+      linkedin: "https://www.linkedin.com/feed/?trk=public_post_google-one-tap-submit",
+      researchGate: "",
+      googleScholar: "https://scholar.google.es/citations?user=j_RQI9wAAAAJ&hl=es"
+    }
+  },
+  {
+    name: "Jorge Carlos Vivas",
+    role: "Investigador Principal",
     institution: "Universidad de Extremadura",
-    department: "Facultad de Ciencias del Deporte",
-    imageUrl: "/api/placeholder/100/100",
+    email: "jorgecv@unex.es",
+    orcid: "https://orcid.org/0000-0002-6377-9950",
+    imageUrl: require("../../assets/images/8efeec09-5e60-4481-9e41-262f20d7297c-Jorge-Carlos-Vivas.webp"),
     socialLinks: {
-      linkedin: "https://linkedin.com/in/maria-garcia",
-      researchGate: "https://researchgate.net/profile/Maria-Garcia",
-      email: "maria.garcia@unex.es",
-    },
+      googleScholar: "https://scholar.google.es/citations?user=y98TYCoAAAAJ&hl=es&oi=ao",
+      researchGate: "https://www.researchgate.net/profile/Jorge-Carlos-Vivas"
+    }
   },
   {
-    name: "Dr. João Silva",
-    role: "Co-Investigador",
-    institution: "Universidade de Lisboa",
-    department: "Faculdade de Motricidade Humana",
-    imageUrl: "/api/placeholder/100/100",
+    name: "Ricardo Hugo Gonzalez",
+    role: "Investigador Principal",
+    institution: "Universidade Federal do Ceará",
+    email: "ricardo.gonzalez@ufc.br",
+    orcid: "https://orcid.org/0000-0002-8447-4224",
+    imageUrl: require("../../assets/images/Foto-Ricardo-Gonzalez.webp"),
     socialLinks: {
-      linkedin: "https://linkedin.com/in/joao-silva",
-      researchGate: "https://researchgate.net/profile/Joao-Silva",
-      email: "j.silva@ulisboa.pt",
-    },
+      researchGate: "https://www.researchgate.net/profile/Ricardo-Gonzalez-25"
+    }
   },
   {
-    name: "Dra. Ana Santos",
-    role: "Investigadora Asociada",
-    institution: "Universidade de Lisboa",
-    department: "Laboratory of Motor Behavior",
-    imageUrl: "/api/placeholder/100/100",
+    name: "Raquel Pastor Cisneros",
+    role: "Personal en formación (FPU)",
+    institution: "Promoting a Healthy Society Research Group (PHeSO)",
+    email: "raquelpc@unex.es",
+    orcid: "https://orcid.org/0000-0001-7305-6783",
+    imageUrl: require("../../assets/images/IMG_2487-Raquel-Pastor-Cisneros.webp"),
     socialLinks: {
-      linkedin: "https://linkedin.com/in/ana-santos",
-      researchGate: "https://researchgate.net/profile/Ana-Santos",
-      email: "a.santos@ulisboa.pt",
-    },
+      researchGate: "https://www.researchgate.net/profile/Raquel-Pastor-Cisneros",
+      linkedin: "https://www.linkedin.com/in/raquel-pastor-cisneros-ab4454185"
+    }
   },
+  {
+    name: "Adilson Passos da Costa Marques",
+    role: "Investigador",
+    institution: "University of Lisbon",
+    email: "amarques@fmh.ulisboa.pt",
+    orcid: "https://orcid.org/0000-0001-9850-7771",
+    imageUrl: require("../../assets/images/adilson2-José-Adsuar.webp"),
+    socialLinks: {
+      googleScholar: "https://scholar.google.com/citations?user=0MPdDS0AAAAJ&hl=en",
+      other: "https://www.cienciavitae.pt/portal/5F18-F9C3-11CB",
+      webOfScience: "https://www.webofscience.com/wos/author/rid/K-4529-2014"
+    }
+  },
+  {
+    name: "Jose Antonio Romero Macarrilla",
+    role: "Investigador Asociado",
+    institution: "Universidad de Extremadura",
+    email: "jaromerom01@unex.es",
+    orcid: "https://orcid.org/0009-0006-3206-9928",
+    imageUrl: require("../../assets/images/foto personal - José Antonio Romero Macarrilla.webp"),
+    socialLinks: {
+      linkedin: "https://www.linkedin.com/"
+    }
+  },
+  {
+    name: "Jean Carlos Rosales García",
+    role: "Asistente",
+    institution: "Universidad del Atlántico",
+    email: "jeanrosales@mail.uniatlantico.edu.co",
+    orcid: "https://orcid.org/0000-0003-0204-2127",
+    imageUrl: require("../../assets/images/Yo-JEAN-CARLOS-ROSALES-GARCIA.webp"),
+    socialLinks: {
+      googleScholar: "https://scholar.google.com/citations?hl=es&user=zmW5JSUAAAAJ",
+      researchGate: "https://www.researchgate.net/profile/Jean-Rosales-Garcia",
+      linkedin: "https://www.linkedin.com/in/jean-carlos-rosales-garc%C3%ADa-3239a5193/"
+    }
+  }
 ];
+
 
 const INSTITUTIONS: Institution[] = [
   {
     name: "Universidad de Extremadura",
-    description:
-      "Centro de investigación deportiva líder en España, especializado en desarrollo motor y actividad física juvenil. Pioneros en metodologías de evaluación física y programas de intervención temprana.",
+    description: "Centro de investigación líder en ciencias del deporte y promoción de la salud, con un enfoque especial en el desarrollo motor y la actividad física.",
     country: "España",
     logo: require("../../assets/images/logo-uex.webp"),
-    website: "https://www.unex.es",
-    stats: {
-      founded: "1973",
-      students: 24000,
-      ranking: "Top 5 en España en Ciencias del Deporte",
-    },
+    website: "https://www.unex.es"
   },
   {
-    name: "Universidade de Lisboa",
-    description:
-      "Referente internacional en investigación del movimiento humano y desarrollo motor. Sede de importantes estudios sobre alfabetización física y desarrollo motor en jóvenes.",
+    name: "University of Lisbon",
+    description: "Institución de referencia en investigación sobre movimiento humano y desarrollo motor, con énfasis en estudios de alfabetización física.",
     country: "Portugal",
     logo: require("../../assets/images/ulisboa.webp"),
-    website: "https://www.ulisboa.pt",
-    stats: {
-      founded: "1911",
-      students: 50000,
-      ranking: "Top 3 en Portugal",
-    },
-  },
-];
-
-const PUBLICATIONS: Publication[] = [
-  {
-    title:
-      "Nuevas Perspectivas en la Evaluación de la Alfabetización Física en Jóvenes",
-    authors: "García, M., Silva, J., Santos, A.",
-    journal: "Revista Internacional de Ciencias del Deporte",
-    year: 2023,
-    doi: "10.1000/j.rid.2023.001",
+    website: "https://www.ulisboa.pt"
   },
   {
-    title: "Herramientas Digitales para la Evaluación del Desarrollo Motor",
-    authors: "Silva, J., Santos, A., García, M.",
-    journal: "Physical Education and Technology",
-    year: 2023,
-    doi: "10.1000/j.pet.2023.002",
+    name: "Universidade Federal do Ceará",
+    description: "Centro de excelencia en investigación deportiva y desarrollo motor, con un fuerte enfoque en la promoción de la actividad física.",
+    country: "Brasil",
+    logo: require("../../assets/images/Brasao4_vertical_cor_300dpi.webp"),
+    website: "https://www.ufc.br"
   },
+  {
+    name: "Universidad del Atlántico",
+    description: "Institución comprometida con la investigación en ciencias del deporte y el desarrollo de programas de actividad física.",
+    country: "Colombia",
+    logo: require("../../assets/images/Logo_de_la_Universidad_del_Atlántico.svg.webp"),
+    website: "https://www.uniatlantico.edu.co"
+  }
 ];
 
 type FormsScreenNavigationProp = CompositeNavigationProp<
@@ -270,31 +302,10 @@ export const FormsListScreen: React.FC = () => {
     <>
       {renderInstitutions()}
       {renderCreators()}
-      {renderPublications()}
     </>
   );
 
-  const renderPublications = () => (
-    <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>Publicaciones Relacionadas</Text>
-      {PUBLICATIONS.map((pub, index) => (
-        <TouchableOpacity
-          key={index}
-          style={styles.publicationCard}
-          onPress={() =>
-            pub.doi && handleOpenLink(`https://doi.org/${pub.doi}`)
-          }
-        >
-          <Text style={styles.publicationTitle}>{pub.title}</Text>
-          <Text style={styles.publicationAuthors}>{pub.authors}</Text>
-          <Text style={styles.publicationMeta}>
-            {pub.journal} ({pub.year})
-          </Text>
-          {pub.doi && <Text style={styles.publicationDOI}>DOI: {pub.doi}</Text>}
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
+
 
   const renderInstitutions = () => (
     <View style={styles.sectionContainer}>
@@ -318,94 +329,78 @@ export const FormsListScreen: React.FC = () => {
             <Text style={styles.institutionDescription}>
               {institution.description}
             </Text>
-            {institution.stats && (
-              <View style={styles.institutionStats}>
-                <Text style={styles.institutionStatItem}>
-                  Fundada en {institution.stats.founded}
-                </Text>
-                {institution.stats.students && (
-                  <Text style={styles.institutionStatItem}>
-                    {institution.stats.students.toLocaleString()} estudiantes
-                  </Text>
-                )}
-                {institution.stats.ranking && (
-                  <Text style={styles.institutionStatItem}>
-                    {institution.stats.ranking}
-                  </Text>
-                )}
-              </View>
-            )}
           </View>
         </View>
       ))}
     </View>
   );
 
-  const renderCreators = () => (
-    <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>Equipo de Investigación</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.creatorsScroll}
-      >
-        {CREATORS.map((creator, index) => (
-          <View key={index} style={styles.creatorCard}>
-            <Image
-              source={{ uri: creator.imageUrl }}
-              style={styles.creatorImage}
-            />
-            <View style={styles.creatorInfo}>
-              <Text style={styles.creatorName}>{creator.name}</Text>
-              <Text style={styles.creatorRole}>{creator.role}</Text>
-              <Text style={styles.creatorInstitution}>
-                {creator.institution}
-              </Text>
-              <Text style={styles.creatorDepartment}>{creator.department}</Text>
-              {creator.socialLinks && (
-                <View style={styles.socialLinks}>
-                  {creator.socialLinks.linkedin && (
-                    <TouchableOpacity
-                      onPress={() =>
-                        handleOpenLink(creator.socialLinks!.linkedin!)
-                      }
-                      style={styles.socialButton}
-                    >
-                      <Ionicons
-                        name="logo-linkedin"
-                        size={20}
-                        color="#0077B5"
-                      />
-                    </TouchableOpacity>
-                  )}
-                  {creator.socialLinks.researchGate && (
-                    <TouchableOpacity
-                      onPress={() =>
-                        handleOpenLink(creator.socialLinks!.researchGate!)
-                      }
-                      style={styles.socialButton}
-                    >
-                      <Ionicons name="book" size={20} color="#00CCBB" />
-                    </TouchableOpacity>
-                  )}
-                  {creator.socialLinks.email && (
-                    <TouchableOpacity
-                      onPress={() =>
-                        handleOpenLink(`mailto:${creator.socialLinks!.email}`)
-                      }
-                      style={styles.socialButton}
-                    >
-                      <Ionicons name="mail" size={20} color="#9E7676" />
-                    </TouchableOpacity>
-                  )}
-                </View>
+// Update the renderCreators method to include ORCID and email
+const renderCreators = () => (
+  <View style={styles.sectionContainer}>
+    <Text style={styles.sectionTitle}>Equipo de Investigación</Text>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.creatorsScroll}
+    >
+      {CREATORS.map((creator, index) => (
+        <View key={index} style={styles.creatorCard}>
+          <Image
+            source={creator.imageUrl}
+            style={styles.creatorImage}
+            resizeMode="cover"
+          />
+          <View style={styles.creatorInfo}>
+            <Text style={styles.creatorName}>{creator.name}</Text>
+            <Text style={styles.creatorRole}>{creator.role}</Text>
+            <Text style={styles.creatorInstitution}>
+              {creator.institution}
+            </Text>
+            <TouchableOpacity
+              onPress={() => handleOpenLink(creator.orcid)}
+              style={styles.orcidButton}
+            >
+              <Text style={styles.orcidText}>ORCID</Text>
+            </TouchableOpacity>
+            <View style={styles.socialLinks}>
+              {creator.socialLinks?.linkedin && (
+                <TouchableOpacity
+                  onPress={() => handleOpenLink(creator.socialLinks!.linkedin!)}
+                  style={styles.socialButton}
+                >
+                  <Ionicons name="logo-linkedin" size={20} color="#0077B5" />
+                </TouchableOpacity>
               )}
+              {creator.socialLinks?.researchGate && (
+                <TouchableOpacity
+                  onPress={() => handleOpenLink(creator.socialLinks!.researchGate!)}
+                  style={styles.socialButton}
+                >
+                  <Ionicons name="book" size={20} color="#00CCBB" />
+                </TouchableOpacity>
+              )}
+              {creator.socialLinks?.googleScholar && (
+                <TouchableOpacity
+                  onPress={() => handleOpenLink(creator.socialLinks!.googleScholar!)}
+                  style={styles.socialButton}
+                >
+                  <Ionicons name="school" size={20} color="#4285F4" />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                onPress={() => handleOpenLink(`mailto:${creator.email}`)}
+                style={styles.socialButton}
+              >
+                <Ionicons name="mail" size={20} color="#9E7676" />
+              </TouchableOpacity>
             </View>
           </View>
-        ))}
-      </ScrollView>
-    </View>
-  );
+        </View>
+      ))}
+    </ScrollView>
+  </View>
+);
 
   const renderFormCard = () => (
     <View style={styles.card}>
@@ -787,6 +782,18 @@ const styles = StyleSheet.create({
     color: "#9E7676",
     fontWeight: "500",
     fontSize: 14,
+  },
+  orcidButton: {
+    backgroundColor: '#A6CE39',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 15,
+    marginTop: 8,
+  },
+  orcidText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 12,
   },
   tabContainer: {
     flexDirection: "row",
