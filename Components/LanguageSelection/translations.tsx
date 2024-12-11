@@ -13,7 +13,6 @@ export interface TranslationText {
   previous: string;
   finish: string;
   selectLevel: string;
-  intermediate: string;
   required: string;
   loading: string;
 
@@ -70,6 +69,10 @@ export interface TranslationText {
   couldNotDelete: string;
   couldNotUpdate: string;
   markAllAsRead: string;
+
+  confirmAnswer: string;
+  selectedScore: string;
+  confirmScoreQuestion: string;
 }
 
 export interface Translations {
@@ -82,6 +85,9 @@ export const translations: Record<Language, TranslationText> = {
     languageSelectionError: "No se pudo guardar la selección de idioma",
     formAlreadyCompleted: "Ya has completado este formulario anteriormente.",
     selectLanguage: "Selecciona tu idioma",
+    confirmAnswer: "Confirmar respuesta",
+    selectedScore: "Has seleccionado",
+    confirmScoreQuestion: "¿Estás seguro de esta puntuación?",
     startButton: "Comenzar",
     question: "Pregunta",
     of: "de",
@@ -99,7 +105,6 @@ export const translations: Record<Language, TranslationText> = {
     couldNotCalculateStats:
       "No se pudieron calcular las estadísticas. Por favor, intenta de nuevo más tarde.",
     selectLevel: "Selecciona tu nivel",
-    intermediate: "Intermedio",
     required: "Requerido",
     loading: "Cargando...",
     // New notification translations
@@ -140,6 +145,9 @@ export const translations: Record<Language, TranslationText> = {
   en: {
     welcome: "Welcome!",
     formAlreadyCompleted: "You have already completed this form.",
+    confirmAnswer: "Confirm answer",
+    selectedScore: "You selected",
+    confirmScoreQuestion: "Are you sure about this score?",
     languageSelectionError: "Could not save language selection",
     selectLanguage: "Select your language",
     startButton: "Start",
@@ -157,7 +165,6 @@ export const translations: Record<Language, TranslationText> = {
     couldNotUpdate: "Could not update notifications",
     markAllAsRead: "Mark all as read",
     selectLevel: "Select your level",
-    intermediate: "Intermediate",
     required: "Required",
     loading: "Loading...",
     languageName: "English",
@@ -203,6 +210,9 @@ export const translations: Record<Language, TranslationText> = {
     languageSelectionError: "Não foi possível guardar a seleção do idioma",
     selectLanguage: "Selecione seu idioma",
     startButton: "Começar",
+    confirmAnswer: "Confirmar resposta",
+    selectedScore: "Selecionou",
+    confirmScoreQuestion: "Tem certeza desta pontuação?",
     // Nuevas traducciones
     confirmation: "Confirmação",
     deleteNotificationConfirm:
@@ -229,7 +239,6 @@ export const translations: Record<Language, TranslationText> = {
     previous: "Anterior",
     finish: "Terminar",
     selectLevel: "Selecione seu nível",
-    intermediate: "Intermediário",
     required: "Obrigatório",
     loading: "Carregando...",
     languageName: "Português",
@@ -260,6 +269,9 @@ export const translations: Record<Language, TranslationText> = {
   "pt-BR": {
     welcome: "Bem-vindo!",
     selectLanguage: "Selecione seu idioma",
+    confirmAnswer: "Confirmar resposta",
+    selectedScore: "Você selecionou",
+    confirmScoreQuestion: "Tem certeza desta pontuação?",
     languageSelectionError: "Não foi possível salvar a seleção do idioma",
     formAlreadyCompleted: "Já completou este formulário anteriormente.",
     startButton: "Começar",
@@ -290,7 +302,6 @@ export const translations: Record<Language, TranslationText> = {
     loadingNotifications: "Carregando notificações...",
     finish: "Terminar",
     selectLevel: "Selecione seu nível",
-    intermediate: "Intermediário",
     required: "Obrigatório",
     loading: "Carregando...",
     languageName: "Português",

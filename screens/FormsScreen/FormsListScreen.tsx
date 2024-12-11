@@ -305,7 +305,42 @@ export const FormsListScreen: React.FC = () => {
     </>
   );
 
-
+  const renderLogoContainer = () => {
+    if (activeTab === "form") {
+      return (
+        <View style={styles.logoContainer}>
+          <View style={styles.logoCard}>
+            <View style={styles.logosWrapper}>
+              <Image
+                source={require("../../assets/images/logo-uex.webp")}
+                style={[styles.logo, { width: 60, height: 60 }]}
+                resizeMode="contain"
+              />
+              <View style={styles.logoDivider} />
+              <Image
+                source={require("../../assets/images/ulisboa.webp")}
+                style={[styles.logo, { width: 60, height: 60 }]}
+                resizeMode="contain"
+              />
+              <View style={styles.logoDivider} />
+              <Image
+                source={require("../../assets/images/Brasao4_vertical_cor_300dpi.webp")}
+                style={[styles.logo, { width: 60, height: 60 }]}
+                resizeMode="contain"
+              />
+              <View style={styles.logoDivider} />
+              <Image
+                source={require("../../assets/images/Logo_de_la_Universidad_del_Atlántico.svg.webp")}
+                style={[styles.logo, { width: 60, height: 60 }]}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+        </View>
+      );
+    }
+    return null;
+  };
 
   const renderInstitutions = () => (
     <View style={styles.sectionContainer}>
@@ -335,72 +370,72 @@ export const FormsListScreen: React.FC = () => {
     </View>
   );
 
-// Update the renderCreators method to include ORCID and email
-const renderCreators = () => (
-  <View style={styles.sectionContainer}>
-    <Text style={styles.sectionTitle}>Equipo de Investigación</Text>
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.creatorsScroll}
-    >
-      {CREATORS.map((creator, index) => (
-        <View key={index} style={styles.creatorCard}>
-          <Image
-            source={creator.imageUrl}
-            style={styles.creatorImage}
-            resizeMode="cover"
-          />
-          <View style={styles.creatorInfo}>
-            <Text style={styles.creatorName}>{creator.name}</Text>
-            <Text style={styles.creatorRole}>{creator.role}</Text>
-            <Text style={styles.creatorInstitution}>
-              {creator.institution}
-            </Text>
-            <TouchableOpacity
-              onPress={() => handleOpenLink(creator.orcid)}
-              style={styles.orcidButton}
-            >
-              <Text style={styles.orcidText}>ORCID</Text>
-            </TouchableOpacity>
-            <View style={styles.socialLinks}>
-              {creator.socialLinks?.linkedin && (
-                <TouchableOpacity
-                  onPress={() => handleOpenLink(creator.socialLinks!.linkedin!)}
-                  style={styles.socialButton}
-                >
-                  <Ionicons name="logo-linkedin" size={20} color="#0077B5" />
-                </TouchableOpacity>
-              )}
-              {creator.socialLinks?.researchGate && (
-                <TouchableOpacity
-                  onPress={() => handleOpenLink(creator.socialLinks!.researchGate!)}
-                  style={styles.socialButton}
-                >
-                  <Ionicons name="book" size={20} color="#00CCBB" />
-                </TouchableOpacity>
-              )}
-              {creator.socialLinks?.googleScholar && (
-                <TouchableOpacity
-                  onPress={() => handleOpenLink(creator.socialLinks!.googleScholar!)}
-                  style={styles.socialButton}
-                >
-                  <Ionicons name="school" size={20} color="#4285F4" />
-                </TouchableOpacity>
-              )}
+  // Update the renderCreators method to include ORCID and email
+  const renderCreators = () => (
+    <View style={styles.sectionContainer}>
+      <Text style={styles.sectionTitle}>Equipo de Investigación</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.creatorsScroll}
+      >
+        {CREATORS.map((creator, index) => (
+          <View key={index} style={styles.creatorCard}>
+            <Image
+              source={creator.imageUrl}
+              style={styles.creatorImage}
+              resizeMode="cover"
+            />
+            <View style={styles.creatorInfo}>
+              <Text style={styles.creatorName}>{creator.name}</Text>
+              <Text style={styles.creatorRole}>{creator.role}</Text>
+              <Text style={styles.creatorInstitution}>
+                {creator.institution}
+              </Text>
               <TouchableOpacity
-                onPress={() => handleOpenLink(`mailto:${creator.email}`)}
-                style={styles.socialButton}
+                onPress={() => handleOpenLink(creator.orcid)}
+                style={styles.orcidButton}
               >
-                <Ionicons name="mail" size={20} color="#9E7676" />
+                <Text style={styles.orcidText}>ORCID</Text>
               </TouchableOpacity>
+              <View style={styles.socialLinks}>
+                {creator.socialLinks?.linkedin && (
+                  <TouchableOpacity
+                    onPress={() => handleOpenLink(creator.socialLinks!.linkedin!)}
+                    style={styles.socialButton}
+                  >
+                    <Ionicons name="logo-linkedin" size={20} color="#0077B5" />
+                  </TouchableOpacity>
+                )}
+                {creator.socialLinks?.researchGate && (
+                  <TouchableOpacity
+                    onPress={() => handleOpenLink(creator.socialLinks!.researchGate!)}
+                    style={styles.socialButton}
+                  >
+                    <Ionicons name="book" size={20} color="#00CCBB" />
+                  </TouchableOpacity>
+                )}
+                {creator.socialLinks?.googleScholar && (
+                  <TouchableOpacity
+                    onPress={() => handleOpenLink(creator.socialLinks!.googleScholar!)}
+                    style={styles.socialButton}
+                  >
+                    <Ionicons name="school" size={20} color="#4285F4" />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  onPress={() => handleOpenLink(`mailto:${creator.email}`)}
+                  style={styles.socialButton}
+                >
+                  <Ionicons name="mail" size={20} color="#9E7676" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      ))}
-    </ScrollView>
-  </View>
-);
+        ))}
+      </ScrollView>
+    </View>
+  );
 
   const renderFormCard = () => (
     <View style={styles.card}>
@@ -432,8 +467,8 @@ const renderCreators = () => (
                   {user?.age && user.age >= 6 && user.age <= 12
                     ? "Franja de edad: 6-12 años"
                     : user?.age && user.age > 12 && user.age <= 18
-                    ? "Franja de edad: 12-18 años"
-                    : "Edades: 6-12 años"}
+                      ? "Franja de edad: 12-18 años"
+                      : "Edades: 6-12 años"}
                 </Text>
               </View>
             </View>
@@ -475,8 +510,8 @@ const renderCreators = () => (
                       user.age > 12 &&
                       user.age <= 18 &&
                       user.age > 18
-                    ? "Franja de edad: 12-18 años"
-                    : "Edades: 12-18 años"}
+                      ? "Franja de edad: 12-18 años"
+                      : "Edades: 12-18 años"}
                 </Text>
               </View>
             </View>
@@ -490,8 +525,8 @@ const renderCreators = () => (
             {user?.age && user.age >= 6 && user.age <= 12
               ? "Evalúa tu forma física y actividad física, comparándote con otros niños/as de 6-12 años."
               : user?.age && user.age > 12 && user.age <= 18
-              ? "Evalúa tu forma física y actividad física, comparándote con otros adolescentes de 12-18 años."
-              : "Evalúa tu forma física y actividad física según tu grupo de edad."}
+                ? "Evalúa tu forma física y actividad física, comparándote con otros adolescentes de 12-18 años."
+                : "Evalúa tu forma física y actividad física según tu grupo de edad."}
           </Text>
           <View style={styles.cardFooter}>
             <Text style={styles.cardMeta}>6 preguntas • ~5 minutos</Text>
@@ -573,23 +608,7 @@ const renderCreators = () => (
             />
           }
         >
-          <View style={styles.logoContainer}>
-            <View style={styles.logoCard}>
-              <View style={styles.logosWrapper}>
-                <Image
-                  source={require("../../assets/images/logo-uex.webp")}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-                <View style={styles.logoDivider} />
-                <Image
-                  source={require("../../assets/images/ulisboa.webp")}
-                  style={styles.logoLisboa}
-                  resizeMode="contain"
-                />
-              </View>
-            </View>
-          </View>
+          {renderLogoContainer()}
 
           <View style={styles.cardsContainer}>
             {activeTab === "form" ? renderFormCard() : renderAboutContent()}
@@ -611,7 +630,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     paddingHorizontal: 20,
-    paddingTop: 10, // Reducido de 20 a 10
+    paddingTop: 10,
     marginBottom: 10,
   },
   logoCard: {
@@ -631,18 +650,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   logo: {
-    height: 45,
-    width: 140,
-  },
-  logoLisboa: {
-    height: 110,
-    width: 100,
+    marginHorizontal: 5,
   },
   logoDivider: {
     width: 1,
-    height: "80%",
+    height: 40,
     backgroundColor: "#DFCCCC",
-    marginHorizontal: 15,
   },
   questionnaire: {
     width: "100%",

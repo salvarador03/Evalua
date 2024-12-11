@@ -62,22 +62,32 @@ export const WelcomeScreen: React.FC = () => {
   }, []);
 
   return (
-    <BackgroundContainer
-      source={require('../../assets/images/p_fondo.webp')}
-    >
+    <BackgroundContainer source={require('../../assets/images/p_fondo.webp')}>
       <View style={styles.overlay}>
         <Animated.View style={[styles.logoContainer, { transform: [{ scale: logoScale }] }]}>
           <View style={styles.logoCard}>
             <View style={styles.logosWrapper}>
-              <Image 
-                source={require('../../assets/images/logo-uex.webp')} 
-                style={styles.logo} 
+              <Image
+                source={require('../../assets/images/logo-uex.webp')}
+                style={[styles.logo, { width: 60, height: 60 }]}
                 resizeMode="contain"
               />
               <View style={styles.logoDivider} />
-              <Image 
-                source={require('../../assets/images/ulisboa.webp')} 
-                style={styles.logoLisboa} 
+              <Image
+                source={require('../../assets/images/ulisboa.webp')}
+                style={[styles.logo, { width: 60, height: 60 }]}
+                resizeMode="contain"
+              />
+              <View style={styles.logoDivider} />
+              <Image
+                source={require('../../assets/images/Brasao4_vertical_cor_300dpi.webp')}
+                style={[styles.logo, { width: 60, height: 60 }]}
+                resizeMode="contain"
+              />
+              <View style={styles.logoDivider} />
+              <Image
+                source={require('../../assets/images/Logo_de_la_Universidad_del_Atlántico.svg.webp')}
+                style={[styles.logo, { width: 60, height: 60 }]}
                 resizeMode="contain"
               />
             </View>
@@ -110,7 +120,7 @@ export const WelcomeScreen: React.FC = () => {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Universidad de Extremadura • Universidade de Lisboa
+            Universidad de Extremadura • Universidade de Lisboa • Universidade Federal do Ceará • Universidad del Atlántico
           </Text>
         </View>
       </View>
@@ -145,18 +155,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   logo: {
-    height: 45,
-    width: 140,
-  },
-  logoLisboa: {
-    height: 110,
-    width: 100,
+    marginHorizontal: 5,
   },
   logoDivider: {
     width: 1,
-    height: '80%',
+    height: 40,
     backgroundColor: '#D4A5A5',
-    marginHorizontal: 15,
   },
   content: {
     flex: 1,
@@ -223,7 +227,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
     opacity: 0.9,
     textShadowColor: 'rgba(0, 0, 0, 0.75)',

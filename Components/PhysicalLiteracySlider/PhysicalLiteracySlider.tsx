@@ -49,7 +49,7 @@ const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
       return {
         icon: "happy-outline",
         color: "#fbbf24",
-        message: translations[language].intermediate,
+        message: '',
         iconColor: "#fbbf24"
       };
     }

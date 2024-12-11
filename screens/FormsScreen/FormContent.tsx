@@ -27,12 +27,14 @@ const childQuestionImages = [
 
 // Imágenes para adolescentes (12-18)
 const teenQuestionImages = [
-  require("../../assets/images/preguntas/teen/primera_pregunta.webp"),
-  require("../../assets/images/preguntas/teen/segunda_pregunta.webp"),
-  require("../../assets/images/preguntas/teen/tercera_pregunta.webp"),
-  require("../../assets/images/preguntas/teen/cuarta_pregunta.webp"),
-  require("../../assets/images/preguntas/teen/quinta_pregunta.webp"),
-  require("../../assets/images/preguntas/teen/sexta_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/primera_pregunta.jpg"),
+  require("../../assets/images/preguntas/teen/segunda_pregunta.jpg"),
+  require("../../assets/images/preguntas/teen/tercera_pregunta.jpg"),
+  require("../../assets/images/preguntas/teen/cuarta_pregunta.jpg"),
+  require("../../assets/images/preguntas/teen/quinta_pregunta.jpg"),
+  require("../../assets/images/preguntas/teen/sexta_pregunta.jpg"),
+  require("../../assets/images/preguntas/teen/septima_pregunta.jpg"),
+  require("../../assets/images/preguntas/teen/octava_pregunta.jpg"),
 ];
 
 interface FormContentProps {
@@ -107,17 +109,64 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
 }) => {
   // Memoizar el valor de isTeenUser para evitar recálculos innecesarios
   const isTeenUser = React.useMemo(() => isTeenager(userAge), [userAge]);
-  
+
   // Memoizar las preguntas y las imágenes para evitar re-renders innecesarios
   const currentQuestions = React.useMemo(
     () => isTeenUser ? teenQuestions[language] : questions[language],
     [isTeenUser, language]
   );
-  
+
   const questionImages = React.useMemo(
     () => isTeenUser ? teenQuestionImages : childQuestionImages,
     [isTeenUser]
   );
+
+// Modificar solo la función confirmAnswer en el componente FormContent
+
+const confirmAnswer = useCallback((action: () => void) => {
+  const currentScore = answers[currentQuestion];
+  if (currentScore === null) return;
+
+  // Si es la última pregunta, mostrar resumen de todas las respuestas
+  if (currentQuestion === currentQuestions.length - 1) {
+    const summary = currentQuestions
+      .map((question, index) => 
+        `${translations[language].question} ${index + 1}: ${answers[index]?.toFixed(1)}`
+      )
+      .join('\n');
+
+    Alert.alert(
+      translations[language].confirmAnswer,
+      `${translations[language].selectedScore}:\n\n${summary}\n\n${translations[language].confirmScoreQuestion}`,
+      [
+        {
+          text: 'No',
+          style: 'cancel'
+        },
+        {
+          text: 'Sí',
+          onPress: action
+        }
+      ]
+    );
+  } else {
+    // Para preguntas individuales, mostrar solo la respuesta actual
+    Alert.alert(
+      translations[language].confirmAnswer,
+      `${translations[language].question} ${currentQuestion + 1}: ${currentScore.toFixed(1)}\n\n${translations[language].confirmScoreQuestion}`,
+      [
+        {
+          text: 'No',
+          style: 'cancel'
+        },
+        {
+          text: 'Sí',
+          onPress: action
+        }
+      ]
+    );
+  }
+}, [answers, currentQuestion, language, currentQuestions]);
 
   // Memoizar la función de formateo de texto
   const formatText = useCallback((text: string) => {
@@ -128,7 +177,7 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
   useEffect(() => {
     // Evitar resetear si no hay cambio real en la edad o tipo de usuario
     const shouldReset = userAge > 0 && currentQuestion > 0;
-    
+
     if (shouldReset) {
       // Reiniciar respuestas
       onAnswerChange(new Array(6).fill(null));
@@ -142,7 +191,7 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
   }, [isTeenUser]);
 
   // Memoizar la función canProceedToNext
-  const canProceedToNext = useCallback(() => 
+  const canProceedToNext = useCallback(() =>
     answers[currentQuestion] !== null,
     [answers, currentQuestion]
   );
@@ -159,6 +208,18 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
     }
     onQuestionChange('next');
   }, [canProceedToNext, language, onQuestionChange]);
+
+  const handleSubmit = useCallback(() => {
+    if (!canProceedToNext()) {
+      Alert.alert(
+        translations[language].requiredAnswer,
+        translations[language].pleaseSelectValue,
+        [{ text: "OK", style: "default" }]
+      );
+      return;
+    }
+    confirmAnswer(onSubmit);
+  }, [canProceedToNext, language, onSubmit, confirmAnswer]);
 
   // Memoizar la función handleAnswerChange
   const handleAnswerChange = useCallback((value: number) => {
@@ -249,7 +310,7 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
               !canProceedToNext() && styles.disabledButton,
             ]}
             disabled={!canProceedToNext()}
-            onPress={onSubmit}
+            onPress={handleSubmit}
           >
             <Text style={[styles.navButtonText, styles.submitButtonText]}>
               {translations[language].finish}
@@ -333,7 +394,8 @@ const styles = StyleSheet.create({
   },
   questionContainer: {
     backgroundColor: "#ffffff",
-    padding: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 20,
     borderRadius: 12,
     marginVertical: 15,
     shadowColor: "#000",
@@ -341,13 +403,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    width: '100%',
+    alignItems: 'center', // Centra el contenido
   },
   questionImage: {
-    width: "100%",
-    height: 230,
-    resizeMode: "cover",
+    width: '95%', // Usa casi todo el ancho disponible
+    minHeight: 250, // Altura mínima garantizada
+    maxHeight: 400, // Altura máxima para pantallas grandes
+    height: undefined, // Permite que la altura se ajuste
+    resizeMode: "cover", // Cambiamos a cover para llenar mejor el espacio
     borderRadius: 12,
     marginBottom: 15,
+    alignSelf: 'center',
   },
   questionText: {
     fontSize: 18,

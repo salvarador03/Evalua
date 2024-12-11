@@ -3,6 +3,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { ComparisonData } from "../../types/formstats";
 import { BarChart } from "react-native-gifted-charts";
+import UserMarker from "./UserMarker";
 
 interface MedianBarChartProps {
   data: number[];
@@ -135,8 +136,7 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
             },
           ]}
         >
-          <View style={styles.userMarkerPoint} />
-          <Text style={styles.userMarkerLabel}>{userScore.toFixed(1)}</Text>
+          <UserMarker score={userScore} />
         </View>
       </View>
 
@@ -155,7 +155,7 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
               ]}
             />
             <Text style={styles.explanationText}>
-              Superior (P95+): Rendimiento excepcional
+              Superior (P85+): Rendimiento excepcional
             </Text>
           </View>
           <View style={styles.explanationItem}>
@@ -166,7 +166,7 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
               ]}
             />
             <Text style={styles.explanationText}>
-              Alto (P85-P95): Por encima del promedio
+              Alto (P50-P85): Por encima del promedio
             </Text>
           </View>
           <View style={styles.explanationItem}>
@@ -177,7 +177,7 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
               ]}
             />
             <Text style={styles.explanationText}>
-              Medio (P50-P85): Dentro del rango típico
+              Medio (P15-P50): Dentro del rango típico
             </Text>
           </View>
           <View style={styles.explanationItem}>
@@ -188,7 +188,7 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
               ]}
             />
             <Text style={styles.explanationText}>
-              Bajo (P15-P50): Área de mejora potencial
+              Bajo (-P15): Área de mejora potencial
             </Text>
           </View>
         </View>
@@ -248,11 +248,12 @@ const styles = StyleSheet.create({
     right: 0,
   },
   percentileLine: {
-    position: "absolute",
+    position: 'absolute',
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: "rgba(158, 118, 118, 0.5)",
+    backgroundColor: 'rgba(158, 118, 118, 0.5)',
+    zIndex: 1,
   },
   percentileLabelContainer: {
     position: "absolute",
@@ -270,30 +271,12 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   userMarker: {
-    position: "absolute",
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  userMarkerPoint: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#4ADE80",
-    borderWidth: 2,
-    borderColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 2,
-    elevation: 3,
-  },
-  userMarkerLabel: {
-    fontSize: 12,
-    color: "#4ADE80",
-    fontWeight: "600",
-    marginTop: 4,
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    right: 20,
+    transform: [{ translateY: -20 }], // Ajusta la posición vertical para centrar el marcador
+    zIndex: 999, // Asegura que el marcador esté siempre visible
   },
   explanationContainer: {
     marginTop: 24,

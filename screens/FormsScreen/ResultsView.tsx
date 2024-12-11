@@ -9,11 +9,14 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Language } from "../../types/language";
+import { useAuth } from "../../context/AuthContext";
 import { FormResponse } from "../../types/form";
 import { questions } from "./data/questions";
+import { teenQuestions } from "./data/teenQuestions";
 import { useRoute } from "@react-navigation/native";
 import ComparisonChart from "./ComparisonChart";
 import db from "@react-native-firebase/database";
+import { translations } from "../../Components/LanguageSelection/translations";
 
 interface FormStats {
   median: number;
@@ -60,6 +63,37 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   >("responses");
   const [fadeAnim] = useState(new Animated.Value(1));
   const [studentClassCode, setStudentClassCode] = useState<string>("");
+  const [studentAge, setStudentAge] = useState<number | undefined>();
+  const { user } = useAuth();
+
+  const loadStudentData = async () => {
+    if (isTeacherView && studentData?.uid) {
+      try {
+        const guestRef = await db().ref(`/guests/${studentData.uid}`).once("value");
+        const guestData = guestRef.val();
+
+        if (guestData?.classCode) {
+          setStudentClassCode(guestData.classCode);
+        }
+        if (guestData?.age) {
+          setStudentAge(guestData.age);
+        }
+      } catch (error) {
+        console.error("Error loading student data:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadStudentData();
+  }, [isTeacherView, studentData?.uid]);
+  
+
+  const getAgeAppropriateQuestions = (language: Language) => {
+    const targetAge = isTeacherView ? studentAge : user?.age;
+    return (targetAge && targetAge >= 12 && targetAge <= 18) ? teenQuestions[language] : questions[language];
+  };
+  
 
   // Eliminar el segundo useEffect y modificar el primero
   useEffect(() => {
@@ -191,13 +225,65 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     </View>
   );
 
+
+
   const renderResponses = () => (
     <View style={styles.responsesContainer}>
-      {questions[language].map((question, index) => {
+      {getAgeAppropriateQuestions(language).map((question, index) => {
         const userAnswer = answers[index];
+        let teacherNoteText = "";
+        let noteColor = "#9E7676";
+  
+        if (isTeacherView && userAnswer !== null) {
+          if (studentAge && studentAge >= 12 && studentAge <= 18) {
+            if (userAnswer >= 8) {
+              teacherNoteText = "Nivel óptimo de alfabetización física";
+              noteColor = "#4CAF50";
+            } else if (userAnswer >= 6) {
+              teacherNoteText = "Buen desarrollo de la alfabetización física";
+              noteColor = "#2196F3";
+            } else if (userAnswer >= 4) {
+              teacherNoteText = "Desarrollo en proceso, necesita refuerzo";
+              noteColor = "#FFC107";
+            } else {
+              teacherNoteText = "Requiere atención y apoyo específico";
+              noteColor = "#F44336";
+            }
+  
+            if (index === 7) {
+              if (userAnswer >= 8) {
+                teacherNoteText = "Excelente comprensión global de la alfabetización física";
+              } else if (userAnswer >= 6) {
+                teacherNoteText = "Buena comprensión de los componentes";
+              } else if (userAnswer >= 4) {
+                teacherNoteText = "Comprensión básica, necesita reforzar";
+              } else {
+                teacherNoteText = "Requiere revisión de conceptos fundamentales";
+              }
+            }
+          } else {
+            if (userAnswer >= 8) {
+              teacherNoteText = "Nivel excelente en este componente";
+              noteColor = "#4CAF50";
+            } else if (userAnswer >= 6) {
+              teacherNoteText = "Buen nivel en este componente";
+              noteColor = "#2196F3";
+            } else if (userAnswer >= 4) {
+              teacherNoteText = "Nivel aceptable, puede mejorar";
+              noteColor = "#FFC107";
+            } else {
+              teacherNoteText = "Necesita mejorar este componente";
+              noteColor = "#F44336";
+            }
+          }
+        }
+  
         return (
           <View key={index} style={styles.responseCard}>
             <View style={styles.questionContainer}>
+              <View style={styles.questionNumberBadge}>
+                <Text style={styles.questionNumberText}>{`P${index + 1}`}</Text>
+              </View>
               <Ionicons name="help-circle" size={24} color="#9E7676" />
               <Text style={styles.questionText}>{question.text}</Text>
             </View>
@@ -208,15 +294,11 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
               </Text>
               <Text style={styles.pointsText}>puntos</Text>
             </View>
-            {isTeacherView && (
-              <View style={styles.teacherNote}>
-                <Ionicons name="information-circle" size={20} color="#9E7676" />
-                <Text style={styles.teacherNoteText}>
-                  {userAnswer !== null && userAnswer > 7
-                    ? "Respuesta satisfactoria"
-                    : userAnswer !== null && userAnswer < 4
-                    ? "Requiere atención"
-                    : "Respuesta promedio"}
+            {isTeacherView && userAnswer !== null && (
+              <View style={[styles.teacherNote, { backgroundColor: `${noteColor}20` }]}>
+                <Ionicons name="information-circle" size={20} color={noteColor} />
+                <Text style={[styles.teacherNoteText, { color: noteColor }]}>
+                  {teacherNoteText}
                 </Text>
               </View>
             )}
@@ -227,28 +309,32 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   );
 
   const renderComparison = () => {
-    return questions[language].map((_, index) => {
-      const effectiveUserId = isTeacherView
-        ? studentData?.uid
-        : formResponse.userId;
-
+    return getAgeAppropriateQuestions(language).map((question, index) => {
+      const effectiveUserId = isTeacherView ? studentData?.uid : formResponse.userId;
       return (
-        <ComparisonChart
-          key={index}
-          userScore={answers[index] || 0}
-          userData={{
-            userId: effectiveUserId || "",
-            name: studentData?.name || "",
-            classCode: studentData?.classCode || "",
-            country: formResponse.country || "",
-            age: formResponse.age || 0,
-          }}
-          formResponse={formResponse} // Añadir esto
-          questionIndex={index}
-        />
+        <View key={index} style={styles.comparisonSection}>
+          <View style={styles.questionNumberBadge}>
+            <Text style={styles.questionNumberText}>
+              {`${translations[language].question} ${index + 1}`}
+            </Text>
+          </View>
+          <ComparisonChart
+            key={index}
+            userScore={answers[index] || 0}
+            userData={{
+              userId: effectiveUserId || "",
+              name: studentData?.name || "",
+              classCode: studentData?.classCode || "",
+              country: formResponse.country || "",
+              age: user?.age || 0,
+            }}
+            formResponse={formResponse}
+            questionIndex={index}
+          />
+        </View>
       );
     });
-  };
+   };
 
   return (
     <View style={styles.container}>
@@ -291,6 +377,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     opacity: 0.9,
   },
+  comparisonSection: {
+    marginBottom: 20,
+  },
   studentClassCode: {
     fontSize: 14,
     color: "#fff",
@@ -306,6 +395,21 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#fff",
+  },
+  questionNumberBadge: {
+    backgroundColor: 'rgba(158, 118, 118, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6, 
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(158, 118, 118, 0.2)',
+    marginBottom: 8
+  },
+  questionNumberText: {
+    color: '#594545',
+    fontWeight: '600',
+    fontSize: 14
   },
   teacherBadgeText: {
     color: "#fff",
