@@ -8,6 +8,7 @@ export interface StudentData {
   name: string;
   email: string;
   uid: string;
+  age?: number; // Añadimos la edad como opcional
 }
 
 export type FormsStackParamList = {

@@ -56,8 +56,9 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   stats,
 }) => {
   const route = useRoute();
-  const { studentData, isTeacherView = false } =
-    (route.params as RouteParams) || {};
+  const routeParams = route.params as RouteParams | undefined;
+  const studentData = routeParams?.studentData;
+  const isTeacherView = routeParams?.isTeacherView ?? false;
   const [activeSection, setActiveSection] = useState<
     "responses" | "comparison"
   >("responses");
@@ -87,13 +88,13 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   useEffect(() => {
     loadStudentData();
   }, [isTeacherView, studentData?.uid]);
-  
+
 
   const getAgeAppropriateQuestions = (language: Language) => {
     const targetAge = isTeacherView ? studentAge : user?.age;
     return (targetAge && targetAge >= 12 && targetAge <= 18) ? teenQuestions[language] : questions[language];
   };
-  
+
 
   // Eliminar el segundo useEffect y modificar el primero
   useEffect(() => {
@@ -225,29 +226,59 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     </View>
   );
 
-
-
   const renderResponses = () => (
     <View style={styles.responsesContainer}>
       {getAgeAppropriateQuestions(language).map((question, index) => {
         const userAnswer = answers[index];
+        if (userAnswer === undefined) return null;
+  
+        // Determinar el color y el icono basado en la puntuación
+        const getScoreStyle = (score: number | null) => {
+          if (score === null) return {
+            color: '#666',
+            backgroundColor: '#f5f5f5', 
+            icon: 'help-circle',
+            label: 'Pendiente de respuesta',
+            borderColor: '#666'
+          };
+          if (score <= 3) return {
+            color: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            icon: 'alert-circle', 
+            label: 'Nivel bajo',
+            borderColor: '#ef4444'
+          };
+          if (score <= 6) return {
+            color: '#fbbf24',
+            backgroundColor: 'rgba(251, 191, 36, 0.1)',
+            icon: 'warning',
+            label: 'Nivel medio',
+            borderColor: '#fbbf24'
+          };
+          return {
+            color: '#4ade80',
+            backgroundColor: 'rgba(74, 222, 128, 0.1)',
+            icon: 'checkmark-circle',
+            label: 'Nivel alto',
+            borderColor: '#4ade80'
+          };
+        };
+  
+        const scoreStyle = getScoreStyle(userAnswer);
+  
         let teacherNoteText = "";
-        let noteColor = "#9E7676";
+        let noteColor = scoreStyle.color;
   
         if (isTeacherView && userAnswer !== null) {
           if (studentAge && studentAge >= 12 && studentAge <= 18) {
             if (userAnswer >= 8) {
               teacherNoteText = "Nivel óptimo de alfabetización física";
-              noteColor = "#4CAF50";
             } else if (userAnswer >= 6) {
               teacherNoteText = "Buen desarrollo de la alfabetización física";
-              noteColor = "#2196F3";
             } else if (userAnswer >= 4) {
               teacherNoteText = "Desarrollo en proceso, necesita refuerzo";
-              noteColor = "#FFC107";
             } else {
               teacherNoteText = "Requiere atención y apoyo específico";
-              noteColor = "#F44336";
             }
   
             if (index === 7) {
@@ -264,16 +295,12 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           } else {
             if (userAnswer >= 8) {
               teacherNoteText = "Nivel excelente en este componente";
-              noteColor = "#4CAF50";
             } else if (userAnswer >= 6) {
               teacherNoteText = "Buen nivel en este componente";
-              noteColor = "#2196F3";
             } else if (userAnswer >= 4) {
               teacherNoteText = "Nivel aceptable, puede mejorar";
-              noteColor = "#FFC107";
             } else {
               teacherNoteText = "Necesita mejorar este componente";
-              noteColor = "#F44336";
             }
           }
         }
@@ -284,20 +311,41 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
               <View style={styles.questionNumberBadge}>
                 <Text style={styles.questionNumberText}>{`P${index + 1}`}</Text>
               </View>
-              <Ionicons name="help-circle" size={24} color="#9E7676" />
               <Text style={styles.questionText}>{question.text}</Text>
             </View>
-            <View style={styles.answerContainer}>
-              <Ionicons name="trophy" size={32} color="#FFD700" />
-              <Text style={styles.answerValue}>
-                {userAnswer !== null ? userAnswer.toString() : "-"}
-              </Text>
-              <Text style={styles.pointsText}>puntos</Text>
+  
+            <View style={styles.scoreContainer}>
+              <View style={[
+                styles.trafficLight,
+                { backgroundColor: scoreStyle.backgroundColor }
+              ]}>
+                <View style={[
+                  styles.scoreCircle,
+                  { borderColor: scoreStyle.borderColor }
+                ]}>
+                  <Ionicons 
+                    name={scoreStyle.icon as any} 
+                    size={24} 
+                    color={scoreStyle.color} 
+                  />
+                  <Text style={[styles.scoreValue, { color: scoreStyle.color }]}>
+                    {userAnswer !== null ? userAnswer.toString() : '-'}
+                  </Text>
+                </View>
+                <Text style={[styles.scoreLabel, { color: scoreStyle.color }]}>
+                  {scoreStyle.label}
+                </Text>
+              </View>
             </View>
+  
             {isTeacherView && userAnswer !== null && (
-              <View style={[styles.teacherNote, { backgroundColor: `${noteColor}20` }]}>
-                <Ionicons name="information-circle" size={20} color={noteColor} />
-                <Text style={[styles.teacherNoteText, { color: noteColor }]}>
+              <View style={[styles.teacherNote, { backgroundColor: `${scoreStyle.color}20` }]}>
+                <Ionicons 
+                  name="information-circle" 
+                  size={20} 
+                  color={scoreStyle.color} 
+                />
+                <Text style={[styles.teacherNoteText, { color: scoreStyle.color }]}>
                   {teacherNoteText}
                 </Text>
               </View>
@@ -310,7 +358,11 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
 
   const renderComparison = () => {
     return getAgeAppropriateQuestions(language).map((question, index) => {
-      const effectiveUserId = isTeacherView ? studentData?.uid : formResponse.userId;
+      const effectiveUserId = isTeacherView && studentData
+        ? studentData.uid
+        : formResponse?.userId;
+      if (!effectiveUserId) return null;
+      if (index >= answers.length) return null
       return (
         <View key={index} style={styles.comparisonSection}>
           <View style={styles.questionNumberBadge}>
@@ -320,7 +372,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           </View>
           <ComparisonChart
             key={index}
-            userScore={answers[index] || 0}
+            userScore={answers[index] ?? 0}
             userData={{
               userId: effectiveUserId || "",
               name: studentData?.name || "",
@@ -334,11 +386,11 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         </View>
       );
     });
-   };
+  };
 
   return (
     <View style={styles.container}>
-      {renderStudentHeader()}
+      {studentData && renderStudentHeader()}
       {renderNavigationButtons()}
       <ScrollView style={styles.content}>
         <Animated.View style={{ opacity: fadeAnim }}>
@@ -386,6 +438,37 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     marginTop: 4,
   },
+  scoreContainer: {
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  trafficLight: {
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    width: '100%',
+  },
+  scoreCircle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 8,
+    padding: 16,
+    borderRadius: 50,
+    borderWidth: 2,
+    backgroundColor: 'white',
+  },
+  scoreValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  scoreLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginTop: 8,
+  },
   teacherBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -399,7 +482,7 @@ const styles = StyleSheet.create({
   questionNumberBadge: {
     backgroundColor: 'rgba(158, 118, 118, 0.15)',
     paddingHorizontal: 12,
-    paddingVertical: 6, 
+    paddingVertical: 6,
     borderRadius: 16,
     alignSelf: 'flex-start',
     borderWidth: 1,
@@ -458,12 +541,12 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   responseCard: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     elevation: 2,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -498,18 +581,17 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   teacherNote: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(158, 118, 118, 0.1)",
-    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
     borderRadius: 8,
-    marginTop: 8,
+    marginTop: 12,
     gap: 8,
   },
   teacherNoteText: {
-    color: "#594545",
-    fontSize: 14,
     flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

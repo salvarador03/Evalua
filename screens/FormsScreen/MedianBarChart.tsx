@@ -9,7 +9,7 @@ interface MedianBarChartProps {
   data: number[];
   median: number;
   userScore: number;
-  viewType: "class" | "global" | "country";
+  viewType: "class" | "global" | "country" | "custom";
   classCode?: string;
   countryName?: string;
   allResponses: ComparisonData[];

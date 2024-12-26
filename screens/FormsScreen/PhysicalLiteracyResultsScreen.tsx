@@ -9,15 +9,29 @@ import db from '@react-native-firebase/database';
 type Props = NativeStackScreenProps<FormsStackParamList, 'PhysicalLiteracyResults'>;
 
 export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { formResponse, language, answers } = route.params;
+  // Add null checks for route params
+  const formResponse = route.params?.formResponse;
+  const language = route.params?.language;
+  const answers = route.params?.answers;
+
+  // Validate required params
+  useEffect(() => {
+    if (!formResponse || !language || !answers) {
+      console.error('Missing required navigation params:', { formResponse, language, answers });
+      navigation.goBack();
+      return;
+    }
+  }, [formResponse, language, answers, navigation]);
+
   const [stats, setStats] = useState<FormStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadStats = async () => {
+      if (!answers) return; // Early return if answers not available
+      
       try {
-
         const snapshot = await db().ref("/form_responses").once("value");
 
         const allResponses: any[] = [];
@@ -29,12 +43,10 @@ export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigati
           return undefined;
         });
 
-
         const calculatedStats = answers.map((userAnswer, questionIndex) => {
           const values = allResponses
             .map((response) => response.answers[questionIndex])
             .filter((value): value is number => value !== null && !isNaN(value));
-
 
           if (values.length === 0) {
             return {
@@ -58,13 +70,12 @@ export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigati
             ? (values[medianIndex - 1] + values[medianIndex]) / 2
             : values[medianIndex];
 
-          // Calculate distance and percentage from median
           const distanceFromMedian = userAnswer !== null ? userAnswer - median : 0;
           const percentageFromMedian = median !== 0 
             ? ((userAnswer !== null ? userAnswer : 0) / median * 100) - 100 
             : 0;
 
-          const stats: FormStats = {
+          return {
             median,
             belowMedian: values.filter(v => v < median).length,
             aboveMedian: values.filter(v => v > median).length,
@@ -74,21 +85,27 @@ export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigati
             distanceFromMedian,
             percentageFromMedian
           };
-
-          return stats;
         });
 
         setStats(calculatedStats);
-        setLoading(false);
       } catch (error) {
         console.error('[ResultsScreen] Error loading stats:', error);
         setError(error instanceof Error ? error.message : 'Error loading stats');
+      } finally {
         setLoading(false);
       }
     };
 
     loadStats();
-  }, [formResponse, language, answers]);
+  }, [answers]); // Only depend on answers
+
+  if (!formResponse || !language || !answers) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: 'red' }}>Error: Datos no disponibles</Text>
+      </View>
+    );
+  }
 
   if (loading) {
     return (

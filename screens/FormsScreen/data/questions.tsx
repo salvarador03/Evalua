@@ -14,13 +14,13 @@ export interface Question {
       {
         id: 1,
         text: 'En comparación con los/las niños/as de mi edad mi forma física global o condición física es:',
-        min: 'Muy mala/malísima',
-        max: 'Muy buena/buenísima',
+        min: 'Muy mala/\nmalísima',
+        max: 'Muy buena/\nbuenísima',
       },
       {
         id: 2,
         text: 'En comparación con los/las niños/as de mi edad la cantidad de actividad física que realizo semanalmente (por ejemplo: jugar en el patio, hacer deportes, andar o ir en bicicleta, etc.) es:',
-        min: 'Nada/Ninguna',
+        min: 'Nada/\nNinguna',
         max: 'Muchísima',
       },
       {
@@ -44,8 +44,8 @@ export interface Question {
       {
         id: 6,
         text: 'Sabiendo que la alfabetización física es la suma de las preguntas anteriores: 1) forma física global/condición física; 2) cantidad de actividad física realizada semanalmente; 3) lo que sabes sobre educación física; 4) motivación para realizar actividad física, incluyendo hacer nuevos amigos y sentirte mejor con tus compañeros/as gracias a la actividad física. En comparación con los/las niños/as de mi edad mi alfabetización física es:',
-        min: 'Muy mala/Pésima',
-        max: 'Muy buena/Excelente',
+        min: 'Muy mala/\nPésima',
+        max: 'Muy buena/\nExcelente',
       },
     ],
     en: [

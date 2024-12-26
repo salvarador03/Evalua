@@ -5,12 +5,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { translations, Language } from '../LanguageSelection/translations';
 
 interface PhysicalLiteracySliderProps {
-    value: number | null;
-    onChange: (value: number) => void;
-    minLabel: string;
-    maxLabel: string;
-    language: Language;
-  }
+  value: number | null;
+  onChange: (value: number) => void;
+  minLabel: string;
+  maxLabel: string;
+  language: Language;
+}
 
 type SliderInfo = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -19,12 +19,12 @@ type SliderInfo = {
   iconColor: string;
 }
 
-const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({ 
-    value, 
-    onChange, 
-    minLabel, 
-    maxLabel,
-    language
+const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
+  value,
+  onChange,
+  minLabel,
+  maxLabel,
+  language
 }) => {
   const getSliderInfo = (value: number | null): SliderInfo => {
     if (value === null) {
@@ -35,7 +35,7 @@ const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
         iconColor: "#666"
       };
     }
-    
+
     if (value <= 3) {
       return {
         icon: "sad",
@@ -44,7 +44,7 @@ const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
         iconColor: "#ef4444"
       };
     }
-    
+
     if (value <= 7) {
       return {
         icon: "happy-outline",
@@ -53,7 +53,7 @@ const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
         iconColor: "#fbbf24"
       };
     }
-    
+
     return {
       icon: "happy",
       color: "#4ade80",
@@ -74,7 +74,7 @@ const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
 
   const renderValueIndicator = () => {
     const { icon, color, message, iconColor } = getSliderInfo(value);
-    
+
     return (
       <View style={styles.valueIndicator}>
         <Ionicons name={icon} size={32} color={iconColor} />
@@ -86,6 +86,7 @@ const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
     );
   };
 
+  // Modificar el renderScaleMarkers y el estilo de los labels
   const renderScaleMarkers = () => {
     return (
       <View style={styles.markersContainer}>
@@ -96,16 +97,18 @@ const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
                 styles.marker,
                 mark === value && styles.activeMarker,
                 mark <= 3 ? styles.redZone :
-                mark <= 7 ? styles.yellowZone :
-                styles.greenZone,
+                  mark <= 7 ? styles.yellowZone :
+                    styles.greenZone,
                 (mark === 0 || mark === 3 || mark === 7 || mark === 10) && styles.majorMarker
               ]} />
               <Text style={[
                 styles.markerLabel,
                 mark === value && styles.activeLabel,
                 mark <= 3 ? styles.redText :
-                mark <= 7 ? styles.yellowText :
-                styles.greenText
+                  mark <= 7 ? styles.yellowText :
+                    styles.greenText,
+                // Añadir estilo especial para los extremos
+                (mark === 0 || mark === 10) && styles.extremeLabel
               ]}>
                 {mark}
               </Text>
@@ -116,16 +119,46 @@ const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
     );
   };
 
+  const ExtremeLine = ({ isStart }: { isStart: boolean }) => (
+    <View style={[
+      styles.extremeLineContainer,
+      isStart ? styles.extremeLineStart : styles.extremeLineEnd
+    ]}>
+      <View style={[
+        styles.extremeLine,
+        isStart ? styles.redLine : styles.greenLine
+      ]} />
+    </View>
+  );
+
+// Modificar el renderizado de las etiquetas
+const renderLabels = () => {
+  return (
+    <View style={styles.labelContainer}>
+      <View style={[styles.valueContainer, { alignItems: 'flex-start' }]}>
+        {/* <ExtremeLine isStart={true} /> */}
+        {/* <Text style={[styles.valueNumberLeft, { color: '#ef4444', marginLeft: 0 }]}>0</Text> */}
+        <Text style={[styles.labelText, { marginLeft: 0 }]}>{minLabel}</Text>
+      </View>
+      <View style={[styles.valueContainer, { alignItems: 'flex-end' }]}>
+        {/*<ExtremeLine isStart={false} />*/}
+        {/* <Text style={[styles.valueNumberRight, { color: '#4ade80', marginRight: 0 }]}>10</Text> */}
+        <Text style={[styles.labelText, { marginRight: 0 }]}>{maxLabel}</Text>
+      </View>
+    </View>
+  );
+};
+
   return (
     <View style={styles.container}>
       {renderValueIndicator()}
-      
+
       <View style={styles.sliderContainer}>
         <View style={styles.sliderTrackBase} />
         {renderScaleMarkers()}
         <View style={[
           styles.sliderTrackActive,
-          { 
+          {
             width: `${(value !== null ? value : 0) * 10}%`,
             backgroundColor: getTrackColor(value)
           }
@@ -142,11 +175,7 @@ const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
           thumbTintColor="#ffffff"
         />
       </View>
-
-      <View style={styles.labelContainer}>
-        <Text style={styles.endLabel}>{minLabel}</Text>
-        <Text style={[styles.endLabel, styles.rightLabel]}>{maxLabel}</Text>
-      </View>
+      {renderLabels()}
     </View>
   );
 };
@@ -156,6 +185,75 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 10,
     marginVertical: 20,
+  },
+  extremeContainer: {
+    alignItems: 'center',
+  },
+  extremeLineContainer: {
+    alignItems: 'center',
+    position: 'relative',
+    height: 20, // Altura de la línea vertical
+    marginBottom: 5, // Espacio entre la línea y el texto
+  },
+
+  extremeLine: {
+    width: 2, // Ancho de la línea
+    height: '100%',
+    backgroundColor: '#666', // Color de la línea
+  },
+
+  extremeLineStart: {
+    alignItems: 'flex-start',
+    marginLeft: 10, // Alinear con el inicio del slider
+  },
+
+  extremeLineEnd: {
+    alignItems: 'flex-end',
+    marginRight: 10, // Alinear con el final del slider
+  },
+  leftExtreme: {
+    textAlign: 'left',
+    fontWeight: '500',
+  },
+  rightExtreme: {
+    textAlign: 'right',
+    fontWeight: '500',
+  },
+  redLine: {
+    backgroundColor: '#ef4444', // Color rojo que coincide con el inicio
+  },
+
+  greenLine: {
+    backgroundColor: '#4ade80', // Color verde que coincide con el final
+  },
+  extremeValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  extremeLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  rightLabel: {
+    alignItems: 'flex-end',
+  },
+  leftLabel: {
+    alignItems: 'flex-start',
+  },
+  valueNumberLeft: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 15,  // Añade este margen para separar el número del texto
+  },
+  valueNumberRight: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginRight: 11,  // Añade este margen para separar el número del texto
+  },
+  labelText: {
+    fontSize: 12,
+    color: '#666',
   },
   valueIndicator: {
     flexDirection: 'row',
@@ -180,13 +278,13 @@ const styles = StyleSheet.create({
   sliderContainer: {
     position: 'relative',
     height: 100,
-    marginHorizontal: 10,
+    marginHorizontal: 0, // Cambiado de 10 a 0
     justifyContent: 'center',
   },
   sliderTrackBase: {
     position: 'absolute',
-    left: 0,
-    right: 0,
+    left: 10,
+    right: 10,
     height: 4,
     backgroundColor: '#e5e7eb',
     borderRadius: 2,
@@ -196,25 +294,24 @@ const styles = StyleSheet.create({
   },
   sliderTrackActive: {
     position: 'absolute',
-    left: 0,
+    left: 10,
     height: 4,
     borderRadius: 2,
     top: '50%',
     marginTop: -2,
-    zIndex: 2,
+    zIndex: 1, // Cambiado de 2 a 1 para que esté por debajo
   },
   markersContainer: {
     position: 'absolute',
     width: '100%',
     paddingVertical: 15,
-    zIndex: 1,
+    zIndex: 2, // Aumentado para que esté por encima de las líneas
   },
   markersInnerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: -10,
+    width: '100%',
     paddingHorizontal: 10,
-    width: '110%',
   },
   markerColumn: {
     alignItems: 'center',
@@ -245,14 +342,9 @@ const styles = StyleSheet.create({
   markerLabel: {
     fontSize: 12,
     color: '#666',
-    ...Platform.select({
-      ios: {
-        fontWeight: '500',
-      },
-      android: {
-        fontFamily: 'sans-serif-medium',
-      },
-    }),
+    textAlign: 'center',
+    width: 20,
+    zIndex: 3, // Añadido para asegurar que está por encima
   },
   activeLabel: {
     fontWeight: 'bold',
@@ -270,21 +362,23 @@ const styles = StyleSheet.create({
   slider: {
     width: '100%',
     height: 40,
-    zIndex: 3,
+    zIndex: 4, // Aumentado para que esté por encima de todo
+  },
+  valueContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-start', // para el 0
+  },
+  valueContainerRight: {
+    alignItems: 'flex-end', // para el 10
   },
   labelContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 10,
-    marginTop: 10,
+    width: '100%',
   },
   endLabel: {
-    fontSize: 12,
-    color: '#666',
-    maxWidth: '45%',
-  },
-  rightLabel: {
-    textAlign: 'right',
+    alignItems: 'flex-start',
   },
 });
 

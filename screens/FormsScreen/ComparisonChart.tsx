@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ComparisonData } from "../../types/formstats";
@@ -36,15 +35,25 @@ interface ChartProps {
   formResponse?: FormResponse;
 }
 
+interface Filter {
+  id: "class" | "global" | "country" | "age";
+  active: boolean;
+  icon: string;
+  label: string;
+}
+
 const ComparisonChart: React.FC<ChartProps> = ({
   userScore,
   userData,
   questionIndex,
   formResponse,
 }) => {
-  const [activeView, setActiveView] = useState<"class" | "global" | "country">(
-    "class"
-  );
+  const [filters, setFilters] = useState<Filter[]>([
+    { id: "class", active: false, icon: "school", label: "Clase" },
+    { id: "global", active: false, icon: "globe", label: "Global" },
+    { id: "country", active: false, icon: "flag", label: "País" },
+    { id: "age", active: true, icon: "calendar", label: "Edad" },
+  ]);
   const [allResponses, setAllResponses] = useState<ComparisonData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -52,20 +61,17 @@ const ComparisonChart: React.FC<ChartProps> = ({
     const loadResponses = async () => {
       setIsLoading(true);
       try {
-        // Si es un usuario guest, primero obtenemos su código de clase
         if (formResponse?.isGuest && userData.userId) {
           const guestSnapshot = await db()
             .ref(`/guests/${userData.userId}`)
             .once("value");
 
           const guestData = guestSnapshot.val();
-
           if (guestData?.classCode) {
             userData.classCode = guestData.classCode;
           }
         }
 
-        // Cargar todas las respuestas
         const [formResponsesSnapshot, usersSnapshot, guestsSnapshot] =
           await Promise.all([
             db().ref("/form_responses").once("value"),
@@ -76,7 +82,6 @@ const ComparisonChart: React.FC<ChartProps> = ({
         const formResponses = formResponsesSnapshot.val() || {};
         const users = usersSnapshot.val() || {};
         const guests = guestsSnapshot.val() || {};
-
 
         const responses: ComparisonData[] = [];
 
@@ -129,42 +134,33 @@ const ComparisonChart: React.FC<ChartProps> = ({
       };
     }
 
-    // Obtener y ordenar los scores válidos
     const scores = data
       .map((r) => r.score)
       .filter((score): score is number => score !== null && !isNaN(score))
       .sort((a, b) => a - b);
 
-    // Calcular la mediana
     const mid = Math.floor(scores.length / 2);
     const median =
       scores.length % 2 === 0
         ? (scores[mid - 1] + scores[mid]) / 2
         : scores[mid];
 
-    // Contar estudiantes en cada categoría
     const belowMedian = scores.filter((s) => s < median).length;
     const aboveMedian = scores.filter((s) => s > median).length;
     const atMedian = scores.filter((s) => s === median).length;
 
-    // Calcular la distancia desde la mediana
     const distanceFromMedian = userScore - median;
 
-    // Calcular el porcentaje desde la mediana teniendo en cuenta la distribución
     let percentageFromMedian = 0;
     if (median !== 0) {
       if (Math.abs(distanceFromMedian) < 0.1) {
-        // Si está en la mediana, el porcentaje es 0
         percentageFromMedian = 0;
       } else {
-        // Calcular el porcentaje teniendo en cuenta la distribución
         const totalScores = scores.length;
         if (userScore > median) {
-          // Si está por encima, calcular qué porcentaje de estudiantes está por debajo
           const studentsBelow = belowMedian + atMedian / 2;
           percentageFromMedian = (studentsBelow / totalScores) * 100;
         } else {
-          // Si está por debajo, calcular qué porcentaje de estudiantes está por encima
           const studentsAbove = aboveMedian + atMedian / 2;
           percentageFromMedian = -(studentsAbove / totalScores) * 100;
         }
@@ -181,6 +177,71 @@ const ComparisonChart: React.FC<ChartProps> = ({
       percentageFromMedian,
     };
   };
+
+  const toggleFilter = (filterId: Filter['id']) => {
+    setFilters(currentFilters =>
+      currentFilters.map(filter => ({
+        ...filter,
+        active: filter.id === filterId ? !filter.active : filter.active
+      }))
+    );
+  };
+
+// En la función getFilteredResponses, modifica cómo se obtiene la edad objetivo
+const getFilteredResponses = () => {
+  let filteredData = [...allResponses];
+  const activeFilters = filters.filter(f => f.active);
+
+  if (activeFilters.length === 0) return [];
+
+  // Usa la edad del estudiante directamente desde userData
+  const studentAge = formResponse?.age;
+
+  activeFilters.forEach(filter => {
+    switch (filter.id) {
+      case "class":
+        filteredData = filteredData.filter(r => r.classCode === userData.classCode);
+        break;
+      case "age":
+        // Usar la edad del estudiante para el filtrado
+        if (studentAge !== undefined) {
+          filteredData = filteredData.filter(r => r.age === studentAge);
+        }
+        break;
+      case "country":
+        filteredData = filteredData.filter(
+          r => r.country.toLowerCase() === userData.country.toLowerCase()
+        );
+        break;
+      case "global":
+        // No aplicar filtro adicional para global
+        break;
+    }
+  });
+
+  return filteredData;
+};
+
+const getComparisonTitle = () => {
+  const activeFilters = filters.filter(f => f.active);
+  if (activeFilters.length === 0) return "Selecciona filtros para comparar";
+
+  // Obtener la edad del estudiante del formResponse
+  const studentAge = formResponse?.age;
+
+  return "Comparación " + activeFilters
+    .map(f => {
+      switch (f.id) {
+        case "class": return "de mi clase";
+        case "global": return "global";
+        case "country": return `de ${userData.country}`;
+        case "age": return studentAge !== undefined ? `por edad (${studentAge} años)` : `por edad (${studentAge})`;
+        default: return "";
+      }
+    })
+    .join(" y ");
+};
+
 
   const renderMedianComparison = (stats: MedianStats, context: string) => {
     if (stats.totalStudents === 0) {
@@ -212,8 +273,8 @@ const ComparisonChart: React.FC<ChartProps> = ({
                   backgroundColor: atMedian
                     ? "#FFB442"
                     : isAboveMedian
-                    ? "#4ADE80"
-                    : "#FF6B6B",
+                      ? "#4ADE80"
+                      : "#FF6B6B",
                 },
               ]}
             />
@@ -228,8 +289,8 @@ const ComparisonChart: React.FC<ChartProps> = ({
                 color: atMedian
                   ? "#FFB442"
                   : isAboveMedian
-                  ? "#4ADE80"
-                  : "#FF6B6B",
+                    ? "#4ADE80"
+                    : "#FF6B6B",
                 left: `${Math.min(
                   Math.max(50 + stats.percentageFromMedian / 2, 0),
                   100
@@ -249,8 +310,8 @@ const ComparisonChart: React.FC<ChartProps> = ({
                 atMedian
                   ? "remove-circle"
                   : isAboveMedian
-                  ? "arrow-up-circle"
-                  : "arrow-down-circle"
+                    ? "arrow-up-circle"
+                    : "arrow-down-circle"
               }
               size={24}
               color={
@@ -260,9 +321,8 @@ const ComparisonChart: React.FC<ChartProps> = ({
             <Text style={styles.statLabel}>
               {atMedian
                 ? "Estás en la mediana"
-                : `${Math.abs(stats.percentageFromMedian).toFixed(1)}% ${
-                    isAboveMedian ? "por encima" : "por debajo"
-                  }`}
+                : `${Math.abs(stats.percentageFromMedian).toFixed(1)}% ${isAboveMedian ? "por encima" : "por debajo"
+                }`}
             </Text>
           </View>
 
@@ -276,106 +336,44 @@ const ComparisonChart: React.FC<ChartProps> = ({
     );
   };
 
-  const renderClassView = () => {
+  const renderComparison = () => {
+    const filteredResponses = getFilteredResponses();
+    const stats = calculateMedianStats(filteredResponses);
 
-    if (!userData.classCode && formResponse?.isGuest) {
-      // Intentar obtener el código de clase del guest
-      const guestId = userData.userId;
-      db()
-        .ref(`/guests/${guestId}`)
-        .once("value")
-        .then((snapshot) => {
-          const guestData = snapshot.val();
-          if (guestData?.classCode) {
-            userData.classCode = guestData.classCode;
-          }
-        });
-    }
-
-    if (!userData.classCode) {
+    if (!userData.classCode && filters.some(f => f.id === "class" && f.active)) {
       return (
         <View style={styles.viewContainer}>
           <View style={styles.headerCard}>
-            <Ionicons name="school" size={32} color="#9E7676" />
-            <Text style={styles.headerTitle}>Comparación con mi Clase</Text>
-            <Text style={styles.headerSubtitle}>
-              Sin código de clase asignado
-            </Text>
+            <Text style={styles.headerTitle}>{getComparisonTitle()}</Text>
           </View>
           <View style={styles.medianComparisonCard}>
             <Text style={styles.noDataText}>
-              Necesitas un código de clase asignado para ver comparaciones
+              Necesitas un código de clase asignado para usar el filtro de clase
             </Text>
           </View>
         </View>
       );
     }
-
-    const classResponses = allResponses.filter(
-      (r) => r.classCode === userData.classCode
-    );
-    const classStats = calculateMedianStats(classResponses);
-
+    
     return (
       <View style={styles.viewContainer}>
         <View style={styles.headerCard}>
-          <Ionicons name="school" size={32} color="#9E7676" />
-          <Text style={styles.headerTitle}>Comparación con mi Clase</Text>
-          <Text style={styles.headerSubtitle}>
-            {`Código: ${userData.classCode} ${
-              classResponses.length > 0
-                ? `(${classResponses.length} estudiantes)`
-                : ""
-            }`}
-          </Text>
-        </View>
-
-        {classResponses.length > 0 ? (
-          <>
-            {renderMedianComparison(classStats, "tu clase")}
-            <MedianBarChart
-              data={classResponses.map((r) => r.score)}
-              median={classStats.median}
-              userScore={userScore}
-              viewType="class"
-              classCode={userData.classCode}
-              countryName={userData.country}
-              allResponses={allResponses} // Pasar todas las respuestas
-            />
-          </>
-        ) : (
-          <View style={styles.medianComparisonCard}>
-            <Text style={styles.noDataText}>
-              No hay suficientes datos en tu clase para hacer comparaciones
+          <Text style={styles.headerTitle}>{getComparisonTitle()}</Text>
+          {filteredResponses.length > 0 && (
+            <Text style={styles.headerSubtitle}>
+              {filteredResponses.length} estudiantes
             </Text>
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  const renderGlobalView = () => {
-
-    const globalStats = calculateMedianStats(allResponses);
-
-    return (
-      <View style={styles.viewContainer}>
-        <View style={styles.headerCard}>
-          <Ionicons name="globe" size={32} color="#9E7676" />
-          <Text style={styles.headerTitle}>Comparación Global</Text>
-          <Text style={styles.headerSubtitle}>
-            {allResponses.length} estudiantes en total
-          </Text>
+          )}
         </View>
 
-        {allResponses.length > 0 ? (
+        {filteredResponses.length > 0 ? (
           <>
-            {renderMedianComparison(globalStats, "todos los estudiantes")}
+            {renderMedianComparison(stats, "la selección")}
             <MedianBarChart
-              data={allResponses.map((r) => r.score)}
-              median={globalStats.median}
+              data={filteredResponses.map(r => r.score)}
+              median={stats.median}
               userScore={userScore}
-              viewType="global"
+              viewType="custom"
               classCode={userData.classCode}
               countryName={userData.country}
               allResponses={allResponses}
@@ -384,52 +382,7 @@ const ComparisonChart: React.FC<ChartProps> = ({
         ) : (
           <View style={styles.medianComparisonCard}>
             <Text style={styles.noDataText}>
-              No hay datos globales disponibles para comparar
-            </Text>
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  const renderCountryView = () => {
-    const countryResponses = allResponses.filter(
-      (r) =>
-        r.country && r.country.toLowerCase() === userData.country.toLowerCase()
-    );
-
-    const countryStats = calculateMedianStats(countryResponses);
-
-    return (
-      <View style={styles.viewContainer}>
-        <View style={styles.headerCard}>
-          <Ionicons name="flag" size={32} color="#9E7676" />
-          <Text style={styles.headerTitle}>Comparación por País</Text>
-          <Text style={styles.headerSubtitle}>
-            {userData.country || "País no especificado"}
-            {countryResponses.length > 0
-              ? ` (${countryResponses.length} estudiantes)`
-              : ""}
-          </Text>
-        </View>
-
-        {countryResponses.length > 0 ? (
-          <>
-            {renderMedianComparison(countryStats, "tu país")}
-            <MedianBarChart
-              data={countryResponses.map((r) => r.score)}
-              median={countryStats.median}
-              userScore={userScore}
-              viewType="country"
-              classCode={userData.classCode}
-              countryName={userData.country}
-              allResponses={allResponses}
-            />
-          </>
-        ) : (
-          <View style={styles.medianComparisonCard}>
-            <Text style={styles.noDataText}>
-              No hay datos disponibles para comparar en tu país
+              No hay datos disponibles para la combinación de filtros seleccionada
             </Text>
           </View>
         )}
@@ -439,63 +392,53 @@ const ComparisonChart: React.FC<ChartProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeView === "class" && styles.activeTab]}
-          onPress={() => setActiveView("class")}
-        >
-          <Ionicons
-            name="people"
-            size={24}
-            color={activeView === "class" ? "#fff" : "#9E7676"}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeView === "class" && styles.activeTabText,
-            ]}
-          >
-            Mi Clase
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeView === "global" && styles.activeTab]}
-          onPress={() => setActiveView("global")}
-        >
-          <Ionicons
-            name="globe"
-            size={24}
-            color={activeView === "global" ? "#fff" : "#9E7676"}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeView === "global" && styles.activeTabText,
-            ]}
-          >
-            Global
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeView === "country" && styles.activeTab]}
-          onPress={() => setActiveView("country")}
-        >
-          <Ionicons
-            name="flag"
-            size={24}
-            color={activeView === "country" ? "#fff" : "#9E7676"}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeView === "country" && styles.activeTabText,
-            ]}
-          >
-            Por País
-          </Text>
-        </TouchableOpacity>
+      <View style={styles.filterContainer}>
+        <View style={styles.filterRow}>
+          {filters.slice(0, 2).map(filter => (
+            <TouchableOpacity
+              key={filter.id}
+              style={[styles.filterChip, filter.active && styles.activeFilterChip]}
+              onPress={() => toggleFilter(filter.id)}
+            >
+              <Ionicons
+                name={filter.icon as any}
+                size={20}
+                color={filter.active ? "#fff" : "#9E7676"}
+              />
+              <Text
+                style={[
+                  styles.filterText,
+                  filter.active && styles.activeFilterText
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={styles.filterRow}>
+          {filters.slice(2, 4).map(filter => (
+            <TouchableOpacity
+              key={filter.id}
+              style={[styles.filterChip, filter.active && styles.activeFilterChip]}
+              onPress={() => toggleFilter(filter.id)}
+            >
+              <Ionicons
+                name={filter.icon as any}
+                size={20}
+                color={filter.active ? "#fff" : "#9E7676"}
+              />
+              <Text
+                style={[
+                  styles.filterText,
+                  filter.active && styles.activeFilterText
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       <ScrollView style={styles.content}>
@@ -504,11 +447,7 @@ const ComparisonChart: React.FC<ChartProps> = ({
             <Text style={styles.noDataText}>Cargando datos...</Text>
           </View>
         ) : (
-          <>
-            {activeView === "class" && renderClassView()}
-            {activeView === "global" && renderGlobalView()}
-            {activeView === "country" && renderCountryView()}
-          </>
+          renderComparison()
         )}
       </ScrollView>
     </View>
@@ -523,33 +462,49 @@ const styles = StyleSheet.create({
     padding: 16,
     marginVertical: 8,
   },
-  tabContainer: {
-    flexDirection: "row",
-    backgroundColor: "#f5f5f5",
+  filterContainer: {
+    flexDirection: 'column',
+    gap: 8,
+    padding: 8,
+    backgroundColor: '#F8F6F4',
     borderRadius: 12,
-    padding: 4,
     marginBottom: 16,
   },
-  tab: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+  filterRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     gap: 8,
   },
-  activeTab: {
-    backgroundColor: "#9E7676",
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 25,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#E4D0D0',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    width: '45%',
+    minWidth: 130,
   },
-  tabText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#9E7676",
+  activeFilterChip: {
+    backgroundColor: '#9E7676',
+    borderColor: '#9E7676',
   },
-  activeTabText: {
-    color: "#fff",
+  filterText: {
+    fontSize: 15,
+    color: '#9E7676',
+    fontWeight: '600',
+  },
+  activeFilterText: {
+    color: '#fff',
   },
   content: {
     flex: 1,
@@ -571,6 +526,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   headerSubtitle: {
+    fontSize: 14,
+    color: "#9E7676",
+    marginTop: 4,
+  },
+  headerValue: {
     fontSize: 14,
     color: "#9E7676",
     marginTop: 4,
@@ -669,3 +629,4 @@ const styles = StyleSheet.create({
 });
 
 export default ComparisonChart;
+    

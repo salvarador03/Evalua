@@ -21,7 +21,7 @@ import {
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import auth from "@react-native-firebase/auth";
 import { Language } from "../../types/language";
-import { MainTabParamList, RootStackParamList } from "../../navigation/types";
+import { MainTabParamList, RootStackParamList, StudentData } from "../../navigation/types";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 const COLORS = {
@@ -569,7 +569,7 @@ export const StudentsScreen: React.FC = () => {
       student.formResponses &&
       student.formResponses.physical_literacy &&
       student.formResponses.physical_literacy.answers;
-
+  
     if (!hasResponses) {
       Alert.alert(
         "Sin respuestas",
@@ -579,9 +579,9 @@ export const StudentsScreen: React.FC = () => {
       );
       return;
     }
-
+  
     const physicalLiteracyResponse = student.formResponses?.physical_literacy;
-
+  
     if (!physicalLiteracyResponse) {
       Alert.alert(
         "Sin respuestas",
@@ -589,18 +589,34 @@ export const StudentsScreen: React.FC = () => {
       );
       return;
     }
-
+  
+    // Determinar si el estudiante es adolescente o niño
+    const isTeenStudent = student.age ? student.age >= 12 && student.age <= 18 : false;
+    
+    // Obtener el número correcto de respuestas basado en la edad
+    const expectedAnswers = isTeenStudent ? 8 : 6;
+    
+    // Asegurarse de que solo se pasen las respuestas necesarias
+    const trimmedAnswers = physicalLiteracyResponse.answers.slice(0, expectedAnswers);
+  
     const country = student.isGuest
       ? (physicalLiteracyResponse as any).country ||
         student.countryRole?.country ||
         "Unknown"
       : student.countryRole?.country || "Unknown";
-
+  
+    const studentData: StudentData = {
+      name: student.name,
+      email: student.email,
+      uid: student.uid,
+      age: student.age // Ahora es opcional, así que es válido incluso si es undefined
+    };
+  
     navigation.navigate("Forms", {
       screen: "PhysicalLiteracyResults",
       params: {
         formResponse: {
-          answers: physicalLiteracyResponse.answers,
+          answers: trimmedAnswers,
           completedAt: physicalLiteracyResponse.completedAt,
           language: physicalLiteracyResponse.language as Language,
           isGuest: student.isGuest || false,
@@ -608,13 +624,9 @@ export const StudentsScreen: React.FC = () => {
           country: country,
         },
         language: physicalLiteracyResponse.language as Language,
-        answers: physicalLiteracyResponse.answers,
-        studentData: {
-          name: student.name,
-          email: student.email,
-          uid: student.uid,
-        },
-        isTeacherView: true, // Aseguramos que esto se pasa siempre como true
+        answers: trimmedAnswers,
+        studentData,
+        isTeacherView: true,
       },
     });
   };
