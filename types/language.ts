@@ -1,0 +1,3 @@
+interface TranslationText {
+  selectFiltersToCompare: string;
+} 

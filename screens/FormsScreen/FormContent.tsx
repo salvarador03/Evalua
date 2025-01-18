@@ -20,21 +20,21 @@ const childQuestionImages = [
   require("../../assets/images/preguntas/kids/primera_pregunta.webp"),
   require("../../assets/images/preguntas/kids/segunda_pregunta.webp"),
   require("../../assets/images/preguntas/kids/tercera_pregunta.webp"),
-  require("../../assets/images/preguntas/kids/cuarta_pregunta.webp"),//
+  require("../../assets/images/preguntas/kids/cuarta_pregunta.webp"),
   require("../../assets/images/preguntas/kids/quinta_pregunta.webp"),
   require("../../assets/images/preguntas/kids/sexta_pregunta.webp"),
 ];
 
 // Imágenes para adolescentes (12-18)
 const teenQuestionImages = [
-  require("../../assets/images/preguntas/teen/primera_pregunta.jpg"),
-  require("../../assets/images/preguntas/teen/segunda_pregunta.jpg"),
-  require("../../assets/images/preguntas/teen/tercera_pregunta.jpg"),
-  require("../../assets/images/preguntas/teen/cuarta_pregunta.jpg"),
-  require("../../assets/images/preguntas/teen/quinta_pregunta.jpg"),
-  require("../../assets/images/preguntas/teen/sexta_pregunta.jpg"),
-  require("../../assets/images/preguntas/teen/septima_pregunta.jpg"),
-  require("../../assets/images/preguntas/teen/octava_pregunta.jpg"),
+  require("../../assets/images/preguntas/teen/primera_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/segunda_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/tercera_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/cuarta_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/quinta_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/sexta_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/septima_pregunta.webp"),
+  require("../../assets/images/preguntas/teen/octava_pregunta.webp"),
 ];
 
 interface FormContentProps {
@@ -96,6 +96,48 @@ const formatQuestionText = (text: string): React.ReactNode[] => {
       <Text key={index}>{part.text}</Text>
     )
   );
+};
+
+// Traducciones para la última pregunta
+const lastQuestionTranslations = {
+  introText: {
+    'es': 'Sabiendo que la alfabetización física es la suma de las preguntas anteriores:',
+    'en': 'Knowing that physical literacy is the sum of the previous questions:',
+    'pt-PT': 'Sabendo que a literacia física é a soma das questões anteriores:',
+    'pt-BR': 'Sabendo que o letramento físico é a soma das questões anteriores:'
+  },
+  finalText: {
+    'es': 'En comparación con los/las niños/as de mi edad mi alfabetización física es:',
+    'en': 'Compared to children my age, my physical literacy is:',
+    'pt-PT': 'Em comparação com as crianças da minha idade, a minha literacia física é:',
+    'pt-BR': 'Em comparação com as crianças da minha idade, meu letramento físico é:'
+  },
+  questionTitles: {
+    'es': [
+      'Forma física global/condición física',
+      'Cantidad de actividad física realizada semanalmente',
+      'Lo que sabes sobre educación física',
+      'Motivación para realizar actividad física, incluyendo hacer nuevos amigos y sentirte mejor con tus compañeros/as gracias a la actividad física'
+    ],
+    'en': [
+      'Overall physical fitness',
+      'Amount of weekly physical activity',
+      'What you know about physical education',
+      'Motivation to do physical activity, including making new friends and feeling better with your peers thanks to physical activity'
+    ],
+    'pt-PT': [
+      'Forma física global',
+      'Quantidade de atividade física semanal',
+      'O que sabe sobre educação física',
+      'Motivação para fazer atividade física, incluindo fazer novos amigos e sentir-se melhor com os colegas graças à atividade física'
+    ],
+    'pt-BR': [
+      'Forma física global',
+      'Quantidade de atividade física semanal',
+      'O que sabe sobre educação física',
+      'Motivação para fazer atividade física, incluindo fazer novos amigos e sentir-se melhor com os colegas graças à atividade física'
+    ]
+  }
 };
 
 export const FormContent: React.FC<FormContentProps> = React.memo(({
@@ -229,78 +271,94 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
   }, [answers, currentQuestion, onAnswerChange]);
 
   const renderQuestionImages = (questionIndex: number) => {
-    if (questionIndex === 7) { // Para la pregunta 8 (índice 7)
+    const images = isTeenUser ? teenQuestionImages : childQuestionImages;
+
+    // Mostrar el collage solo en la sexta pregunta Y solo para niños
+    if (questionIndex === 5 && !isTeenUser) {
       return (
         <View style={styles.multipleImagesContainer}>
-          <View style={styles.imageRow}>
-            {/* Primera fila de imágenes */}
-            <View style={styles.imageContainer}>
-              <View style={styles.letterBadge}>
-                <Text style={styles.letterText}>A</Text>
+          {/* Grid de imágenes inicial */}
+          <View style={styles.imageGrid}>
+            {/* Primera fila */}
+            <View style={styles.gridRow}>
+              <View style={styles.gridImageContainer}>
+                <View style={styles.numberBadge}>
+                  <Text style={styles.numberText}>1</Text>
+                </View>
+                <Image source={images[0]} style={styles.gridImage} resizeMode="contain" />
               </View>
-              <Image
-                source={teenQuestionImages[0]}
-                style={styles.smallQuestionImage}
-              />
+              <View style={styles.gridImageContainer}>
+                <View style={styles.numberBadge}>
+                  <Text style={styles.numberText}>2</Text>
+                </View>
+                <Image source={images[1]} style={styles.gridImage} resizeMode="contain" />
+              </View>
             </View>
-            <View style={styles.imageContainer}>
-              <View style={styles.letterBadge}>
-                <Text style={styles.letterText}>B</Text>
+            {/* Segunda fila */}
+            <View style={styles.gridRow}>
+              <View style={styles.gridImageContainer}>
+                <View style={styles.numberBadge}>
+                  <Text style={styles.numberText}>3</Text>
+                </View>
+                <Image source={images[2]} style={styles.gridImage} resizeMode="contain" />
               </View>
-              <Image
-                source={teenQuestionImages[2]}
-                style={styles.smallQuestionImage}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <View style={styles.letterBadge}>
-                <Text style={styles.letterText}>C</Text>
+              <View style={styles.gridImageContainer}>
+                <View style={styles.numberBadge}>
+                  <Text style={styles.numberText}>4</Text>
+                </View>
+                <Image source={images[3]} style={styles.gridImage} resizeMode="contain" />
               </View>
-              <Image
-                source={teenQuestionImages[3]}
-                style={styles.smallQuestionImage}
-              />
             </View>
           </View>
-          <View style={styles.imageRow}>
-            {/* Segunda fila de imágenes */}
-            <View style={styles.imageContainer}>
-              <View style={styles.letterBadge}>
-                <Text style={styles.letterText}>D</Text>
+
+          {/* Enunciado principal */}
+          <Text style={styles.mainQuestionText}>
+            {lastQuestionTranslations.introText[language]}
+          </Text>
+          
+          {/* Preguntas con imágenes individuales */}
+          <View style={styles.questionsSection}>
+            {[0, 1, 2, 3].map((index) => (
+              <View key={index} style={styles.questionBlock}>
+                <Text style={styles.questionSubtext}>
+                  {`${index + 1}) ${lastQuestionTranslations.questionTitles[language][index]}`}
+                </Text>
+                <View style={styles.imageWrapper}>
+                  <View style={styles.numberBadge}>
+                    <Text style={styles.numberText}>{index + 1}</Text>
+                  </View>
+                  <Image
+                    source={images[index]}
+                    style={styles.summaryQuestionImage}
+                    resizeMode="contain"
+                  />
+                </View>
               </View>
-              <Image
-                source={teenQuestionImages[4]}
-                style={styles.smallQuestionImage}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <View style={styles.letterBadge}>
-                <Text style={styles.letterText}>E</Text>
-              </View>
-              <Image
-                source={teenQuestionImages[5]}
-                style={styles.smallQuestionImage}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <View style={styles.letterBadge}>
-                <Text style={styles.letterText}>F</Text>
-              </View>
-              <Image
-                source={teenQuestionImages[6]}
-                style={styles.smallQuestionImage}
-              />
-            </View>
+            ))}
           </View>
         </View>
       );
     }
-  
-    // Para el resto de preguntas, mantener la imagen única
+    
+    // Para todas las demás preguntas y para adolescentes, mantener el diseño original
     return (
       <Image
-        source={teenQuestionImages[questionIndex]}
+        source={images[questionIndex]}
         style={styles.questionImage}
+        resizeMode="contain"
+      />
+    );
+  };
+
+  // En el componente principal, para el slider usamos los labels de la pregunta original
+  const renderSlider = () => {
+    return (
+      <PhysicalLiteracySlider
+        value={answers[currentQuestion]}
+        onChange={handleAnswerChange}
+        minLabel={currentQuestions[currentQuestion].min}
+        maxLabel={currentQuestions[currentQuestion].max}
+        language={language}
       />
     );
   };
@@ -353,13 +411,7 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
       </View>
 
       {/* Slider */}
-      <PhysicalLiteracySlider
-        value={answers[currentQuestion]}
-        onChange={handleAnswerChange}
-        minLabel={currentQuestions[currentQuestion].min}
-        maxLabel={currentQuestions[currentQuestion].max}
-        language={language}
-      />
+      {renderSlider()}
 
       {/* Navigation */}
       <View style={styles.navigation}>
@@ -447,23 +499,59 @@ const styles = StyleSheet.create({
   },
   multipleImagesContainer: {
     width: '100%',
-    marginBottom: 15,
-    paddingHorizontal: 10, // Añadir padding horizontal
+    paddingHorizontal: 10,
+    paddingVertical: 15,
   },
-  imageRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between', // Cambiar a space-between
-    marginBottom: 10,
-  },
-  letterText: {
-    color: 'white',
-    fontSize: 14,
+  mainQuestionText: {
+    fontSize: 18,
     fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 25,
+    textAlign: 'center',
+    paddingHorizontal: 10,
   },
-  letterBadge: {
+  questionsSection: {
+    gap: 25,
+  },
+  questionBlock: {
+    marginBottom: 25,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  questionSubtext: {
+    fontSize: 16,
+    color: '#1f2937',
+    marginBottom: 15,
+    fontWeight: '600',
+    lineHeight: 22,
+  },
+  imageWrapper: {
+    position: 'relative',
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  summaryQuestionImage: {
+    width: '100%',
+    height: 180,
+    resizeMode: 'cover',
+  },
+  numberBadge: {
     position: 'absolute',
-    top: 5,
-    left: 5,
+    top: 10,
+    left: 10,
     backgroundColor: '#4ade80',
     borderRadius: 12,
     width: 24,
@@ -471,11 +559,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+    elevation: 3,
   },
-  smallQuestionImage: {
+  numberText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  questionImage: {
     width: '100%',
-    height: 200, // Aumentar la altura
-    borderRadius: 8,
+    height: 250,
+    borderRadius: 12,
     resizeMode: 'cover',
   },
   progress: {
@@ -500,14 +598,10 @@ const styles = StyleSheet.create({
   activeDot: {
     backgroundColor: "#4ade80",
   },
-  imageContainer: {
-    position: 'relative',
-    width: '30%', // Mantener el ancho
-  },
   questionContainer: {
     backgroundColor: "#ffffff",
-    paddingHorizontal: 15,
-    paddingVertical: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 15,
     borderRadius: 12,
     marginVertical: 15,
     shadowColor: "#000",
@@ -516,17 +610,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     width: '100%',
-    alignItems: 'center', // Centra el contenido
-  },
-  questionImage: {
-    width: '95%', // Usa casi todo el ancho disponible
-    minHeight: 250, // Altura mínima garantizada
-    maxHeight: 400, // Altura máxima para pantallas grandes
-    height: undefined, // Permite que la altura se ajuste
-    resizeMode: "cover", // Cambiamos a cover para llenar mejor el espacio
-    borderRadius: 12,
-    marginBottom: 15,
-    alignSelf: 'center',
+    alignItems: 'center',
+    flex: 1,
   },
   questionText: {
     fontSize: 18,
@@ -567,6 +652,33 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     color: "#fff",
+  },
+  imageGrid: {
+    marginBottom: 20,
+    width: '100%',
+  },
+  gridRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  gridImageContainer: {
+    width: '48%', // Permite un pequeño espacio entre imágenes
+    position: 'relative',
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  gridImage: {
+    width: '100%',
+    height: 150,
+    resizeMode: 'cover',
+    borderRadius: 12,
   },
 });
 

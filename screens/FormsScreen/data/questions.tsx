@@ -43,11 +43,11 @@ export interface Question {
       },
       {
         id: 6,
-        text: 'Sabiendo que la alfabetización física es la suma de las preguntas anteriores: 1) forma física global/condición física; 2) cantidad de actividad física realizada semanalmente; 3) lo que sabes sobre educación física; 4) motivación para realizar actividad física, incluyendo hacer nuevos amigos y sentirte mejor con tus compañeros/as gracias a la actividad física. En comparación con los/las niños/as de mi edad mi alfabetización física es:',
+        text: '',
         min: 'Muy mala/\nPésima',
         max: 'Muy buena/\nExcelente',
       },
-    ],
+    ], 
     en: [
       {
         id: 1,
@@ -81,7 +81,7 @@ export interface Question {
       },
       {
         id: 6,
-        text: 'Knowing that physical literacy is the sum of the previous questions: 1) overall physical fitness; 2) amount of weekly physical activity; 3) what you know about physical education; 4) motivation to do physical activity, including making new friends and feeling better with your peers thanks to physical activity. Compared to children my age, my physical literacy is:',
+        text: '',
         min: 'Very poor',
         max: 'Excellent',
       },
@@ -119,7 +119,7 @@ export interface Question {
       },
       {
         id: 6,
-        text: 'Sabendo que a literacia física é a soma das questões anteriores: 1) forma física global; 2) quantidade de atividade física semanal; 3) o que sabe sobre educação física; 4) motivação para fazer atividade física, incluindo fazer novos amigos e sentir-se melhor com os colegas graças à atividade física. Em comparação com as crianças da minha idade, a minha literacia física é:',
+        text: '',
         min: 'Muito má',
         max: 'Excelente',
       },
@@ -157,7 +157,7 @@ export interface Question {
       },
       {
         id: 6,
-        text: 'Sabendo que o letramento físico é a soma das questões anteriores: 1) forma física global; 2) quantidade de atividade física semanal; 3) o que sabe sobre educação física; 4) motivação para fazer atividade física, incluindo fazer novos amigos e sentir-se melhor com os colegas graças à atividade física. Em comparação com as crianças da minha idade, meu letramento físico é:',
+        text: '',
         min: 'Muito ruim',
         max: 'Excelente',
       },

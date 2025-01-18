@@ -4,6 +4,8 @@ import { View, Text, StyleSheet } from "react-native";
 import { ComparisonData } from "../../types/formstats";
 import { BarChart } from "react-native-gifted-charts";
 import UserMarker from "./UserMarker";
+import { translations } from "../../Components/LanguageSelection/translations";
+import { Language } from "../../types/language";
 
 interface MedianBarChartProps {
   data: number[];
@@ -13,6 +15,7 @@ interface MedianBarChartProps {
   classCode?: string;
   countryName?: string;
   allResponses: ComparisonData[];
+  language: Language;
 }
 
 const MedianBarChart: React.FC<MedianBarChartProps> = ({
@@ -23,6 +26,7 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
   classCode,
   countryName,
   allResponses,
+  language,
 }) => {
   const calculatePercentiles = (scores: number[]) => {
     const sortedScores = [...scores].sort((a, b) => a - b);
@@ -65,7 +69,7 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Distribución de puntuaciones</Text>
+      <Text style={styles.title}>{translations[language].scoreDistribution}</Text>
 
       <View style={styles.graphContainer}>
         {/* Bandas coloreadas con valores numéricos */}
@@ -142,11 +146,13 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
 
       <View style={styles.explanationContainer}>
         <Text style={styles.explanationTitle}>
-          ¿Cómo interpretar esta gráfica?
+          {translations[language].howToInterpret}
         </Text>
 
         <View style={styles.explanationSection}>
-          <Text style={styles.explanationSubtitle}>Bandas de Color:</Text>
+          <Text style={styles.explanationSubtitle}>
+            {translations[language].colorBands}:
+          </Text>
           <View style={styles.explanationItem}>
             <View
               style={[
@@ -155,7 +161,7 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
               ]}
             />
             <Text style={styles.explanationText}>
-              Superior (P85+): Rendimiento excepcional
+              {translations[language].superior} (P85+): {translations[language].exceptionalPerformance}
             </Text>
           </View>
           <View style={styles.explanationItem}>
@@ -166,7 +172,7 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
               ]}
             />
             <Text style={styles.explanationText}>
-              Alto (P50-P85): Por encima del promedio
+              {translations[language].high} (P50-P85): {translations[language].aboveAverage}
             </Text>
           </View>
           <View style={styles.explanationItem}>
@@ -177,7 +183,7 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
               ]}
             />
             <Text style={styles.explanationText}>
-              Medio (P15-P50): Dentro del rango típico
+              {translations[language].medium} (P15-P50): {translations[language].withinTypicalRange}
             </Text>
           </View>
           <View style={styles.explanationItem}>
@@ -188,30 +194,32 @@ const MedianBarChart: React.FC<MedianBarChartProps> = ({
               ]}
             />
             <Text style={styles.explanationText}>
-              Bajo (-P15): Área de mejora potencial
+              {translations[language].low} (-P15): {translations[language].potentialImprovementArea}
             </Text>
           </View>
         </View>
 
         <View style={styles.explanationSection}>
-          <Text style={styles.explanationSubtitle}>Tu Posición:</Text>
-          <Text style={styles.explanationText}>
-            • Tu puntuación ({userScore.toFixed(1)}) está en el percentil{" "}
-            {userPercentile.toFixed(1)}
+          <Text style={styles.explanationSubtitle}>
+            {translations[language].yourPosition}:
           </Text>
           <Text style={styles.explanationText}>
-            • Esto significa que superas al {userPercentile.toFixed(1)}% de los
-            estudiantes
+            • {translations[language].yourScore} ({userScore.toFixed(1)}) {translations[language].isAtPercentile} {userPercentile.toFixed(1)}
+          </Text>
+          <Text style={styles.explanationText}>
+            • {translations[language].thisMeans} {translations[language].youSurpass} {userPercentile.toFixed(1)}% {translations[language].ofStudents}
           </Text>
         </View>
 
         <View style={styles.explanationSection}>
-          <Text style={styles.explanationSubtitle}>Comparación:</Text>
-          <Text style={styles.explanationText}>
-            • Total de estudiantes: {filteredData.length}
+          <Text style={styles.explanationSubtitle}>
+            {translations[language].comparison}:
           </Text>
           <Text style={styles.explanationText}>
-            • Mediana del grupo: {percentiles.p50?.toFixed(1)}
+            • {translations[language].totalStudents}: {filteredData.length}
+          </Text>
+          <Text style={styles.explanationText}>
+            • {translations[language].groupMedian}: {percentiles.p50?.toFixed(1)}
           </Text>
         </View>
       </View>

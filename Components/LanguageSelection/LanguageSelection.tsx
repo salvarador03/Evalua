@@ -11,6 +11,46 @@ const countryConfigs = {
     language: "es" as Language,
     flag: "spain"
   },
+  "es_CU": {
+    country: "Cuba",
+    language: "es" as Language,
+    flag: "cuba"
+  },
+  "es_PE": {
+    country: "Perú",
+    language: "es" as Language,
+    flag: "peru"
+  },
+  "es_PA": {
+    country: "Panamá",
+    language: "es" as Language,
+    flag: "panama"
+  },
+  "es_CO": {
+    country: "Colombia",
+    language: "es" as Language,
+    flag: "colombia"
+  },
+  "es_CL": {
+    country: "Chile",
+    language: "es" as Language,
+    flag: "chile"
+  },
+  "es_EC": {
+    country: "Ecuador",
+    language: "es" as Language,
+    flag: "ecuador"
+  },
+  "es_AR": {
+    country: "Argentina",
+    language: "es" as Language,
+    flag: "argentina"
+  },
+  "es_MX": {
+    country: "México",
+    language: "es" as Language,
+    flag: "mexico"
+  },
   "en": {
     country: "United States",
     language: "en" as Language,
@@ -41,11 +81,9 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
 
   const handleCountrySelection = async (language: Language) => {
     try {
-      // Si hay un usuario, actualizamos su perfil
       if (user) {
         const selectedCountry = countryConfigs[language];
         
-        // Solo actualizamos si el countryRole es diferente
         if (!user.countryRole || 
             user.countryRole.language !== selectedCountry.language || 
             user.countryRole.country !== selectedCountry.country) {
@@ -63,7 +101,6 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
         }
       }
 
-      // Siempre llamamos a onLanguageSelect, independientemente del usuario
       await onLanguageSelect(language);
       
     } catch (error) {
@@ -89,12 +126,13 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
             <Text style={styles.welcomeSubtitle}>
               Selecciona tu idioma /{'\n'}
               Select your language /{'\n'}
-              Selecione seu idioma /
+              Selecione seu idioma / {'\n'}
               Selecione seu idioma
             </Text>
           </View>
 
           <View style={styles.gridContainer}>
+            {/* European and North American flags */}
             <View style={styles.row}>
               <TouchableOpacity
                 style={styles.flagButton}
@@ -105,7 +143,6 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("en")}
@@ -115,9 +152,90 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.flagButton}
+                onPress={() => handleCountrySelection("es")}
+              >
+                <Image
+                  source={require("../../assets/flags/mexico.webp")}
+                  style={styles.flagImage}
+                />
+              </TouchableOpacity>
             </View>
 
+            {/* South American flags row 1 */}
             <View style={styles.row}>
+              <TouchableOpacity
+                style={styles.flagButton}
+                onPress={() => handleCountrySelection("es")}
+              >
+                <Image
+                  source={require("../../assets/flags/colombia.webp")}
+                  style={styles.flagImage}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.flagButton}
+                onPress={() => handleCountrySelection("es")}
+              >
+                <Image
+                  source={require("../../assets/flags/peru.webp")}
+                  style={styles.flagImage}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.flagButton}
+                onPress={() => handleCountrySelection("es")}
+              >
+                <Image
+                  source={require("../../assets/flags/ecuador.webp")}
+                  style={styles.flagImage}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* South American flags row 2 */}
+            <View style={styles.row}>
+              <TouchableOpacity
+                style={styles.flagButton}
+                onPress={() => handleCountrySelection("es")}
+              >
+                <Image
+                  source={require("../../assets/flags/chile.webp")}
+                  style={styles.flagImage}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.flagButton}
+                onPress={() => handleCountrySelection("es")}
+              >
+                <Image
+                  source={require("../../assets/flags/argentina.webp")}
+                  style={styles.flagImage}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.flagButton}
+                onPress={() => handleCountrySelection("es")}
+              >
+                <Image
+                  source={require("../../assets/flags/panama.webp")}
+                  style={styles.flagImage}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Caribbean and Portuguese flags */}
+            <View style={styles.row}>
+              <TouchableOpacity
+                style={styles.flagButton}
+                onPress={() => handleCountrySelection("es")}
+              >
+                <Image
+                  source={require("../../assets/flags/cuba.webp")}
+                  style={styles.flagImage}
+                />
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("pt-PT")}
@@ -127,7 +245,6 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("pt-BR")}
@@ -148,7 +265,7 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
 const styles = StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: 'transparent',
+      backgroundColor: '#f0f4f8',
     },
     container: {
       flex: 1,
@@ -162,18 +279,18 @@ const styles = StyleSheet.create({
       width: '100%',
     },
     welcomeTitle: {
-      fontSize: 24,
+      fontSize: 26,
       fontWeight: 'bold',
-      color: '#1f2937',
+      color: '#2c3e50',
       textAlign: 'center',
       marginBottom: 20,
-      lineHeight: 32,
+      lineHeight: 34,
     },
     welcomeSubtitle: {
-      fontSize: 16,
-      color: '#6b7280',
+      fontSize: 18,
+      color: '#34495e',
       textAlign: 'center',
-      lineHeight: 24,
+      lineHeight: 26,
     },
     gridContainer: {
       width: '100%',
@@ -186,18 +303,18 @@ const styles = StyleSheet.create({
       marginBottom: 16,
     },
     flagButton: {
-      backgroundColor: 'white',
+      backgroundColor: '#ffffff',
       borderRadius: 16,
       padding: 12,
       marginHorizontal: 8,
       shadowColor: '#000',
       shadowOffset: {
         width: 0,
-        height: 1,
+        height: 2,
       },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 2,
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 4,
     },
     flagImage: {
       width: 65,

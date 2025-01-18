@@ -11,6 +11,8 @@ import { ComparisonData } from "../../types/formstats";
 import MedianBarChart from "./MedianBarChart";
 import db from "@react-native-firebase/database";
 import { FormResponse } from "../../types/form";
+import { translations } from "../../Components/LanguageSelection/translations";
+import { Language } from "../../types/language";
 
 interface MedianStats {
   median: number;
@@ -33,6 +35,7 @@ interface ChartProps {
   };
   questionIndex: number;
   formResponse?: FormResponse;
+  language: Language;
 }
 
 interface Filter {
@@ -47,12 +50,13 @@ const ComparisonChart: React.FC<ChartProps> = ({
   userData,
   questionIndex,
   formResponse,
+  language,
 }) => {
   const [filters, setFilters] = useState<Filter[]>([
-    { id: "class", active: false, icon: "school", label: "Clase" },
-    { id: "global", active: false, icon: "globe", label: "Global" },
-    { id: "country", active: false, icon: "flag", label: "País" },
-    { id: "age", active: true, icon: "calendar", label: "Edad" },
+    { id: "class", active: false, icon: "school", label: translations[language].class },
+    { id: "global", active: false, icon: "globe", label: translations[language].global },
+    { id: "country", active: false, icon: "flag", label: translations[language].country },
+    { id: "age", active: true, icon: "calendar", label: translations[language].age }
   ]);
   const [allResponses, setAllResponses] = useState<ComparisonData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,19 +95,18 @@ const ComparisonChart: React.FC<ChartProps> = ({
 
             if (physicalLiteracy?.answers?.[questionIndex] !== undefined) {
               const userInfo = users[userId] || guests[userId];
-              const userName = userInfo?.name || "Anónimo";
+              // Usar la edad del formResponse para el usuario actual
+              const age = userId === formResponse?.userId 
+                ? formResponse.age 
+                : userInfo?.age || 0;
 
               responses.push({
                 userId,
-                userName,
+                userName: userInfo?.name || "Anónimo",
                 score: physicalLiteracy.answers[questionIndex],
-                classCode:
-                  userInfo?.classCode || physicalLiteracy.classCode || "",
-                country:
-                  userInfo?.countryRole?.country ||
-                  physicalLiteracy.country ||
-                  "Unknown",
-                age: userInfo?.age || 0,
+                classCode: userInfo?.classCode || physicalLiteracy.classCode || "",
+                country: userInfo?.countryRole?.country || physicalLiteracy.country || "Unknown",
+                age: age,
                 completedAt: physicalLiteracy.completedAt,
               });
             }
@@ -187,60 +190,57 @@ const ComparisonChart: React.FC<ChartProps> = ({
     );
   };
 
-// En la función getFilteredResponses, modifica cómo se obtiene la edad objetivo
-const getFilteredResponses = () => {
-  let filteredData = [...allResponses];
-  const activeFilters = filters.filter(f => f.active);
-
-  if (activeFilters.length === 0) return [];
-
-  // Usa la edad del estudiante directamente desde userData
-  const studentAge = formResponse?.age;
-
-  activeFilters.forEach(filter => {
-    switch (filter.id) {
-      case "class":
-        filteredData = filteredData.filter(r => r.classCode === userData.classCode);
-        break;
-      case "age":
-        // Usar la edad del estudiante para el filtrado
-        if (studentAge !== undefined) {
-          filteredData = filteredData.filter(r => r.age === studentAge);
-        }
-        break;
-      case "country":
-        filteredData = filteredData.filter(
-          r => r.country.toLowerCase() === userData.country.toLowerCase()
-        );
-        break;
-      case "global":
-        // No aplicar filtro adicional para global
-        break;
-    }
-  });
-
-  return filteredData;
-};
-
-const getComparisonTitle = () => {
-  const activeFilters = filters.filter(f => f.active);
-  if (activeFilters.length === 0) return "Selecciona filtros para comparar";
-
-  // Obtener la edad del estudiante del formResponse
-  const studentAge = formResponse?.age;
-
-  return "Comparación " + activeFilters
-    .map(f => {
-      switch (f.id) {
-        case "class": return "de mi clase";
-        case "global": return "global";
-        case "country": return `de ${userData.country}`;
-        case "age": return studentAge !== undefined ? `por edad (${studentAge} años)` : `por edad (${studentAge})`;
-        default: return "";
+  const getFilteredResponses = () => {
+    let filteredData = [...allResponses];
+    const activeFilters = filters.filter(f => f.active);
+  
+    if (activeFilters.length === 0) return [];
+  
+    activeFilters.forEach(filter => {
+      switch (filter.id) {
+        case "class":
+          if (userData.classCode) {
+            filteredData = filteredData.filter(r => r.classCode === userData.classCode);
+          }
+          break;
+        case "age":
+          // Usar la edad del formResponse para el filtrado
+          if (userData?.age) {
+            filteredData = filteredData.filter(r => r.age === userData.age);
+          }
+          break;
+        case "country":
+          filteredData = filteredData.filter(
+            r => r.country.toLowerCase() === userData.country.toLowerCase()
+          );
+          break;
+        case "global":
+          // No aplicar filtro adicional para global
+          break;
       }
-    })
-    .join(" y ");
-};
+    });
+  
+    return filteredData;
+  };
+
+  const getComparisonTitle = () => {
+    const activeFilters = filters.filter(f => f.active);
+    if (activeFilters.length === 0) return translations[language].selectFiltersToCompare;
+
+    return translations[language].comparisonByLevel + " " + activeFilters
+      .map(f => {
+        switch (f.id) {
+          case "class": return translations[language].classComparison;
+          case "global": return translations[language].globalComparison;
+          case "country": return `${translations[language].countryComparison} ${userData.country}`;
+          case "age": return userData?.age 
+            ? `${translations[language].ageComparison} (${userData.age} ${translations[language].years})` 
+            : translations[language].ageComparison;
+          default: return "";
+        }
+      })
+      .join(" y ");
+  };
 
 
   const renderMedianComparison = (stats: MedianStats, context: string) => {
@@ -248,7 +248,7 @@ const getComparisonTitle = () => {
       return (
         <View style={styles.medianComparisonCard}>
           <Text style={styles.noDataText}>
-            No hay datos disponibles para comparar en {context}
+            {translations[language].noDataAvailable}
           </Text>
         </View>
       );
@@ -280,7 +280,7 @@ const getComparisonTitle = () => {
             />
           </View>
           <Text style={styles.medianLabel}>
-            Mediana: {stats.median.toFixed(1)}
+            {translations[language].median}: {stats.median.toFixed(1)}
           </Text>
           <Text
             style={[
@@ -298,7 +298,7 @@ const getComparisonTitle = () => {
               },
             ]}
           >
-            Tu puntuación:{"\n"}
+            {translations[language].score}:{"\n"}
             {userScore.toFixed(1)}
           </Text>
         </View>
@@ -320,15 +320,16 @@ const getComparisonTitle = () => {
             />
             <Text style={styles.statLabel}>
               {atMedian
-                ? "Estás en la mediana"
-                : `${Math.abs(stats.percentageFromMedian).toFixed(1)}% ${isAboveMedian ? "por encima" : "por debajo"
-                }`}
+                ? translations[language].atMedian
+                : `${Math.abs(stats.percentageFromMedian).toFixed(1)}% ${
+                    isAboveMedian ? translations[language].aboveMedian : translations[language].belowMedian
+                  }`}
             </Text>
           </View>
 
           <View style={styles.distributionStats}>
             <Text style={styles.distributionLabel}>
-              {`${stats.belowMedian} estudiantes por debajo • ${stats.atMedian} en la mediana • ${stats.aboveMedian} por encima • ${stats.totalStudents} total`}
+              {`${stats.belowMedian} ${translations[language].students} ${translations[language].belowMedian} • ${stats.atMedian} ${translations[language].atMedian} • ${stats.aboveMedian} ${translations[language].aboveMedian} • ${stats.totalStudents} ${translations[language].total}`}
             </Text>
           </View>
         </View>
@@ -377,6 +378,7 @@ const getComparisonTitle = () => {
               classCode={userData.classCode}
               countryName={userData.country}
               allResponses={allResponses}
+              language={language}
             />
           </>
         ) : (

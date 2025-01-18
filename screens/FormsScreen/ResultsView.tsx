@@ -49,6 +49,22 @@ interface RouteParams {
   answers: (number | null)[];
 }
 
+// Primero, definimos las traducciones para la pregunta 6 dentro de ResultsView
+const lastQuestionTranslations = {
+  es: {
+    text: 'Sabiendo que la alfabetización física es la suma de las preguntas anteriores: 1) forma física global/condición física; 2) cantidad de actividad física realizada semanalmente; 3) lo que sabes sobre educación física; 4) motivación para realizar actividad física, incluyendo hacer nuevos amigos y sentirte mejor con tus compañeros/as gracias a la actividad física. En comparación con los/las niños/as de mi edad mi alfabetización física es:'
+  },
+  en: {
+    text: 'Knowing that physical literacy is the sum of the previous questions: 1) overall physical fitness; 2) amount of weekly physical activity; 3) what you know about physical education; 4) motivation to do physical activity, including making new friends and feeling better with your peers thanks to physical activity. Compared to children my age, my physical literacy is:'
+  },
+  "pt-PT": {
+    text: 'Sabendo que a literacia física é a soma das questões anteriores: 1) forma física global; 2) quantidade de atividade física semanal; 3) o que sabe sobre educação física; 4) motivação para fazer atividade física, incluindo fazer novos amigos e sentir-se melhor com os colegas graças à atividade física. Em comparação com as crianças da minha idade, a minha literacia física é:'
+  },
+  "pt-BR": {
+    text: 'Sabendo que o letramento físico é a soma das questões anteriores: 1) forma física global; 2) quantidade de atividade física semanal; 3) o que sabe sobre educação física; 4) motivação para fazer atividade física, incluindo fazer novos amigos e sentir-se melhor com os colegas graças à atividade física. Em comparação com as crianças da minha idade, meu letramento físico é:'
+  }
+};
+
 export const ResultsView: React.FC<ResultsViewProps> = ({
   language,
   formResponse,
@@ -72,22 +88,21 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
       try {
         const guestRef = await db().ref(`/guests/${studentData.uid}`).once("value");
         const guestData = guestRef.val();
-
+  
         if (guestData?.classCode) {
           setStudentClassCode(guestData.classCode);
         }
         if (guestData?.age) {
           setStudentAge(guestData.age);
         }
+  
+        // Agregar logs para verificar los datos cargados
+        console.log("Datos del estudiante cargados:", guestData);
       } catch (error) {
         console.error("Error loading student data:", error);
       }
     }
   };
-
-  useEffect(() => {
-    loadStudentData();
-  }, [isTeacherView, studentData?.uid]);
 
 
   const getAgeAppropriateQuestions = (language: Language) => {
@@ -166,13 +181,15 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           <Text style={styles.studentEmail}>{studentData.email}</Text>
           {studentData.classCode && (
             <Text style={styles.studentClassCode}>
-              Código de clase: {studentData.classCode}
+              {translations[language].classCode}: {studentData.classCode}
             </Text>
           )}
         </View>
         <View style={styles.teacherBadge}>
           <Ionicons name="school" size={20} color="#fff" />
-          <Text style={styles.teacherBadgeText}>Vista del Profesor</Text>
+          <Text style={styles.teacherBadgeText}>
+            {translations[language].teacherView}
+          </Text>
         </View>
       </View>
     );
@@ -198,7 +215,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             activeSection === "responses" && styles.navButtonTextActive,
           ]}
         >
-          {isTeacherView ? "Respuestas del Alumno" : "Mis Respuestas"}
+          {isTeacherView ? translations[language].studentResponses : translations[language].myResponses}
         </Text>
       </TouchableOpacity>
 
@@ -220,7 +237,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             activeSection === "comparison" && styles.navButtonTextActive,
           ]}
         >
-          Comparar con Otros
+          {translations[language].compareWithOthers}
         </Text>
       </TouchableOpacity>
     </View>
@@ -232,86 +249,54 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         const userAnswer = answers[index];
         if (userAnswer === undefined) return null;
   
+        // Obtener el texto de la pregunta
+        const questionText = index === 5 
+          ? lastQuestionTranslations[language].text 
+          : question.text;
+  
         // Determinar el color y el icono basado en la puntuación
         const getScoreStyle = (score: number | null) => {
           if (score === null) return {
             color: '#666',
             backgroundColor: '#f5f5f5', 
             icon: 'help-circle',
-            label: 'Pendiente de respuesta',
+            label: translations[language].pendingResponse,
             borderColor: '#666'
           };
           if (score <= 3) return {
             color: '#ef4444',
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
             icon: 'alert-circle', 
-            label: 'Nivel bajo',
+            label: translations[language].lowLevel,
             borderColor: '#ef4444'
           };
           if (score <= 6) return {
             color: '#fbbf24',
             backgroundColor: 'rgba(251, 191, 36, 0.1)',
             icon: 'warning',
-            label: 'Nivel medio',
+            label: translations[language].mediumLevel,
             borderColor: '#fbbf24'
           };
           return {
             color: '#4ade80',
             backgroundColor: 'rgba(74, 222, 128, 0.1)',
             icon: 'checkmark-circle',
-            label: 'Nivel alto',
+            label: translations[language].highLevel,
             borderColor: '#4ade80'
           };
         };
   
         const scoreStyle = getScoreStyle(userAnswer);
   
-        let teacherNoteText = "";
-        let noteColor = scoreStyle.color;
-  
-        if (isTeacherView && userAnswer !== null) {
-          if (studentAge && studentAge >= 12 && studentAge <= 18) {
-            if (userAnswer >= 8) {
-              teacherNoteText = "Nivel óptimo de alfabetización física";
-            } else if (userAnswer >= 6) {
-              teacherNoteText = "Buen desarrollo de la alfabetización física";
-            } else if (userAnswer >= 4) {
-              teacherNoteText = "Desarrollo en proceso, necesita refuerzo";
-            } else {
-              teacherNoteText = "Requiere atención y apoyo específico";
-            }
-  
-            if (index === 7) {
-              if (userAnswer >= 8) {
-                teacherNoteText = "Excelente comprensión global de la alfabetización física";
-              } else if (userAnswer >= 6) {
-                teacherNoteText = "Buena comprensión de los componentes";
-              } else if (userAnswer >= 4) {
-                teacherNoteText = "Comprensión básica, necesita reforzar";
-              } else {
-                teacherNoteText = "Requiere revisión de conceptos fundamentales";
-              }
-            }
-          } else {
-            if (userAnswer >= 8) {
-              teacherNoteText = "Nivel excelente en este componente";
-            } else if (userAnswer >= 6) {
-              teacherNoteText = "Buen nivel en este componente";
-            } else if (userAnswer >= 4) {
-              teacherNoteText = "Nivel aceptable, puede mejorar";
-            } else {
-              teacherNoteText = "Necesita mejorar este componente";
-            }
-          }
-        }
-  
         return (
           <View key={index} style={styles.responseCard}>
             <View style={styles.questionContainer}>
               <View style={styles.questionNumberBadge}>
-                <Text style={styles.questionNumberText}>{`P${index + 1}`}</Text>
+                <Text style={styles.questionNumberText}>
+                  {`${translations[language].question} ${index + 1}`}
+                </Text>
               </View>
-              <Text style={styles.questionText}>{question.text}</Text>
+              <Text style={styles.questionText}>{questionText}</Text>
             </View>
   
             <View style={styles.scoreContainer}>
@@ -346,7 +331,9 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
                   color={scoreStyle.color} 
                 />
                 <Text style={[styles.teacherNoteText, { color: scoreStyle.color }]}>
-                  {teacherNoteText}
+                  {userAnswer >= 8 ? translations[language].excellentGlobalUnderstanding : 
+                   userAnswer >= 6 ? translations[language].goodComponentsUnderstanding : 
+                   translations[language].needsImprovement}
                 </Text>
               </View>
             )}
@@ -362,7 +349,10 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         ? studentData.uid
         : formResponse?.userId;
       if (!effectiveUserId) return null;
-      if (index >= answers.length) return null
+      if (index >= answers.length) return null;
+  
+      const userAge = isTeacherView ? studentAge : user?.age;
+  
       return (
         <View key={index} style={styles.comparisonSection}>
           <View style={styles.questionNumberBadge}>
@@ -378,10 +368,11 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
               name: studentData?.name || "",
               classCode: studentData?.classCode || "",
               country: formResponse.country || "",
-              age: user?.age || 0,
+              age: userAge || 0,
             }}
             formResponse={formResponse}
             questionIndex={index}
+            language={language}
           />
         </View>
       );

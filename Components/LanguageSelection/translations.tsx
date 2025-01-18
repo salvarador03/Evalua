@@ -73,6 +73,74 @@ export interface TranslationText {
   confirmAnswer: string;
   selectedScore: string;
   confirmScoreQuestion: string;
+
+  // Nuevas traducciones para ResultsView
+  myResponses: string;
+  compareWithOthers: string;
+  studentResponses: string;
+  class: string;
+  global: string;
+  country: string;
+  age: string;
+  students: string;
+  score: string; // Changed from yourScore to avoid duplicate
+  median: string;
+  belowMedian: string;
+  aboveMedian: string;
+  atMedian: string;
+  distribution: string;
+  howToInterpret: string;
+  howToInterpretText: string;
+  scoreDistribution: string;
+  comparisonByLevel: string;
+  classComparison: string;
+  globalComparison: string;
+  countryComparison: string;
+  ageComparison: string;
+  lowLevel: string;
+  mediumLevel: string;
+  highLevel: string;
+  teacherView: string;
+  classCode: string;
+  pending: string;
+  optimalLevel: string;
+  goodLevel: string;
+  needsReinforcement: string;
+  needsSupport: string;
+  pendingResponse: string;
+  excellentGlobalUnderstanding: string;
+  goodComponentsUnderstanding: string;
+  basicUnderstanding: string;
+  needsFundamentalReview: string;
+  excellentComponentLevel: string;
+  goodComponentLevel: string;
+  acceptableLevel: string;
+  needsImprovement: string;
+
+  selectFiltersToCompare: string;
+
+  years: string;
+
+  noDataAvailable: string;
+
+  total: string;
+
+  colorBands: string;
+  superior: string;
+  exceptionalPerformance: string;
+  high: string;
+  aboveAverage: string;
+  medium: string;
+  withinTypicalRange: string;
+  low: string;
+  potentialImprovementArea: string;
+  yourPosition: string;
+  isAtPercentile: string;
+  thisMeans: string;
+  youSurpass: string;
+  ofStudents: string;
+  comparison: string;
+  totalStudents: string;
 }
 
 export interface Translations {
@@ -141,6 +209,67 @@ export const translations: Record<Language, TranslationText> = {
     comparativeTitle: "Comparativa",
     groupMedian: "Mediana del grupo",
     requiredAnswer: "Respuesta requerida",
+    myResponses: "Mis Respuestas",
+    compareWithOthers: "Comparar con Otros",
+    studentResponses: "Respuestas del Alumno",
+    class: "Clase",
+    global: "Global",
+    country: "País",
+    age: "Edad",
+    students: "Estudiantes",
+    score: "Tu puntuación",
+    median: "Mediana",
+    belowMedian: "Por debajo de la mediana",
+    aboveMedian: "Por encima de la mediana",
+    atMedian: "Estás en la mediana",
+    distribution: "Distribución",
+    howToInterpret: "¿Cómo interpretar esta gráfica?",
+    howToInterpretText: "La gráfica muestra la distribución de puntuaciones. La línea vertical representa la mediana. Tu puntuación está marcada en comparación con otros estudiantes.",
+    scoreDistribution: "Distribución de puntuaciones",
+    comparisonByLevel: "Comparación por nivel",
+    classComparison: "Comparación con tu clase",
+    globalComparison: "Comparación global",
+    countryComparison: "Comparación por país",
+    ageComparison: "Comparación por edad",
+    lowLevel: "Nivel bajo",
+    mediumLevel: "Nivel medio",
+    highLevel: "Nivel alto",
+    teacherView: "Vista del Profesor",
+    classCode: "Código de clase",
+    pending: 'Pendiente',
+    optimalLevel: 'Nivel óptimo de alfabetización física',
+    goodLevel: 'Buen desarrollo de la alfabetización física',
+    needsReinforcement: 'Desarrollo en proceso, necesita refuerzo',
+    needsSupport: 'Requiere atención y apoyo específico',
+    pendingResponse: 'Pendiente de respuesta',
+    excellentGlobalUnderstanding: "Excelente comprensión global de la alfabetización física",
+    goodComponentsUnderstanding: "Buena comprensión de los componentes",
+    basicUnderstanding: "Comprensión básica, necesita reforzar",
+    needsFundamentalReview: "Requiere revisión de conceptos fundamentales",
+    excellentComponentLevel: "Nivel excelente en este componente",
+    goodComponentLevel: "Buen nivel en este componente",
+    acceptableLevel: "Nivel aceptable, puede mejorar",
+    needsImprovement: "Necesita mejorar este componente",
+    selectFiltersToCompare: "Selecciona filtros para comparar",
+    years: "años",
+    noDataAvailable: "No hay datos disponibles",
+    total: "total",
+    colorBands: "Bandas de color",
+    superior: "Superior",
+    exceptionalPerformance: "Rendimiento excepcional",
+    high: "Alto",
+    aboveAverage: "Por encima del promedio",
+    medium: "Medio",
+    withinTypicalRange: "Dentro del rango típico",
+    low: "Bajo",
+    potentialImprovementArea: "Área de mejora potencial",
+    yourPosition: "Tu posición",
+    isAtPercentile: "está en el percentil",
+    thisMeans: "Esto significa que",
+    youSurpass: "superas a",
+    ofStudents: "de los estudiantes",
+    comparison: "Comparación",
+    totalStudents: "Total de estudiantes",
   },
   en: {
     welcome: "Welcome!",
@@ -203,6 +332,67 @@ export const translations: Record<Language, TranslationText> = {
     comparativeTitle: "Comparative",
     groupMedian: "Group median",
     requiredAnswer: "Required answer",
+    myResponses: "My Responses",
+    compareWithOthers: "Compare with Others",
+    studentResponses: "Student Responses",
+    class: "Class",
+    global: "Global",
+    country: "Country",
+    age: "Age",
+    students: "Students",
+    score: "Your score",
+    median: "Median",
+    belowMedian: "Below median",
+    aboveMedian: "Above median",
+    atMedian: "You are at the median",
+    distribution: "Distribution",
+    howToInterpret: "How to interpret this chart?",
+    howToInterpretText: "The chart shows the score distribution. The vertical line represents the median. Your score is marked in comparison to other students.",
+    scoreDistribution: "Score distribution",
+    comparisonByLevel: "Comparison by level",
+    classComparison: "Class comparison",
+    globalComparison: "Global comparison",
+    countryComparison: "Country comparison",
+    ageComparison: "Age comparison",
+    lowLevel: "Low level",
+    mediumLevel: "Medium level",
+    highLevel: "High level",
+    teacherView: "Teacher View",
+    classCode: "Class code",
+    pending: 'Pending',
+    optimalLevel: 'Optimal level of physical literacy',
+    goodLevel: 'Good physical literacy development',
+    needsReinforcement: 'Development in progress, needs reinforcement',
+    needsSupport: 'Requires attention and specific support',
+    pendingResponse: 'Pending response',
+    excellentGlobalUnderstanding: "Excellent global understanding of physical literacy",
+    goodComponentsUnderstanding: "Good understanding of components",
+    basicUnderstanding: "Basic understanding, needs reinforcement",
+    needsFundamentalReview: "Requires review of fundamental concepts",
+    excellentComponentLevel: "Excellent level in this component",
+    goodComponentLevel: "Good level in this component",
+    acceptableLevel: "Acceptable level, can improve",
+    needsImprovement: "Needs improvement in this component",
+    selectFiltersToCompare: "Select filters to compare",
+    years: "years",
+    noDataAvailable: "No data available",
+    total: "total",
+    colorBands: "Color bands",
+    superior: "Superior",
+    exceptionalPerformance: "Exceptional performance",
+    high: "High",
+    aboveAverage: "Above average",
+    medium: "Medium",
+    withinTypicalRange: "Within typical range",
+    low: "Low",
+    potentialImprovementArea: "Potential improvement area",
+    yourPosition: "Your position",
+    isAtPercentile: "is at percentile",
+    thisMeans: "This means",
+    youSurpass: "you surpass",
+    ofStudents: "of students",
+    comparison: "Comparison",
+    totalStudents: "Total students",
   },
   "pt-PT": {
     welcome: "Bem-vindo!",
@@ -242,8 +432,6 @@ export const translations: Record<Language, TranslationText> = {
     required: "Obrigatório",
     loading: "Carregando...",
     languageName: "Português",
-    couldNotCalculateStats:
-      "Não foi possível calcular as estatísticas. Por favor, tente novamente mais tarde.",
     countryName: "Portugal",
     tellUsAboutPhysical: "Conte-nos sobre a sua atividade física!",
     pleaseSelectValue: "Por favor, selecione um valor antes de continuar.",
@@ -265,6 +453,68 @@ export const translations: Record<Language, TranslationText> = {
     comparativeTitle: "Comparativo",
     groupMedian: "Mediana do grupo",
     requiredAnswer: "Resposta obrigatória",
+    myResponses: "Minhas Respostas",
+    compareWithOthers: "Comparar com Outros",
+    studentResponses: "Respostas do Aluno",
+    class: "Turma",
+    global: "Global",
+    country: "País",
+    age: "Idade",
+    students: "Estudantes",
+    score: "Sua pontuação",
+    median: "Mediana",
+    belowMedian: "Abaixo da mediana",
+    aboveMedian: "Acima da mediana",
+    atMedian: "Está na mediana",
+    distribution: "Distribuição",
+    howToInterpret: "Como interpretar este gráfico?",
+    howToInterpretText: "O gráfico mostra a distribuição das pontuações. A linha vertical representa a mediana. A sua pontuação está marcada em comparação com outros estudantes.",
+    scoreDistribution: "Distribuição de pontuações",
+    comparisonByLevel: "Comparação por nível",
+    classComparison: "Comparação com a turma",
+    globalComparison: "Comparação global",
+    countryComparison: "Comparação por país",
+    ageComparison: "Comparação por idade",
+    lowLevel: "Nível baixo",
+    mediumLevel: "Nível médio",
+    highLevel: "Nível alto",
+    teacherView: "Vista do Professor",
+    classCode: "Código da turma",
+    pending: 'Pendente',
+    optimalLevel: 'Nível ótimo de literacia física',
+    goodLevel: 'Bom desenvolvimento da literacia física',
+    needsReinforcement: 'Desenvolvimento em andamento, precisa de reforço',
+    needsSupport: 'Requer atenção e suporte específico',
+    pendingResponse: 'Resposta pendente',
+    excellentGlobalUnderstanding: "Excelente compreensão global da literacia física",
+    goodComponentsUnderstanding: "Boa compreensão dos componentes",
+    basicUnderstanding: "Compreensão básica, precisa de reforço",
+    needsFundamentalReview: "Requer revisão de conceitos fundamentais",
+    excellentComponentLevel: "Nível excelente neste componente",
+    goodComponentLevel: "Bom nível neste componente",
+    acceptableLevel: "Nível aceitável, pode melhorar",
+    needsImprovement: "Precisa melhorar este componente",
+    selectFiltersToCompare: "Selecione filtros para comparar",
+    years: "anos",
+    noDataAvailable: "Não há dados disponíveis",
+    total: "total",
+    colorBands: "Bandas de cor",
+    superior: "Superior",
+    exceptionalPerformance: "Desempenho excepcional",
+    high: "Alto",
+    aboveAverage: "Acima da média",
+    medium: "Médio",
+    withinTypicalRange: "Dentro do intervalo típico",
+    low: "Baixo",
+    potentialImprovementArea: "Área de potencial melhoria",
+    yourPosition: "Sua posição",
+    isAtPercentile: "está no percentil",
+    thisMeans: "Isto significa que",
+    youSurpass: "você supera",
+    ofStudents: "dos estudantes",
+    comparison: "Comparação",
+    totalStudents: "Total de estudantes",
+    couldNotCalculateStats: "Não foi possível calcular as estatísticas. Por favor, tente novamente mais tarde.",
   },
   "pt-BR": {
     welcome: "Bem-vindo!",
@@ -329,5 +579,66 @@ export const translations: Record<Language, TranslationText> = {
     comparativeTitle: "Comparativo",
     groupMedian: "Mediana do grupo",
     requiredAnswer: "Resposta obrigatória",
+    myResponses: "Minhas Respostas",
+    compareWithOthers: "Comparar com Outros",
+    studentResponses: "Respostas do Aluno",
+    class: "Turma",
+    global: "Global",
+    country: "País",
+    age: "Idade",
+    students: "Estudantes",
+    score: "Sua pontuação",
+    median: "Mediana",
+    belowMedian: "Abaixo da mediana",
+    aboveMedian: "Acima da mediana",
+    atMedian: "Você está na mediana",
+    distribution: "Distribuição",
+    howToInterpret: "Como interpretar este gráfico?",
+    howToInterpretText: "O gráfico mostra a distribuição das pontuações. A linha vertical representa a mediana. Sua pontuação está marcada em comparação com outros estudantes.",
+    scoreDistribution: "Distribuição de pontuações",
+    comparisonByLevel: "Comparação por nível",
+    classComparison: "Comparação com a turma",
+    globalComparison: "Comparação global",
+    countryComparison: "Comparação por país",
+    ageComparison: "Comparação por idade",
+    lowLevel: "Nível baixo",
+    mediumLevel: "Nível médio",
+    highLevel: "Nível alto",
+    teacherView: "Vista do Professor",
+    classCode: "Código da turma",
+    pending: 'Pendente',
+    optimalLevel: 'Nível ótimo de letramento físico',
+    goodLevel: 'Bom desenvolvimento do letramento físico',
+    needsReinforcement: 'Desenvolvimento em andamento, precisa de reforço',
+    needsSupport: 'Requer atenção e suporte específico',
+    pendingResponse: 'Resposta pendente',
+    excellentGlobalUnderstanding: "Excelente compreensão global do letramento físico",
+    goodComponentsUnderstanding: "Boa compreensão dos componentes",
+    basicUnderstanding: "Compreensão básica, precisa de reforço",
+    needsFundamentalReview: "Requer revisão de conceitos fundamentais",
+    excellentComponentLevel: "Nível excelente neste componente",
+    goodComponentLevel: "Bom nível neste componente",
+    acceptableLevel: "Nível aceitável, pode melhorar",
+    needsImprovement: "Precisa melhorar este componente",
+    selectFiltersToCompare: "Selecione filtros para comparar",
+    years: "anos",
+    noDataAvailable: "Não há dados disponíveis",
+    total: "total",
+    colorBands: "Bandas de cor",
+    superior: "Superior",
+    exceptionalPerformance: "Desempenho excepcional",
+    high: "Alto",
+    aboveAverage: "Acima da média",
+    medium: "Médio",
+    withinTypicalRange: "Dentro do intervalo típico",
+    low: "Baixo",
+    potentialImprovementArea: "Área de potencial melhoria",
+    yourPosition: "Sua posição",
+    isAtPercentile: "está no percentil",
+    thisMeans: "Isto significa que",
+    youSurpass: "você supera",
+    ofStudents: "dos estudantes",
+    comparison: "Comparação",
+    totalStudents: "Total de estudantes",
   },
 };

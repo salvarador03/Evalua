@@ -91,6 +91,18 @@ const CREATORS: Creator[] = [
     }
   },
   {
+    name: "María Mendoza Muñoz",
+    role: "Investigador Postdoctoral",
+    institution: "Universidad de Extremadura",
+    email: "mamendozam@unex.es",
+    orcid: "https://orcid.org/0000-0001-9502-5486",
+    imageUrl: require("../../assets/images/maria.webp"),
+    socialLinks: {
+      linkedin: "https://es.linkedin.com/in/mar%C3%ADa-mendoza-mu%C3%B1oz-536995161",
+      researchGate: "https://www.researchgate.net/profile/Maria-Mendoza-Munoz"
+    }
+  },
+  {
     name: "Ricardo Hugo Gonzalez",
     role: "Investigador Principal",
     institution: "Universidade Federal do Ceará",
@@ -124,6 +136,18 @@ const CREATORS: Creator[] = [
       googleScholar: "https://scholar.google.com/citations?user=0MPdDS0AAAAJ&hl=en",
       other: "https://www.cienciavitae.pt/portal/5F18-F9C3-11CB",
       webOfScience: "https://www.webofscience.com/wos/author/rid/K-4529-2014"
+    }
+  },
+  {
+    name: "Tiago D. Ribeiro",
+    role: "PhD candidate",
+    institution: "University of Lisbon",
+    email: "tiagoribeiro@fmh.ulisboa.pt",
+    orcid: "https://orcid.org/0000-0001-5602-048X",
+    imageUrl: require("../../assets/images/tiago.webp"),
+    socialLinks: {
+      researchGate:"https://www.researchgate.net/profile/Tiago-Ribeiro-41",
+      
     }
   },
   {
@@ -468,7 +492,7 @@ export const FormsListScreen: React.FC = () => {
                     ? "Franja de edad: 6-12 años"
                     : user?.age && user.age > 12 && user.age <= 18
                       ? "Franja de edad: 12-18 años"
-                      : "Edades: 6-12 años"}
+                      : "Edades: 6-18 años"}
                 </Text>
               </View>
             </View>
@@ -504,14 +528,11 @@ export const FormsListScreen: React.FC = () => {
               <View style={styles.ageRangeContainer}>
                 <Ionicons name="people-outline" size={16} color="#9E7676" />
                 <Text style={styles.ageRangeText}>
-                  {user?.age && user.age >= 6 && user.age <= 12 && user.age < 6
+                  {user?.age && user.age >= 6 && user.age <= 12
                     ? "Franja de edad: 6-12 años"
-                    : user?.age &&
-                      user.age > 12 &&
-                      user.age <= 18 &&
-                      user.age > 18
+                    : user?.age && user.age > 12 && user.age <= 18
                       ? "Franja de edad: 12-18 años"
-                      : "Edades: 12-18 años"}
+                      : "Edades: 6-18 años"}
                 </Text>
               </View>
             </View>
