@@ -173,6 +173,41 @@ const CREATORS: Creator[] = [
       researchGate: "https://www.researchgate.net/profile/Jean-Rosales-Garcia",
       linkedin: "https://www.linkedin.com/in/jean-carlos-rosales-garc%C3%ADa-3239a5193/"
     }
+  },
+  {
+    name: "Jorge De Lázaro Coll Costa",
+    role: "Vicerrector e Investigador",
+    institution: "Universidad de Ciencias de la Cultura Física y el Deporte Manuel Fajardo",
+    email: "jorgecoll@uccfd.cu",
+    orcid: "https://orcid.org/0000-0001-8712-2948",
+    imageUrl: require("../../assets/images/jorge.webp"),
+    socialLinks: {
+      researchGate: "https://www.researchgate.net/profile/Jorge-Coll-Costa"
+    }
+  },
+  {
+    name: "Cristian Pérez Tapia",
+    role: "Investigador",
+    institution: "Universidad Santo Tomás",
+    email: "cristianperez@santotomas.cl",
+    orcid: "https://orcid.org/0000-0002-9633-6064",
+    imageUrl: require("../../assets/images/cristian.webp"),
+    socialLinks: {
+      googleScholar: "https://scholar.google.com/citations?user=g-ZhVhMAAAAJ",
+      linkedin: "https://cl.linkedin.com/in/cristian-p%C3%A9rez-tapia-33401467"
+    }
+  },
+  {
+    name: "Natalia Triviño Amigo",
+    role: "Profesora e Investigadora",
+    institution: "Universidad Europea - Real Madrid",
+    email: "natalia.trivino@universidadeuropea.es",
+    orcid: "",
+    imageUrl: require("../../assets/images/natalia.webp"),
+    socialLinks: {
+      linkedin: "https://es.linkedin.com/in/natalia-trivi%C3%B1o-amigo-899718162",
+      researchGate: "https://www.researchgate.net/profile/Natalia-Trivino-Amigo"
+    }
   }
 ];
 
@@ -205,6 +240,27 @@ const INSTITUTIONS: Institution[] = [
     country: "Colombia",
     logo: require("../../assets/images/Logo_de_la_Universidad_del_Atlántico.svg.webp"),
     website: "https://www.uniatlantico.edu.co"
+  },
+  {
+    name: "Universidad de Ciencias de la Cultura Física y el Deporte",
+    description: "Institución especializada en la formación de profesionales en cultura física y deporte, con énfasis en la investigación de la actividad física y la prevención de enfermedades.",
+    country: "Cuba",
+    logo: require("../../assets/images/UCCFD.webp"),
+    website: "https://www.uccfd.cu"
+  },
+  {
+    name: "Universidad Santo Tomás",
+    description: "Institución dedicada a la investigación en educación física y formación inicial docente, con énfasis en la didáctica de la educación física.",
+    country: "Chile",
+    logo: require("../../assets/images/st.webp"),
+    website: "https://www.santotomas.cl"
+  },
+  {
+    name: "Universidad Europea - Real Madrid",
+    description: "Institución especializada en ciencias del deporte y medicina deportiva, con estrecha colaboración con el Real Madrid para la formación e investigación deportiva.",
+    country: "España",
+    logo: require("../../assets/images/europea.webp"),
+    website: "https://universidadeuropea.es"
   }
 ];
 
@@ -221,6 +277,9 @@ export const FormsListScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"form" | "about">("form");
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
 
   useEffect(() => {
     loadFormResponse();
@@ -321,6 +380,19 @@ export const FormsListScreen: React.FC = () => {
     }
   };
 
+  const handleScroll = (event: any) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    setShowLeftArrow(contentOffset.x > 0);
+    setShowRightArrow(contentOffset.x < contentSize.width - layoutMeasurement.width);
+  };
+
+  const scrollTo = (direction: 'left' | 'right') => {
+    scrollViewRef.current?.scrollTo({
+      x: direction === 'left' ? 0 : 1000,
+      animated: true
+    });
+  };
+
   // Render Methods
   const renderAboutContent = () => (
     <>
@@ -334,30 +406,73 @@ export const FormsListScreen: React.FC = () => {
       return (
         <View style={styles.logoContainer}>
           <View style={styles.logoCard}>
-            <View style={styles.logosWrapper}>
-              <Image
-                source={require("../../assets/images/logo-uex.webp")}
-                style={[styles.logo, { width: 60, height: 60 }]}
-                resizeMode="contain"
-              />
-              <View style={styles.logoDivider} />
-              <Image
-                source={require("../../assets/images/ulisboa.webp")}
-                style={[styles.logo, { width: 60, height: 60 }]}
-                resizeMode="contain"
-              />
-              <View style={styles.logoDivider} />
-              <Image
-                source={require("../../assets/images/Brasao4_vertical_cor_300dpi.webp")}
-                style={[styles.logo, { width: 60, height: 60 }]}
-                resizeMode="contain"
-              />
-              <View style={styles.logoDivider} />
-              <Image
-                source={require("../../assets/images/Logo_de_la_Universidad_del_Atlántico.svg.webp")}
-                style={[styles.logo, { width: 60, height: 60 }]}
-                resizeMode="contain"
-              />
+            <View style={styles.scrollContainer}>
+              {showLeftArrow && (
+                <TouchableOpacity 
+                  style={[styles.scrollButton, styles.scrollButtonLeft]}
+                  onPress={() => scrollTo('left')}
+                >
+                  <Ionicons name="chevron-back" size={24} color="#9E7676" />
+                </TouchableOpacity>
+              )}
+              <ScrollView 
+                ref={scrollViewRef}
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                contentContainerStyle={styles.logosScrollContent}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+              >
+                <Image
+                  source={require("../../assets/images/logo-uex.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/ulisboa.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/Brasao4_vertical_cor_300dpi.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/Logo_de_la_Universidad_del_Atlántico.svg.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/UCCFD.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/st.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/europea.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+              </ScrollView>
+              {showRightArrow && (
+                <TouchableOpacity 
+                  style={[styles.scrollButton, styles.scrollButtonRight]}
+                  onPress={() => scrollTo('right')}
+                >
+                  <Ionicons name="chevron-forward" size={24} color="#9E7676" />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
@@ -652,7 +767,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     paddingHorizontal: 20,
     paddingTop: 10,
-    marginBottom: 10,
+    marginBottom: 20,
   },
   logoCard: {
     backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -664,14 +779,36 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  logosWrapper: {
+  scrollContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  scrollButton: {
+    position: 'absolute',
+    zIndex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    padding: 8,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  scrollButtonLeft: {
+    left: 5,
+  },
+  scrollButtonRight: {
+    right: 5,
+  },
+  logosScrollContent: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: 45,
   },
   logo: {
-    marginHorizontal: 5,
+    marginHorizontal: 8,
   },
   logoDivider: {
     width: 1,
