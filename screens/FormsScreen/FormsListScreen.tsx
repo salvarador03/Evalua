@@ -797,15 +797,15 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   scrollButtonLeft: {
-    left: 5,
+    left: 0,
   },
   scrollButtonRight: {
-    right: 5,
+    right: 0,
   },
   logosScrollContent: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 45,
+    paddingHorizontal: 10,
   },
   logo: {
     marginHorizontal: 8,
