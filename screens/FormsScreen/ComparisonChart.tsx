@@ -30,6 +30,11 @@ interface ChartProps {
     userId: string;
     name: string;
     classCode: string;
+    countryRole: {
+      country: string;
+      language: string;
+      flag: string;
+    };
     country: string;
     age: number;
   };
@@ -96,8 +101,8 @@ const ComparisonChart: React.FC<ChartProps> = ({
             if (physicalLiteracy?.answers?.[questionIndex] !== undefined) {
               const userInfo = users[userId] || guests[userId];
               // Usar la edad del formResponse para el usuario actual
-              const age = userId === formResponse?.userId 
-                ? formResponse.age 
+              const age = userId === formResponse?.userId
+                ? formResponse.age
                 : userInfo?.age || 0;
 
               responses.push({
@@ -190,12 +195,13 @@ const ComparisonChart: React.FC<ChartProps> = ({
     );
   };
 
+  // Modificamos la función getFilteredResponses
   const getFilteredResponses = () => {
     let filteredData = [...allResponses];
     const activeFilters = filters.filter(f => f.active);
-  
+
     if (activeFilters.length === 0) return [];
-  
+
     activeFilters.forEach(filter => {
       switch (filter.id) {
         case "class":
@@ -204,14 +210,14 @@ const ComparisonChart: React.FC<ChartProps> = ({
           }
           break;
         case "age":
-          // Usar la edad del formResponse para el filtrado
           if (userData?.age) {
             filteredData = filteredData.filter(r => r.age === userData.age);
           }
           break;
         case "country":
+          // Usamos countryRole.country en lugar de country
           filteredData = filteredData.filter(
-            r => r.country.toLowerCase() === userData.country.toLowerCase()
+            r => r.country.toLowerCase() === (userData.countryRole?.country || "").toLowerCase()
           );
           break;
         case "global":
@@ -219,22 +225,23 @@ const ComparisonChart: React.FC<ChartProps> = ({
           break;
       }
     });
-  
+
     return filteredData;
   };
 
+  // Modificamos la función getComparisonTitle
   const getComparisonTitle = () => {
     const activeFilters = filters.filter(f => f.active);
     if (activeFilters.length === 0) return translations[language].selectFiltersToCompare;
 
-    return translations[language].comparisonByLevel + " " + activeFilters
+    return activeFilters
       .map(f => {
         switch (f.id) {
           case "class": return translations[language].classComparison;
           case "global": return translations[language].globalComparison;
-          case "country": return `${translations[language].countryComparison} ${userData.country}`;
-          case "age": return userData?.age 
-            ? `${translations[language].ageComparison} (${userData.age} ${translations[language].years})` 
+          case "country": return `${translations[language].countryComparison} ${userData.countryRole?.country || ""}`;
+          case "age": return userData?.age
+            ? `${translations[language].ageComparison} (${userData.age} ${translations[language].years})`
             : translations[language].ageComparison;
           default: return "";
         }
@@ -321,9 +328,8 @@ const ComparisonChart: React.FC<ChartProps> = ({
             <Text style={styles.statLabel}>
               {atMedian
                 ? translations[language].atMedian
-                : `${Math.abs(stats.percentageFromMedian).toFixed(1)}% ${
-                    isAboveMedian ? translations[language].aboveMedian : translations[language].belowMedian
-                  }`}
+                : `${Math.abs(stats.percentageFromMedian).toFixed(1)}% ${isAboveMedian ? translations[language].aboveMedian : translations[language].belowMedian
+                }`}
             </Text>
           </View>
 
@@ -355,7 +361,7 @@ const ComparisonChart: React.FC<ChartProps> = ({
         </View>
       );
     }
-    
+
     return (
       <View style={styles.viewContainer}>
         <View style={styles.headerCard}>
@@ -376,7 +382,7 @@ const ComparisonChart: React.FC<ChartProps> = ({
               userScore={userScore}
               viewType="custom"
               classCode={userData.classCode}
-              countryName={userData.country}
+              countryName={userData.countryRole?.country || ""}
               allResponses={allResponses}
               language={language}
             />
@@ -631,4 +637,3 @@ const styles = StyleSheet.create({
 });
 
 export default ComparisonChart;
-    

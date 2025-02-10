@@ -49,19 +49,59 @@ interface RouteParams {
   answers: (number | null)[];
 }
 
-// Primero, definimos las traducciones para la pregunta 6 dentro de ResultsView
-const lastQuestionTranslations = {
-  es: {
-    text: 'Sabiendo que la alfabetización física es la suma de las preguntas anteriores: 1) forma física global/condición física; 2) cantidad de actividad física realizada semanalmente; 3) lo que sabes sobre educación física; 4) motivación para realizar actividad física, incluyendo hacer nuevos amigos y sentirte mejor con tus compañeros/as gracias a la actividad física. En comparación con los/las niños/as de mi edad mi alfabetización física es:'
+// Primero, definimos las traducciones para la pregunta última dentro de ResultsView
+const lastKidsQuestionTranslations = {
+  'es': {
+    title: 'Tener una buena alfabetización física significa:',
+    options: [
+      'A) Tener una buena condición física.',
+      'B) Saber mucho sobre la Educación Física.',
+      'C) Tener interés y ganas de hacer actividad física.',
+      'D) Hacer amigos/as gracias a la actividad física.',
+      'E) Ser más seguro/a cuando se hace actividad física.',
+      'F) Hacer bien actividad física.',
+      'G) Hacer actividad física varias veces a la semana.'
+    ],
+    finalQuestion: 'Sabiendo que la alfabetización física es la suma de las preguntas anteriores: 1) forma física global/condición física; 2) cantidad de actividad física realizada semanalmente; 3) lo que sabes sobre educación física; 4) motivación para realizar actividad física, incluyendo hacer nuevos amigos y sentirte mejor con tus compañeros/as gracias a la actividad física. En comparación con los/las niños/as de mi edad mi alfabetización física es:'
   },
-  en: {
-    text: 'Knowing that physical literacy is the sum of the previous questions: 1) overall physical fitness; 2) amount of weekly physical activity; 3) what you know about physical education; 4) motivation to do physical activity, including making new friends and feeling better with your peers thanks to physical activity. Compared to children my age, my physical literacy is:'
+  'en': {
+    title: 'Having good physical literacy means:',
+    options: [
+      'A) Having good physical fitness.',
+      'B) Knowing a lot about Physical Education.',
+      'C) Having interest and desire to do physical activity.',
+      'D) Making friends through physical activity.',
+      'E) Being more confident when doing physical activity.',
+      'F) Doing physical activity well.',
+      'G) Doing physical activity several times a week.'
+    ],
+    finalQuestion: 'Knowing that physical literacy is the sum of the previous questions: 1) overall physical fitness; 2) amount of weekly physical activity; 3) what you know about physical education; 4) motivation to do physical activity, including making new friends and feeling better with your peers thanks to physical activity. Compared to children my age, my physical literacy is:'
   },
-  "pt-PT": {
-    text: 'Sabendo que a literacia física é a soma das questões anteriores: 1) forma física global; 2) quantidade de atividade física semanal; 3) o que sabe sobre educação física; 4) motivação para fazer atividade física, incluindo fazer novos amigos e sentir-se melhor com os colegas graças à atividade física. Em comparação com as crianças da minha idade, a minha literacia física é:'
+  'pt-PT': {
+    title: 'Ter uma boa literacia física significa:',
+    options: [
+      'A) Ter uma boa condição física.',
+      'B) Saber muito sobre Educação Física.',
+      'C) Ter interesse e vontade de fazer atividade física.',
+      'D) Fazer amigos através da atividade física.',
+      'E) Ser mais seguro ao fazer atividade física.',
+      'F) Fazer bem atividade física.',
+      'G) Fazer atividade física várias vezes por semana.'
+    ],
+    finalQuestion: 'Sabendo que a literacia física é a soma das questões anteriores: 1) forma física global; 2) quantidade de atividade física semanal; 3) o que sabe sobre educação física; 4) motivação para fazer atividade física, incluindo fazer novos amigos e sentir-se melhor com os colegas graças à atividade física. Em comparação com as crianças da minha idade, a minha literacia física é:'
   },
-  "pt-BR": {
-    text: 'Sabendo que o letramento físico é a soma das questões anteriores: 1) forma física global; 2) quantidade de atividade física semanal; 3) o que sabe sobre educação física; 4) motivação para fazer atividade física, incluindo fazer novos amigos e sentir-se melhor com os colegas graças à atividade física. Em comparação com as crianças da minha idade, meu letramento físico é:'
+  'pt-BR': {
+    title: 'Ter um bom letramento físico significa:',
+    options: [
+      'A) Ter uma boa condição física.',
+      'B) Saber muito sobre Educação Física.',
+      'C) Ter interesse e vontade de fazer atividade física.',
+      'D) Fazer amigos através da atividade física.',
+      'E) Ser mais seguro ao fazer atividade física.',
+      'F) Fazer bem atividade física.',
+      'G) Fazer atividade física várias vezes por semana.'
+    ],
+    finalQuestion: 'Sabendo que o letramento físico é a soma das questões anteriores: 1) forma física global; 2) quantidade de atividade física semanal; 3) o que sabe sobre educação física; 4) motivação para fazer atividade física, incluindo fazer novos amigos e sentir-se melhor com os colegas graças à atividade física. Em comparação com as crianças da minha idade, meu letramento físico é:'
   }
 };
 
@@ -88,14 +128,14 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
       try {
         const guestRef = await db().ref(`/guests/${studentData.uid}`).once("value");
         const guestData = guestRef.val();
-  
+
         if (guestData?.classCode) {
           setStudentClassCode(guestData.classCode);
         }
         if (guestData?.age) {
           setStudentAge(guestData.age);
         }
-  
+
         // Agregar logs para verificar los datos cargados
         console.log("Datos del estudiante cargados:", guestData);
       } catch (error) {
@@ -105,9 +145,23 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   };
 
 
+  // Actualizar la función getAgeAppropriateQuestions
   const getAgeAppropriateQuestions = (language: Language) => {
     const targetAge = isTeacherView ? studentAge : user?.age;
-    return (targetAge && targetAge >= 12 && targetAge <= 18) ? teenQuestions[language] : questions[language];
+
+    if (targetAge) {
+      if (targetAge >= 18 && targetAge <= 24) {
+        // Universitarios (18-24)
+        return teenQuestions[language];
+      } else if (targetAge >= 12 && targetAge <= 17) {
+        // Adolescentes (12-17)
+        return teenQuestions[language];
+      } else {
+        // Niños (6-11)
+        return questions[language];
+      }
+    }
+    return questions[language]; // Default a preguntas de niños si no hay edad
   };
 
 
@@ -243,22 +297,57 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     </View>
   );
 
+  const getTargetAge = () => {
+    return isTeacherView ? studentAge : user?.age;
+  };
+
+  const isTeenUser = React.useMemo(() => {
+    const targetAge = getTargetAge();
+    return targetAge ? targetAge >= 12 && targetAge <= 18 : false;
+  }, [studentAge, user?.age, isTeacherView]);
+
+  const isUniversityUser = React.useMemo(() => {
+    const targetAge = getTargetAge();
+    return targetAge ? targetAge >= 18 && targetAge <= 24 : false;
+  }, [studentAge, user?.age, isTeacherView]);
+
   const renderResponses = () => (
     <View style={styles.responsesContainer}>
       {getAgeAppropriateQuestions(language).map((question, index) => {
         const userAnswer = answers[index];
         if (userAnswer === undefined) return null;
-  
+
+        // Determinar la edad y el tipo de usuario
+        const targetAge = isTeacherView ? studentAge : user?.age;
+        const isUniversityStudent = targetAge ? targetAge >= 18 && targetAge <= 24 : false;
+        const isTeenStudent = targetAge ? targetAge >= 12 && targetAge <= 17 : false;
+
         // Obtener el texto de la pregunta
-        const questionText = index === 5 
-          ? lastQuestionTranslations[language].text 
-          : question.text;
-  
+        let questionText = question.text;
+
+        // Si es la última pregunta, manejar según el grupo de edad
+        if (index === getAgeAppropriateQuestions(language).length - 1) {
+          if (isUniversityStudent || isTeenStudent) {
+            // Usar la última pregunta de teenQuestions para universitarios y adolescentes
+            questionText = teenQuestions[language][teenQuestions[language].length - 1].text;
+          } else {
+            // Para niños, usar el formato especial con las opciones
+            const lastQuestion = {
+              'es': 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:',
+              'en': 'Now that you know what physical literacy is. Compared to children my age, my physical literacy is:',
+              'pt-PT': 'Depois de saber o que é literacia física. Em comparação com as crianças da minha idade, a minha literacia física é:',
+              'pt-BR': 'Depois de saber o que é letramento físico. Em comparação com crianças da minha idade, meu letramento físico é:'
+            };
+
+            questionText = `${lastKidsQuestionTranslations[language].title}\n\n${lastKidsQuestionTranslations[language].options.join('\n')}\n\n${lastQuestion[language]}`;
+          }
+        }
+
         // Determinar el color y el icono basado en la puntuación
         const getScoreStyle = (score: number | null) => {
           if (score === null) return {
             color: '#666',
-            backgroundColor: '#f5f5f5', 
+            backgroundColor: '#f5f5f5',
             icon: 'help-circle',
             label: translations[language].pendingResponse,
             borderColor: '#666'
@@ -266,7 +355,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           if (score <= 3) return {
             color: '#ef4444',
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            icon: 'alert-circle', 
+            icon: 'alert-circle',
             label: translations[language].lowLevel,
             borderColor: '#ef4444'
           };
@@ -285,9 +374,9 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             borderColor: '#4ade80'
           };
         };
-  
+
         const scoreStyle = getScoreStyle(userAnswer);
-  
+
         return (
           <View key={index} style={styles.responseCard}>
             <View style={styles.questionContainer}>
@@ -298,7 +387,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
               </View>
               <Text style={styles.questionText}>{questionText}</Text>
             </View>
-  
+
             <View style={styles.scoreContainer}>
               <View style={[
                 styles.trafficLight,
@@ -308,10 +397,10 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
                   styles.scoreCircle,
                   { borderColor: scoreStyle.borderColor }
                 ]}>
-                  <Ionicons 
-                    name={scoreStyle.icon as any} 
-                    size={24} 
-                    color={scoreStyle.color} 
+                  <Ionicons
+                    name={scoreStyle.icon as any}
+                    size={24}
+                    color={scoreStyle.color}
                   />
                   <Text style={[styles.scoreValue, { color: scoreStyle.color }]}>
                     {userAnswer !== null ? userAnswer.toString() : '-'}
@@ -322,18 +411,18 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
                 </Text>
               </View>
             </View>
-  
+
             {isTeacherView && userAnswer !== null && (
               <View style={[styles.teacherNote, { backgroundColor: `${scoreStyle.color}20` }]}>
-                <Ionicons 
-                  name="information-circle" 
-                  size={20} 
-                  color={scoreStyle.color} 
+                <Ionicons
+                  name="information-circle"
+                  size={20}
+                  color={scoreStyle.color}
                 />
                 <Text style={[styles.teacherNoteText, { color: scoreStyle.color }]}>
-                  {userAnswer >= 8 ? translations[language].excellentGlobalUnderstanding : 
-                   userAnswer >= 6 ? translations[language].goodComponentsUnderstanding : 
-                   translations[language].needsImprovement}
+                  {userAnswer >= 8 ? translations[language].excellentGlobalUnderstanding :
+                    userAnswer >= 6 ? translations[language].goodComponentsUnderstanding :
+                      translations[language].needsImprovement}
                 </Text>
               </View>
             )}
@@ -350,9 +439,9 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         : formResponse?.userId;
       if (!effectiveUserId) return null;
       if (index >= answers.length) return null;
-  
+
       const userAge = isTeacherView ? studentAge : user?.age;
-  
+
       return (
         <View key={index} style={styles.comparisonSection}>
           <View style={styles.questionNumberBadge}>
@@ -368,6 +457,11 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
               name: studentData?.name || "",
               classCode: studentData?.classCode || "",
               country: formResponse.country || "",
+              countryRole: formResponse.countryRole || {
+                country: formResponse.country || "",
+                language: formResponse.language || "es",
+                flag: ""
+              },
               age: userAge || 0,
             }}
             formResponse={formResponse}

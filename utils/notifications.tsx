@@ -53,7 +53,7 @@ export const sendVerificationEmail = async () => {
   }
 };
 
-// Función para email de login
+/**
 export const sendLoginEmail = async (userName: string, userEmail: string) => {
   try {
     const currentUser = auth().currentUser;
@@ -69,3 +69,5 @@ export const sendLoginEmail = async (userName: string, userEmail: string) => {
     // No lanzamos el error para no interrumpir el flujo de login
   }
 };
+
+ */

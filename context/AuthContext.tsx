@@ -5,7 +5,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { User, GuestUser, CountryRole } from "../types/user";
 import {
   createLoginNotification,
-  sendLoginEmail,
 } from "../utils/notifications";
 
 // Función de utilidad para calcular la edad
@@ -207,14 +206,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             "login",
             userData.name
           );
-
-          // Intentar enviar email (no bloqueante)
-          if (response.user.email) {
-            sendLoginEmail(userData.name, response.user.email)
-              .catch(emailError => {
-                console.error("[signIn] Email error (non-blocking):", emailError);
-              });
-          }
         } catch (notifError) {
           console.error("[signIn] Notification error:", notifError);
           // Continuamos con el login aunque falle la notificación

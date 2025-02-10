@@ -7,6 +7,11 @@ export interface ComparisonData {
   score: number;
   classCode: string;
   country: string;
+  countryRole?: {
+    country: string;
+    language: string;
+    flag: string;
+  };
   age: number;
   completedAt: number;
 }

@@ -341,8 +341,8 @@ export const StudentsScreen: React.FC = () => {
               <Text style={styles.selectedCodeText}>
                 {selectedClassCode
                   ? availableClassCodes.find(
-                      (c) => c.code === selectedClassCode
-                    )?.code
+                    (c) => c.code === selectedClassCode
+                  )?.code
                   : "Seleccionar clase"}
               </Text>
               <Ionicons name="chevron-down" size={20} color={COLORS.text} />
@@ -450,8 +450,7 @@ export const StudentsScreen: React.FC = () => {
   const handleDeleteStudent = async (student: Student) => {
     Alert.alert(
       "Confirmar eliminación",
-      `¿Estás seguro de que deseas eliminar a ${student.name}${
-        student.isGuest ? " (Usuario Invitado)" : ""
+      `¿Estás seguro de que deseas eliminar a ${student.name}${student.isGuest ? " (Usuario Invitado)" : ""
       }?`,
       [
         { text: "Cancelar", style: "cancel" },
@@ -564,12 +563,32 @@ export const StudentsScreen: React.FC = () => {
     return countryFlags[country] || "unknown";
   };
 
+  // Función helper para obtener la bandera basada en el país
+  const getCountryFlagFromCountry = (country: string): string => {
+    const countryToFlag: { [key: string]: string } = {
+      "España": "spain",
+      "United States": "usa",
+      "Portugal": "portugal",
+      "Brasil": "brazil",
+      "Panamá": "panama",
+      "Colombia": "colombia",
+      "Chile": "chile",
+      "Ecuador": "ecuador",
+      "Argentina": "argentina",
+      "México": "mexico",
+      "Cuba": "cuba",
+      "Unknown": "unknown"
+    };
+
+    return countryToFlag[country] || "unknown";
+  };
+
   const handleViewResults = (student: Student) => {
     const hasResponses =
       student.formResponses &&
       student.formResponses.physical_literacy &&
       student.formResponses.physical_literacy.answers;
-  
+
     if (!hasResponses) {
       Alert.alert(
         "Sin respuestas",
@@ -579,9 +598,9 @@ export const StudentsScreen: React.FC = () => {
       );
       return;
     }
-  
+
     const physicalLiteracyResponse = student.formResponses?.physical_literacy;
-  
+
     if (!physicalLiteracyResponse) {
       Alert.alert(
         "Sin respuestas",
@@ -589,29 +608,36 @@ export const StudentsScreen: React.FC = () => {
       );
       return;
     }
-  
+
     // Determinar si el estudiante es adolescente o niño
     const isTeenStudent = student.age ? student.age >= 12 && student.age <= 18 : false;
-    
+
     // Obtener el número correcto de respuestas basado en la edad
     const expectedAnswers = isTeenStudent ? 8 : 6;
-    
+
     // Asegurarse de que solo se pasen las respuestas necesarias
     const trimmedAnswers = physicalLiteracyResponse.answers.slice(0, expectedAnswers);
-  
+
     const country = student.isGuest
-      ? (physicalLiteracyResponse as any).country ||
-        student.countryRole?.country ||
-        "Unknown"
-      : student.countryRole?.country || "Unknown";
-  
+    ? (physicalLiteracyResponse as any).country ||
+      student.countryRole?.country ||
+      "Unknown"
+    : student.countryRole?.country || "Unknown";
+
+    // Crear el countryRole basado en la información disponible
+    const countryRole = {
+      country: country,
+      language: physicalLiteracyResponse.language as Language,
+      flag: student.countryRole?.flag || getCountryFlagFromCountry(country)
+    };
+
     const studentData: StudentData = {
       name: student.name,
       email: student.email,
       uid: student.uid,
       age: student.age // Ahora es opcional, así que es válido incluso si es undefined
     };
-  
+
     navigation.navigate("Forms", {
       screen: "PhysicalLiteracyResults",
       params: {
@@ -622,6 +648,7 @@ export const StudentsScreen: React.FC = () => {
           isGuest: student.isGuest || false,
           userId: student.uid,
           country: country,
+          countryRole: countryRole // Añadimos el countryRole aquí
         },
         language: physicalLiteracyResponse.language as Language,
         answers: trimmedAnswers,

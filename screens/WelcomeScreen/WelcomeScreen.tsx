@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Dimensions,
   Platform,
   Image,
+  ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,7 +16,7 @@ import { BackgroundContainer } from '../../Components/BackgroundContainer/Backgr
 import { typography } from '../../theme/typography';
 import { RootStackParamList } from '../../navigation/types';
 import { CustomButton } from '../../Components/CustomButton/CustomButton';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,6 +31,22 @@ export const WelcomeScreen: React.FC = () => {
   const titleOpacity = new Animated.Value(0);
   const subtitleOpacity = new Animated.Value(0);
   const buttonScale = new Animated.Value(0.5);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  const handleScroll = (event: any) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    setShowLeftArrow(contentOffset.x > 0);
+    setShowRightArrow(contentOffset.x < contentSize.width - layoutMeasurement.width);
+  };
+
+  const scrollTo = (direction: 'left' | 'right') => {
+    scrollViewRef.current?.scrollTo({
+      x: direction === 'left' ? 0 : 1000,
+      animated: true
+    });
+  };
 
   useEffect(() => {
     const animations = [
@@ -66,30 +84,79 @@ export const WelcomeScreen: React.FC = () => {
       <View style={styles.overlay}>
         <Animated.View style={[styles.logoContainer, { transform: [{ scale: logoScale }] }]}>
           <View style={styles.logoCard}>
-            <View style={styles.logosWrapper}>
-              <Image
-                source={require('../../assets/images/logo-uex.webp')}
-                style={[styles.logo, { width: 60, height: 60 }]}
-                resizeMode="contain"
-              />
-              <View style={styles.logoDivider} />
-              <Image
-                source={require('../../assets/images/ulisboa.webp')}
-                style={[styles.logo, { width: 60, height: 60 }]}
-                resizeMode="contain"
-              />
-              <View style={styles.logoDivider} />
-              <Image
-                source={require('../../assets/images/Brasao4_vertical_cor_300dpi.webp')}
-                style={[styles.logo, { width: 60, height: 60 }]}
-                resizeMode="contain"
-              />
-              <View style={styles.logoDivider} />
-              <Image
-                source={require('../../assets/images/Logo_de_la_Universidad_del_Atlántico.svg.webp')}
-                style={[styles.logo, { width: 60, height: 60 }]}
-                resizeMode="contain"
-              />
+            <View style={styles.scrollContainer}>
+              {showLeftArrow && (
+                <TouchableOpacity 
+                  style={[styles.scrollButton, styles.scrollButtonLeft]}
+                  onPress={() => scrollTo('left')}
+                >
+                  <Ionicons name="chevron-back" size={24} color="#9E7676" />
+                </TouchableOpacity>
+              )}
+              <ScrollView 
+                ref={scrollViewRef}
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                contentContainerStyle={styles.logosScrollContent}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+              >
+                <Image
+                  source={require("../../assets/images/logo-uex.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/ulisboa.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/Brasao4_vertical_cor_300dpi.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/Logo_de_la_Universidad_del_Atlántico.svg.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/UCCFD.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/st.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/europea.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/san_marcos.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+              </ScrollView>
+              {showRightArrow && (
+                <TouchableOpacity 
+                  style={[styles.scrollButton, styles.scrollButtonRight]}
+                  onPress={() => scrollTo('right')}
+                >
+                  <Ionicons name="chevron-forward" size={24} color="#9E7676" />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </Animated.View>
@@ -119,8 +186,8 @@ export const WelcomeScreen: React.FC = () => {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Universidad de Extremadura • Universidade de Lisboa • Universidade Federal do Ceará • Universidad del Atlántico
+                      <Text style={styles.footerText}>
+            Universidad de Extremadura • Universidade de Lisboa • Universidade Federal do Ceará • Universidad del Atlántico • Universidad de Ciencias de la Cultura Física y el Deporte • Universidad Santo Tomás • Universidad Europea - Real Madrid • Universidad Nacional Mayor de San Marcos
           </Text>
         </View>
       </View>
@@ -148,9 +215,31 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  logosWrapper: {
+  scrollContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  scrollButton: {
+    position: 'absolute',
+    zIndex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    padding: 8,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  scrollButtonLeft: {
+    left: 0,
+  },
+  scrollButtonRight: {
+    right: 0,
+  },
+  logosScrollContent: {
+    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
   },

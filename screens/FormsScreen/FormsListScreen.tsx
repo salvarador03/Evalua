@@ -29,6 +29,8 @@ import type { FormResponse } from "../../types/form";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../../context/AuthContext";
 import { Language } from "../../types/language";
+import { isUniversityStudent } from "./data/universityStudentQuestions";
+import { isTeenager } from "./data/teenQuestions";
 
 // Actualiza la interfaz Creator para incluir el tipo correcto de imageUrl
 interface Creator {
@@ -146,8 +148,20 @@ const CREATORS: Creator[] = [
     orcid: "https://orcid.org/0000-0001-5602-048X",
     imageUrl: require("../../assets/images/tiago.webp"),
     socialLinks: {
-      researchGate:"https://www.researchgate.net/profile/Tiago-Ribeiro-41",
-      
+      researchGate: "https://www.researchgate.net/profile/Tiago-Ribeiro-41",
+
+    }
+  },
+  {
+    name: "Sandy Dorian Isla Alcoser",
+    role: "Investigador",
+    institution: "Universidad Nacional Mayor de San Marcos",
+    email: "sislaa@unmsm.edu.pe",
+    orcid: "https://orcid.org/0000-0003-1330-3716",
+    imageUrl: require("../../assets/images/sandy.webp"),
+    socialLinks: {
+      linkedin: "https://pe.linkedin.com/in/sandy-dorian-isla-alcoser-8515b9248",
+      googleScholar: "https://scholar.google.com/citations?user=QKKUfcIAAAAJ&hl=es"
     }
   },
   {
@@ -233,6 +247,13 @@ const INSTITUTIONS: Institution[] = [
     country: "Brasil",
     logo: require("../../assets/images/Brasao4_vertical_cor_300dpi.webp"),
     website: "https://www.ufc.br"
+  },
+  {
+    name: "Universidad Nacional Mayor de San Marcos",
+    description: "La Universidad Nacional Mayor de San Marcos, fundada en 1551, es la universidad más antigua de América y una de las más prestigiosas del Perú, destacada en investigación y desarrollo académico.",
+    country: "Perú",
+    logo: require("../../assets/images/san_marcos.webp"),
+    website: "https://www.unmsm.edu.pe"
   },
   {
     name: "Universidad del Atlántico",
@@ -408,17 +429,17 @@ export const FormsListScreen: React.FC = () => {
           <View style={styles.logoCard}>
             <View style={styles.scrollContainer}>
               {showLeftArrow && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.scrollButton, styles.scrollButtonLeft]}
                   onPress={() => scrollTo('left')}
                 >
                   <Ionicons name="chevron-back" size={24} color="#9E7676" />
                 </TouchableOpacity>
               )}
-              <ScrollView 
+              <ScrollView
                 ref={scrollViewRef}
-                horizontal 
-                showsHorizontalScrollIndicator={false} 
+                horizontal
+                showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.logosScrollContent}
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
@@ -464,9 +485,15 @@ export const FormsListScreen: React.FC = () => {
                   style={[styles.logo, { width: 60, height: 60 }]}
                   resizeMode="contain"
                 />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/san_marcos.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
               </ScrollView>
               {showRightArrow && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.scrollButton, styles.scrollButtonRight]}
                   onPress={() => scrollTo('right')}
                 >
@@ -576,6 +603,16 @@ export const FormsListScreen: React.FC = () => {
     </View>
   );
 
+  const getFormTitle = (age: number | undefined) => {
+    if (age && isUniversityStudent(age)) {
+      return "Cuestionario de Autoevaluación de Alfabetización Física - Universitarios";
+    } else if (age && isTeenager(age)) {
+      return "Cuestionario de Autoevaluación de Alfabetización Física - Adolescentes";
+    } else {
+      return "Cuestionario de Autoevaluación de Alfabetización Física - Niños";
+    }
+  };
+
   const renderFormCard = () => (
     <View style={styles.card}>
       {loading ? (
@@ -598,16 +635,18 @@ export const FormsListScreen: React.FC = () => {
             <Ionicons name="checkmark-circle" size={24} color="#9E7676" />
             <View style={styles.titleContainer}>
               <Text style={styles.cardTitle}>
-                Cuestionario de Autoevaluación de la Alfabetización Física
+                {getFormTitle(user?.age)}
               </Text>
               <View style={styles.ageRangeContainer}>
                 <Ionicons name="people-outline" size={16} color="#9E7676" />
                 <Text style={styles.ageRangeText}>
-                  {user?.age && user.age >= 6 && user.age <= 12
-                    ? "Franja de edad: 6-12 años"
-                    : user?.age && user.age > 12 && user.age <= 18
+                  {user?.age && isUniversityStudent(user.age)
+                    ? "Franja de edad: 18-24 años"
+                    : user?.age && isTeenager(user.age)
                       ? "Franja de edad: 12-18 años"
-                      : "Edades: 6-18 años"}
+                      : user?.age && user.age >= 6 && user.age < 12
+                        ? "Franja de edad: 6-12 años"
+                        : "Franja de edad: 6-24 años"}
                 </Text>
               </View>
             </View>
@@ -638,7 +677,7 @@ export const FormsListScreen: React.FC = () => {
             <Ionicons name="fitness" size={24} color="#9E7676" />
             <View style={styles.titleContainer}>
               <Text style={styles.cardTitle}>
-                Cuestionario de Autoevaluación de la Alfabetización Física
+                {getFormTitle(user?.age)}
               </Text>
               <View style={styles.ageRangeContainer}>
                 <Ionicons name="people-outline" size={16} color="#9E7676" />
@@ -647,7 +686,9 @@ export const FormsListScreen: React.FC = () => {
                     ? "Franja de edad: 6-12 años"
                     : user?.age && user.age > 12 && user.age <= 18
                       ? "Franja de edad: 12-18 años"
-                      : "Edades: 6-18 años"}
+                      : user?.age && user.age > 18 && user.age <= 24
+                        ? "Franja de edad: 18-24 años"
+                        : "Edades: 6-24 años"}
                 </Text>
               </View>
             </View>
@@ -665,7 +706,7 @@ export const FormsListScreen: React.FC = () => {
                 : "Evalúa tu forma física y actividad física según tu grupo de edad."}
           </Text>
           <View style={styles.cardFooter}>
-            <Text style={styles.cardMeta}>6 preguntas • ~5 minutos</Text>
+            <Text style={styles.cardMeta}>8 preguntas • ~5 minutos</Text>
             <TouchableOpacity
               onPress={handleStartForm}
               style={styles.startButton}

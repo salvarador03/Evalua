@@ -11,6 +11,11 @@ export interface FormResponse {
   completedAt: number;
   score?: number;
   country?: string;
+  countryRole: {
+    country: string;
+    language: string;
+    flag: string;
+  };
   classCode?: string;
   age?: number;
   responses?: number[];

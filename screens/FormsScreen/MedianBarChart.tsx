@@ -2,7 +2,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { ComparisonData } from "../../types/formstats";
-import { BarChart } from "react-native-gifted-charts";
 import UserMarker from "./UserMarker";
 import { translations } from "../../Components/LanguageSelection/translations";
 import { Language } from "../../types/language";

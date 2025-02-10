@@ -72,20 +72,20 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
   const generateGuestId = () => `guest_${Date.now()}`;
 
-    // Prevenir la navegación hacia atrás
-    useEffect(() => {
-      const backHandler = BackHandler.addEventListener(
-        'hardwareBackPress',
-        () => true
-      );
-      return () => backHandler.remove();
-    }, []);
+  // Prevenir la navegación hacia atrás
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => true
+    );
+    return () => backHandler.remove();
+  }, []);
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
         let currentUserId = user?.uid || "";
-        
+
         // 1. Inicializar userId
         if (!currentUserId) {
           const storedGuestId = await AsyncStorage.getItem("@guest_user_id");
@@ -109,7 +109,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
         const formSnapshot = await db()
           .ref(`/form_responses/${currentUserId}/physical_literacy`)
           .once("value");
-        
+
         const existingResponse = formSnapshot.val();
 
         if (existingResponse) {
@@ -150,19 +150,19 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
   const handleLanguageSelect = async (selectedLanguage: Language) => {
     try {
       setLoading(true);
-      
+
       if (!userId) {
         throw new Error("No userId available");
       }
-  
+
       const { languageKey, languageSelectedKey } = getUserSpecificKeys(userId);
-      
+
       // Separamos las operaciones asíncronas según el tipo de usuario
       const storageOperations = [
         AsyncStorage.setItem(languageKey, selectedLanguage),
         AsyncStorage.setItem(languageSelectedKey, "true")
       ];
-  
+
       // Solo intentamos actualizar la base de datos si es un usuario autenticado
       if (user && !userId.startsWith('guest_')) {
         await Promise.all([
@@ -171,9 +171,9 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
             countryRole: {
               country: languageToCountry[selectedLanguage],
               language: selectedLanguage,
-              flag: selectedLanguage === 'es' ? 'spain' : 
-                    selectedLanguage === 'en' ? 'usa' : 
-                    selectedLanguage === 'pt-PT' ? 'portugal' : 'brazil'
+              flag: selectedLanguage === 'es' ? 'spain' :
+                selectedLanguage === 'en' ? 'usa' :
+                  selectedLanguage === 'pt-PT' ? 'portugal' : 'brazil'
             }
           })
         ]);
@@ -189,20 +189,20 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
           })
         ]);
       }
-  
+
       setLanguage(selectedLanguage);
       setHasSelectedLanguage(true);
       setShowLanguageSelection(false);
       setCurrentQuestion(0);
       setAnswers(Array(6).fill(null));
       setIsFormReady(true);
-  
+
     } catch (error) {
       console.error("Error en handleLanguageSelect:", error);
       // Mostrar un mensaje de error más específico
       Alert.alert(
         "Error",
-        error instanceof Error 
+        error instanceof Error
           ? `${translations[selectedLanguage].languageSelectionError}: ${error.message}`
           : translations[selectedLanguage].languageSelectionError
       );
@@ -213,17 +213,17 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
   const createFormCompletionNotification = async () => {
     if (!language || !userId) return;
-    
+
     const notification: Notification = {
       id: `form_completed_${Date.now()}`,
       title: translations[language].formCompletedTitle || '¡Formulario completado!',
-      message: translations[language].formCompletedMessage || 
+      message: translations[language].formCompletedMessage ||
         'Si no ves los resultados, por favor recarga la página.',
       timestamp: Date.now(),
       read: false,
       type: 'form_completed'
     };
-  
+
     try {
       await db()
         .ref(`/notifications/${userId}/${notification.id}`)
@@ -235,11 +235,11 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
   const calculateStats = async (): Promise<FormStats[]> => {
     if (!language) return [];
-    
+
     try {
       const snapshot = await db().ref("/form_responses").once("value");
       const allResponses: FormResponseData[] = [];
-  
+
       snapshot.forEach((childSnapshot: FirebaseDatabaseTypes.DataSnapshot) => {
         const response = childSnapshot.child("physical_literacy").val() as FormResponseData | null;
         if (response?.answers) {
@@ -247,18 +247,18 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
         }
         return undefined;
       });
-  
-      const currentQuestions = userAge && isTeenager(userAge) 
-        ? teenQuestions[language] 
+
+      const currentQuestions = userAge && isTeenager(userAge)
+        ? teenQuestions[language]
         : questions[language];
-  
+
       const calculatedStats = currentQuestions.map((_, questionIndex) => {
         const values = allResponses
           .map(response => response.answers[questionIndex])
           .filter((value): value is number => value !== null && !isNaN(value));
-  
+
         values.sort((a, b) => a - b);
-  
+
         if (values.length === 0) {
           return {
             median: 0,
@@ -271,7 +271,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
             percentageFromMedian: 0
           };
         }
-  
+
         const totalUsers = values.length;
         const min = values[0];
         const max = values[totalUsers - 1];
@@ -279,16 +279,16 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
         const median = totalUsers % 2 === 0
           ? (values[medianIndex - 1] + values[medianIndex]) / 2
           : values[medianIndex];
-  
+
         // Get user's current answer for this question
         const userAnswer = answers[questionIndex];
-        
+
         // Calculate distance and percentage from median
         const distanceFromMedian = userAnswer !== null ? userAnswer - median : 0;
-        const percentageFromMedian = median !== 0 
-          ? ((userAnswer !== null ? userAnswer : 0) / median * 100) - 100 
+        const percentageFromMedian = median !== 0
+          ? ((userAnswer !== null ? userAnswer : 0) / median * 100) - 100
           : 0;
-  
+
         return {
           median,
           belowMedian: values.filter(v => v < median).length,
@@ -300,7 +300,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
           percentageFromMedian
         };
       });
-  
+
       setStats(calculatedStats);
       return calculatedStats;
     } catch (error) {
@@ -329,13 +329,32 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
         throw new Error("No se pudo identificar al usuario");
       }
 
+      // Obtener el countryRole actual del usuario de Firebase
+      const userRef = !user || user.role === "guest"
+        ? db().ref(`/guests/${userId}`)
+        : db().ref(`/users/${userId}`);
+
+      const userSnapshot = await userRef.once('value');
+      const userData = userSnapshot.val();
+
+      // Usar el countryRole existente
+      const existingCountryRole = userData?.countryRole;
+
       const response: FormResponse = {
         userId,
         answers: answers as number[],
         completedAt: Date.now(),
         language,
         isGuest: !user || user.role === "guest",
-        country: languageToCountry[language],
+        country: existingCountryRole?.country || languageToCountry[language], // Usar el país del countryRole existente
+        countryRole: existingCountryRole || {
+          // Fallback solo si no existe countryRole
+          country: languageToCountry[language],
+          language: language,
+          flag: language === 'es' ? 'spain' :
+            language === 'en' ? 'usa' :
+              language === 'pt-PT' ? 'portugal' : 'brazil'
+        }
       };
 
       await db()
