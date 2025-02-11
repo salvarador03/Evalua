@@ -394,7 +394,10 @@ export const FormContent: React.FC<FormContentProps> = ({
           color="#4ade80"
         />
         <Text style={styles.headerText}>
-          Cuestionario de Autoevaluación de la Alfabetización Física
+          {language === 'es' && 'Cuestionario de Autoevaluación \n de la Alfabetización Física'}
+          {language === 'en' && 'Self-Assessment Questionnaire \n of Physical Literacy'}
+          {language === 'pt-PT' && 'Questionário de Autoavaliação \n da Literacia Física'}
+          {language === 'pt-BR' && 'Questionário de Autoavaliação \n do Letramento Físico'}
         </Text>
       </View>
 

@@ -1,5 +1,5 @@
 // Components/LanguageSelection.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, SafeAreaView, Alert, Dimensions } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { Language } from "../../types/language";
@@ -8,6 +8,8 @@ import { User } from "../../types/user";
 const { width } = Dimensions.get('window');
 const BUTTON_MARGIN = 8;
 const GRID_PADDING = 20;
+
+
 
 // Define the interface for country configuration
 interface CountryConfig {
@@ -93,6 +95,17 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
   isStandalone = false
 }) => {
   const { user, updateUserProfile } = useAuth();
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>(
+    width > Dimensions.get('window').height ? 'landscape' : 'portrait'
+  );
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setOrientation(window.width > window.height ? 'landscape' : 'portrait');
+    });
+
+    return () => subscription?.remove();
+  }, []);
 
   const handleCountrySelection = async (countryCode: CountryCodeType) => {
     try {
@@ -101,14 +114,15 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
 
         if (!user.countryRole ||
           user.countryRole.language !== selectedCountry.language ||
-          user.countryRole.country !== selectedCountry.country) {
+          user.countryRole.country !== selectedCountry.country ||
+          user.countryRole.flag !== selectedCountry.flag) {
 
           const updatedUser: User = {
             ...user,
             countryRole: {
-              country: selectedCountry.country,
-              language: selectedCountry.language,
-              flag: selectedCountry.flag
+              country: selectedCountry.country, // Usamos el nombre del país del config
+              language: selectedCountry.language, // Usamos el idioma del config
+              flag: selectedCountry.flag // Usamos el flag del config
             }
           };
 
@@ -272,34 +286,37 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
       </View>
     </SafeAreaView>
   );
+
+
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f0f4f8',
   },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: GRID_PADDING,
+    width: '100%',
   },
   welcomeContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: '5%', // Cambiado a porcentaje
     width: '100%',
+    paddingHorizontal: 38
   },
   welcomeTitle: {
-    fontSize: 26,
+    fontSize: Math.min(26, width * 0.06), // Tamaño responsivo
     fontWeight: 'bold',
     color: '#2c3e50',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: '3%', // Cambiado a porcentaje
     lineHeight: 34,
   },
   welcomeSubtitle: {
-    fontSize: 18,
+    fontSize: Math.min(18, width * 0.045), // Tamaño responsivo
     color: '#34495e',
     textAlign: 'center',
     lineHeight: 26,
@@ -307,17 +324,19 @@ const styles = StyleSheet.create({
   gridContainer: {
     width: '100%',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-evenly', // Cambiado a space-evenly
     width: '100%',
-    marginBottom: 16,
+    marginBottom: '3%', // Cambiado a porcentaje
+    paddingHorizontal: 10,
   },
   flagButton: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding: 12,
+    padding: Math.min(12, width * 0.02), // Padding responsivo
     marginHorizontal: BUTTON_MARGIN,
     shadowColor: '#000',
     shadowOffset: {
@@ -327,10 +346,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
+    flex: 1, // Añadido flex: 1
+    maxWidth: width * 0.25, // Máximo ancho responsivo
+    aspectRatio: 1.5, // Mantener proporción
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   flagImage: {
-    width: 65,
-    height: 45,
+    width: '100%',
+    height: undefined,
+    aspectRatio: 1.44, // Proporción de banderas estándar
     borderRadius: 8,
-  }
+  },
 });

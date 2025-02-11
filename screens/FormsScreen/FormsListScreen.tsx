@@ -31,6 +31,7 @@ import { useAuth } from "../../context/AuthContext";
 import { Language } from "../../types/language";
 import { isUniversityStudent } from "./data/universityStudentQuestions";
 import { isTeenager } from "./data/teenQuestions";
+import FormImageCarousel from "./FormImageCarousel";
 
 // Actualiza la interfaz Creator para incluir el tipo correcto de imageUrl
 interface Creator {
@@ -651,10 +652,9 @@ export const FormsListScreen: React.FC = () => {
               </View>
             </View>
           </View>
-          <Image
-            source={require("../../assets/images/foto_primer_form.webp")}
-            style={styles.questionnaire}
-            resizeMode="contain"
+          <FormImageCarousel
+            userAge={user?.age ?? 0}
+            isFormCompleted={formResponse !== null}
           />
           <Text style={styles.cardDescription}>
             Has completado este cuestionario el{" "}
