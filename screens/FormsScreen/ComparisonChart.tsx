@@ -70,17 +70,6 @@ const ComparisonChart: React.FC<ChartProps> = ({
     const loadResponses = async () => {
       setIsLoading(true);
       try {
-        if (formResponse?.isGuest && userData.userId) {
-          const guestSnapshot = await db()
-            .ref(`/guests/${userData.userId}`)
-            .once("value");
-
-          const guestData = guestSnapshot.val();
-          if (guestData?.classCode) {
-            userData.classCode = guestData.classCode;
-          }
-        }
-
         const [formResponsesSnapshot, usersSnapshot, guestsSnapshot] =
           await Promise.all([
             db().ref("/form_responses").once("value"),
@@ -99,8 +88,17 @@ const ComparisonChart: React.FC<ChartProps> = ({
             const physicalLiteracy = responseData.physical_literacy;
 
             if (physicalLiteracy?.answers?.[questionIndex] !== undefined) {
+              // Get user info from either users or guests collection
               const userInfo = users[userId] || guests[userId];
-              // Usar la edad del formResponse para el usuario actual
+
+              // Debug logging
+              console.log('Processing user:', {
+                userId,
+                userInfoClassCode: userInfo?.classCode,
+                physicalLiteracyClassCode: physicalLiteracy.classCode,
+                finalClassCode: userInfo?.classCode || physicalLiteracy.classCode || ""
+              });
+
               const age = userId === formResponse?.userId
                 ? formResponse.age
                 : userInfo?.age || 0;
@@ -117,6 +115,11 @@ const ComparisonChart: React.FC<ChartProps> = ({
             }
           }
         );
+
+        console.log('Final responses array:', responses.map(r => ({
+          userId: r.userId,
+          classCode: r.classCode
+        })));
 
         setAllResponses(responses);
       } catch (error) {
@@ -205,23 +208,43 @@ const ComparisonChart: React.FC<ChartProps> = ({
     activeFilters.forEach(filter => {
       switch (filter.id) {
         case "class":
-          if (userData.classCode) {
-            filteredData = filteredData.filter(r => r.classCode === userData.classCode);
+          const classCode = userData.classCode || formResponse?.classCode;
+          console.log("Current classCode:", classCode);
+          console.log("All responses before filtering:", filteredData.map(r => ({
+            userId: r.userId,
+            classCode: r.classCode,
+          })));
+
+          if (classCode) {
+            filteredData = filteredData.filter(r => {
+              console.log(`Comparing response classCode: "${r.classCode}" with user classCode: "${classCode}"`);
+              return r.classCode === classCode;
+            });
           }
+
+          console.log("Filtered responses:", filteredData.map(r => ({
+            userId: r.userId,
+            classCode: r.classCode,
+          })));
           break;
+
         case "age":
           if (userData?.age) {
+            console.log("Filtering by age:", userData.age);
             filteredData = filteredData.filter(r => r.age === userData.age);
           }
           break;
+
         case "country":
-          // Usamos countryRole.country en lugar de country
-          filteredData = filteredData.filter(
-            r => r.country.toLowerCase() === (userData.countryRole?.country || "").toLowerCase()
+          const userCountry = (userData.countryRole?.country || "").toLowerCase();
+          console.log("Filtering by country:", userCountry);
+          filteredData = filteredData.filter(r =>
+            r.country.toLowerCase() === userCountry
           );
           break;
+
         case "global":
-          // No aplicar filtro adicional para global
+          // No additional filtering for global
           break;
       }
     });
@@ -346,8 +369,10 @@ const ComparisonChart: React.FC<ChartProps> = ({
   const renderComparison = () => {
     const filteredResponses = getFilteredResponses();
     const stats = calculateMedianStats(filteredResponses);
-
-    if (!userData.classCode && filters.some(f => f.id === "class" && f.active)) {
+    const classCode = userData.classCode || formResponse?.classCode;
+  
+    // Modificamos la validación para considerar también el classCode del formResponse
+    if (!classCode && filters.some(f => f.id === "class" && f.active)) {
       return (
         <View style={styles.viewContainer}>
           <View style={styles.headerCard}>
@@ -361,7 +386,7 @@ const ComparisonChart: React.FC<ChartProps> = ({
         </View>
       );
     }
-
+  
     return (
       <View style={styles.viewContainer}>
         <View style={styles.headerCard}>
@@ -372,7 +397,7 @@ const ComparisonChart: React.FC<ChartProps> = ({
             </Text>
           )}
         </View>
-
+  
         {filteredResponses.length > 0 ? (
           <>
             {renderMedianComparison(stats, "la selección")}
@@ -381,7 +406,7 @@ const ComparisonChart: React.FC<ChartProps> = ({
               median={stats.median}
               userScore={userScore}
               viewType="custom"
-              classCode={userData.classCode}
+              classCode={classCode}
               countryName={userData.countryRole?.country || ""}
               allResponses={allResponses}
               language={language}
@@ -397,7 +422,6 @@ const ComparisonChart: React.FC<ChartProps> = ({
       </View>
     );
   };
-
   return (
     <View style={styles.container}>
       <View style={styles.filterContainer}>

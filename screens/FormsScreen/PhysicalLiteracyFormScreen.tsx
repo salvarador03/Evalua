@@ -354,7 +354,8 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
           flag: language === 'es' ? 'spain' :
             language === 'en' ? 'usa' :
               language === 'pt-PT' ? 'portugal' : 'brazil'
-        }
+        },
+        classCode: userData?.classCode || null
       };
 
       await db()

@@ -652,9 +652,10 @@ export const FormsListScreen: React.FC = () => {
               </View>
             </View>
           </View>
-          <FormImageCarousel
-            userAge={user?.age ?? 0}
-            isFormCompleted={formResponse !== null}
+          <Image
+            source={require("../../assets/images/foto_primer_form.webp")}
+            style={styles.questionnaire}
+            resizeMode="contain"
           />
           <Text style={styles.cardDescription}>
             Has completado este cuestionario el{" "}
@@ -693,11 +694,11 @@ export const FormsListScreen: React.FC = () => {
               </View>
             </View>
           </View>
-          <Image
-            source={require("../../assets/images/foto_primer_form.webp")}
-            style={styles.questionnaire}
-            resizeMode="contain"
+          <FormImageCarousel
+            userAge={user?.age ?? 0}
+            isFormCompleted={formResponse !== null}
           />
+
           <Text style={styles.cardDescription}>
             {user?.age && user.age >= 6 && user.age <= 12
               ? "Evalúa tu forma física y actividad física, comparándote con otros niños/as de 6-12 años."
