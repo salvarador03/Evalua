@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, SafeAreaView, Alert, Dimensions } from "react-native";
 import { useAuth } from "../../context/AuthContext";
-import { Language } from "../../types/language";
+import { countryCodeToName, countryToLanguage, Language } from "../../types/language";
 import { User } from "../../types/user";
 
 const { width } = Dimensions.get('window');
@@ -86,7 +86,7 @@ const countryConfigs: Record<CountryCodeType, CountryConfig> = {
 };
 
 export interface LanguageSelectionScreenProps {
-  onLanguageSelect: (lang: Language) => void | Promise<void>;
+  onLanguageSelect: (countryCode: string) => void | Promise<void>;
   isStandalone?: boolean;
 }
 
@@ -107,38 +107,42 @@ export const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = (
     return () => subscription?.remove();
   }, []);
 
-  const handleCountrySelection = async (countryCode: CountryCodeType) => {
-    try {
-      if (user) {
-        const selectedCountry = countryConfigs[countryCode];
-
-        if (!user.countryRole ||
-          user.countryRole.language !== selectedCountry.language ||
-          user.countryRole.country !== selectedCountry.country ||
+// En LanguageSelectionScreen.tsx
+const handleCountrySelection = async (countryCode: CountryCodeType) => {
+  try {
+    if (user) {
+      const selectedCountry = countryConfigs[countryCode];
+      // Obtener el nombre del país del mapeo
+      const countryName = countryCodeToName[countryCode];
+      
+      // Siempre usar el nombre del país específico, no el del idioma
+      if (!user.countryRole ||
+          user.countryRole.country !== countryName ||
           user.countryRole.flag !== selectedCountry.flag) {
-
-          const updatedUser: User = {
-            ...user,
-            countryRole: {
-              country: selectedCountry.country, // Usamos el nombre del país del config
-              language: selectedCountry.language, // Usamos el idioma del config
-              flag: selectedCountry.flag // Usamos el flag del config
-            }
-          };
-
-          await updateUserProfile(updatedUser);
-        }
-
-        await onLanguageSelect(selectedCountry.language);
+  
+        const updatedUser: User = {
+          ...user,
+          countryRole: {
+            country: countryName, // Usar el nombre específico del país
+            language: countryToLanguage[countryCode], // Usar el idioma base para traducciones
+            flag: selectedCountry.flag
+          }
+        };
+  
+        await updateUserProfile(updatedUser);
       }
-    } catch (error) {
-      console.error('Error al actualizar el rol de país:', error);
-      Alert.alert(
-        'Error',
-        'No se pudo actualizar el país seleccionado. Por favor, intenta nuevamente.'
-      );
+  
+      // Enviar el código de país completo en lugar del idioma base
+      await onLanguageSelect(countryCode);  // <-- CAMBIO AQUÍ
     }
-  };
+  } catch (error) {
+    console.error('Error al actualizar el rol de país:', error);
+    Alert.alert(
+      'Error',
+      'No se pudo actualizar el país seleccionado. Por favor, intenta nuevamente.'
+    );
+  }
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>

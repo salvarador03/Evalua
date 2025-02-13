@@ -22,7 +22,7 @@ import type {
 } from "../../navigation/types";
 import auth from "@react-native-firebase/auth";
 import db, { FirebaseDatabaseTypes } from "@react-native-firebase/database";
-import { languageToCountry, type FormResponse } from "../../types/form";
+import { countryCodeMap, type FormResponse } from "../../types/form";
 import { Notification } from '../../types/notification';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { translations } from "../../Components/LanguageSelection/translations";
@@ -147,7 +147,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
     }
   }, [language, formResponse]);
 
-  const handleLanguageSelect = async (selectedLanguage: Language) => {
+  const handleLanguageSelect = async (selectedLanguageCode: string) => {
     try {
       setLoading(true);
 
@@ -155,42 +155,45 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
         throw new Error("No userId available");
       }
 
+      const countryInfo = countryCodeMap[selectedLanguageCode];
+      if (!countryInfo) {
+        throw new Error(`Invalid country code: ${selectedLanguageCode}`);
+      }
+
       const { languageKey, languageSelectedKey } = getUserSpecificKeys(userId);
 
-      // Separamos las operaciones asíncronas según el tipo de usuario
       const storageOperations = [
-        AsyncStorage.setItem(languageKey, selectedLanguage),
+        AsyncStorage.setItem(languageKey, countryInfo.language),
         AsyncStorage.setItem(languageSelectedKey, "true")
       ];
+
+      const countryRole = {
+        country: countryInfo.country,
+        language: countryInfo.language,
+        flag: countryInfo.flag
+      };
 
       // Solo intentamos actualizar la base de datos si es un usuario autenticado
       if (user && !userId.startsWith('guest_')) {
         await Promise.all([
           ...storageOperations,
           db().ref(`/users/${userId}`).update({
-            countryRole: {
-              country: languageToCountry[selectedLanguage],
-              language: selectedLanguage,
-              flag: selectedLanguage === 'es' ? 'spain' :
-                selectedLanguage === 'en' ? 'usa' :
-                  selectedLanguage === 'pt-PT' ? 'portugal' : 'brazil'
-            }
+            countryRole: countryRole
           })
         ]);
       } else {
-        // Si es un usuario invitado, solo actualizamos AsyncStorage
+        // Si es un usuario invitado, actualizamos AsyncStorage y la colección de invitados
         await Promise.all([
           ...storageOperations,
-          // Opcionalmente, podemos guardar la información en la colección de invitados
           db().ref(`/guests/${userId}`).update({
             role: 'guest',
-            language: selectedLanguage,
-            country: languageToCountry[selectedLanguage]
+            language: countryInfo.language,
+            countryRole: countryRole
           })
         ]);
       }
 
-      setLanguage(selectedLanguage);
+      setLanguage(countryInfo.language);
       setHasSelectedLanguage(true);
       setShowLanguageSelection(false);
       setCurrentQuestion(0);
@@ -199,12 +202,11 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
     } catch (error) {
       console.error("Error en handleLanguageSelect:", error);
-      // Mostrar un mensaje de error más específico
       Alert.alert(
         "Error",
         error instanceof Error
-          ? `${translations[selectedLanguage].languageSelectionError}: ${error.message}`
-          : translations[selectedLanguage].languageSelectionError
+          ? `Error al seleccionar el idioma: ${error.message}`
+          : "Error al seleccionar el idioma"
       );
     } finally {
       setLoading(false);
@@ -337,7 +339,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
       const userSnapshot = await userRef.once('value');
       const userData = userSnapshot.val();
 
-      // Usar el countryRole existente
+      // Usar el countryRole existente o crear uno por defecto
       const existingCountryRole = userData?.countryRole;
 
       const response: FormResponse = {
@@ -346,14 +348,11 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
         completedAt: Date.now(),
         language,
         isGuest: !user || user.role === "guest",
-        country: existingCountryRole?.country || languageToCountry[language], // Usar el país del countryRole existente
+        country: existingCountryRole?.country || countryCodeMap.es_ES.country,
         countryRole: existingCountryRole || {
-          // Fallback solo si no existe countryRole
-          country: languageToCountry[language],
+          country: countryCodeMap.es_ES.country,
           language: language,
-          flag: language === 'es' ? 'spain' :
-            language === 'en' ? 'usa' :
-              language === 'pt-PT' ? 'portugal' : 'brazil'
+          flag: countryCodeMap.es_ES.flag
         },
         classCode: userData?.classCode || null
       };
