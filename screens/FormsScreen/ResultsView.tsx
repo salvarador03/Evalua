@@ -137,7 +137,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         }
 
         // Agregar logs para verificar los datos cargados
-        console.log("Datos del estudiante cargados:", guestData);
       } catch (error) {
         console.error("Error loading student data:", error);
       }
