@@ -14,7 +14,6 @@ export interface ComparisonData {
   };
   age: number;
   completedAt: number;
-  isGuest: boolean; // Añadimos esta propiedad
 }
 
 export interface FormStats {

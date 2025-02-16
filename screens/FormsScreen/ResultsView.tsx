@@ -124,18 +124,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const [localAnswers, setLocalAnswers] = useState<(number | null)[]>(answers);
   const { user } = useAuth();
 
-  useEffect(() => {
-    // Log para intentar corregir los fallos.
-    console.log("-----------------------------------------------------------------------------------------")
-    console.log("[DEBUG] User name:", user?.name);
-    console.log("[DEBUG] Loaded answers:", answers);
-    console.log("[DEBUG] Questions length:", getAgeAppropriateQuestions(language).length);
-    console.log("[DEBUG] User role:", isTeacherView ? "teacher" : "student");
-    console.log("[DEBUG] Student age:", studentAge);
-    console.log("[DEBUG] User age:", user?.age);
-    console.log("-----------------------------------------------------------------------------------------")
-  }, [answers, language, isTeacherView, studentAge, user?.age]);
-
   const loadStudentData = async () => {
     if (isTeacherView && studentData?.uid) {
       try {
@@ -167,7 +155,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             .once('value');
 
           const formResponseData = formResponseRef.val();
-          console.log("[DEBUG] Teacher view - loaded answers:", formResponseData?.answers);
 
           if (formResponseData?.answers) {
             setLocalAnswers(formResponseData.answers);
@@ -188,10 +175,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   // 2. Modificar getAgeAppropriateQuestions para asegurar que siempre devuelve todas las preguntas
   const getAgeAppropriateQuestions = (language: Language) => {
     const targetAge = isTeacherView ? studentAge : user?.age;
-    console.log("[DEBUG] getAgeAppropriateQuestions - targetAge:", targetAge);
-    console.log("[DEBUG] isTeacherView:", isTeacherView);
-    console.log("[DEBUG] studentAge:", studentAge);
-    console.log("[DEBUG] user?.age:", user?.age);
 
     let questionSet;
     if (targetAge) {
@@ -206,7 +189,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
       questionSet = questions[language];
     }
 
-    console.log("[DEBUG] Selected question set length:", questionSet.length);
     return questionSet.slice();
   };
 
@@ -362,14 +344,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     const questions = getAgeAppropriateQuestions(language);
     // Usar localAnswers en lugar de answers directamente
     const validAnswers = isTeacherView ? localAnswers : answers;
-
-    console.log("[DEBUG] Rendering responses:");
-    console.log("[DEBUG] Questions length:", questions.length);
-    console.log("[DEBUG] Valid answers:", validAnswers);
-    console.log("[DEBUG] Local answers:", localAnswers);
-    console.log("[DEBUG] Original answers:", answers);
-    console.log("[DEBUG] User role:", isTeacherView ? "teacher" : "student");
-    console.log("[DEBUG] Target age:", isTeacherView ? studentAge : user?.age);
 
     return (
       <View style={styles.responsesContainer}>

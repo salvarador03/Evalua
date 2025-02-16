@@ -43,6 +43,15 @@ interface ChartProps {
   language: Language;
 }
 
+interface ClassDetails {
+  active: boolean;
+  code: string;
+  createdAt: number;
+  description: string;
+  teacherId: string;
+  teacherName: string;
+}
+
 interface Filter {
   id: "class" | "global" | "country" | "age";
   active: boolean;
@@ -65,70 +74,64 @@ const ComparisonChart: React.FC<ChartProps> = ({
   ]);
   const [allResponses, setAllResponses] = useState<ComparisonData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [classDetails, setClassDetails] = useState<ClassDetails | null>(null);
 
   useEffect(() => {
     const loadResponses = async () => {
       setIsLoading(true);
       try {
-        // Obtener los datos igual que en StudentsScreen
-        const [formResponsesSnapshot, usersSnapshot, guestsSnapshot] =
+        const [formResponsesSnapshot, usersSnapshot, guestsSnapshot, classCodesSnapshot] =
           await Promise.all([
             db().ref("/form_responses").once("value"),
             db().ref("/users").once("value"),
             db().ref("/guests").once("value"),
+            db().ref("/classCodes").once("value"),
           ]);
 
         const formResponses = formResponsesSnapshot.val() || {};
         const users = usersSnapshot.val() || {};
         const guests = guestsSnapshot.val() || {};
+        const classCodes = classCodesSnapshot.val() || {};
 
-        console.log("[DEBUG] Loading data for user:", userData);
+        // Obtener el usuario que estamos observando
+        const studentData = users[userData.userId] || guests[userData.userId];
+        const studentClassCode = studentData?.classCode;
+
+        // Buscar los detalles de la clase
+        if (studentClassCode) {
+          const classEntry = Object.entries(classCodes).find(([_, classData]: [string, any]) => 
+            classData.code === studentClassCode
+          );
+          if (classEntry) {
+            setClassDetails(classEntry[1]);
+          }
+        }
 
         const responses: ComparisonData[] = [];
 
-        // Procesar usuarios registrados primero
-        Object.entries(users)
-          .filter(([_, data]: [string, any]) => data.role === "student")
-          .forEach(([uid, userData]: [string, any]) => {
-            const userResponses = formResponses[uid]?.physical_literacy;
-            if (userResponses?.answers?.[questionIndex] !== undefined) {
-              responses.push({
-                userId: uid,
-                userName: userData.name,
-                score: userResponses.answers[questionIndex],
-                classCode: userData.classCode || "",
-                country: userData.countryRole?.country || "Unknown",
-                age: userData.age || 0,
-                completedAt: userResponses.completedAt,
-                isGuest: false
-              });
-            }
-          });
+        Object.entries(formResponses).forEach(([userId, responseData]: [string, any]) => {
+          const physicalLiteracy = responseData.physical_literacy;
 
-        // Procesar usuarios invitados
-        Object.entries(guests).forEach(([uid, guestData]: [string, any]) => {
-          const guestResponses = formResponses[uid]?.physical_literacy;
-          if (guestResponses?.answers?.[questionIndex] !== undefined) {
+          if (physicalLiteracy?.answers?.[questionIndex] !== undefined) {
+            const userInfo = users[userId] || guests[userId];
+
+            // Si es el usuario actual y estamos en modo profesor, usar la edad del estudiante de la base de datos
+            const userAge = userId === userData.userId
+              ? (formResponse ? studentData?.age : userInfo?.age) || 0
+              : userInfo?.age || 0;
+
             responses.push({
-              userId: uid,
-              userName: guestData.name,
-              score: guestResponses.answers[questionIndex],
-              classCode: guestData.classCode || "",
-              country: guestData.countryRole?.country || guestResponses.country || "Unknown",
-              age: guestData.age || 0,
-              completedAt: guestResponses.completedAt,
-              isGuest: true
+              userId,
+              userName: userInfo?.name || "Anónimo",
+              score: physicalLiteracy.answers[questionIndex],
+              classCode: userId === userData.userId
+                ? studentData?.classCode
+                : userInfo?.classCode || physicalLiteracy.classCode || "",
+              country: userInfo?.countryRole?.country || physicalLiteracy.country || "Unknown",
+              age: userAge,
+              completedAt: physicalLiteracy.completedAt,
             });
           }
-        });
-
-        console.log("[DEBUG] Processed responses:", {
-          total: responses.length,
-          ages: [...new Set(responses.map(r => r.age))].sort((a, b) => a - b),
-          ageDistribution: responses.reduce((acc, r) => {
-            acc[r.age] = (acc[r.age] || 0) + 1;
-            return acc;
-          }, {} as Record<number, number>)
         });
 
         setAllResponses(responses);
@@ -140,7 +143,7 @@ const ComparisonChart: React.FC<ChartProps> = ({
     };
 
     loadResponses();
-  }, [questionIndex, userData]);
+  }, [questionIndex, userData, formResponse]);
 
   const calculateMedianStats = (data: ComparisonData[]): MedianStats => {
     if (!data || data.length === 0) {
@@ -208,73 +211,106 @@ const ComparisonChart: React.FC<ChartProps> = ({
     );
   };
 
-  // Actualizar getFilteredResponses
-// Modificar getFilteredResponses para usar la edad correctamente
-const getFilteredResponses = () => {
-  console.log("[DEBUG] Starting filter process:");
-  console.log("[DEBUG] User data:", userData);
-  console.log("[DEBUG] Available responses:", allResponses.length);
+  // Modificamos la función getFilteredResponses
+  const getFilteredResponses = () => {
+    let filteredData = [...allResponses];
+    const activeFilters = filters.filter(f => f.active);
 
-  let filteredData = [...allResponses];
-  const activeFilters = filters.filter(f => f.active);
-
-  if (activeFilters.length === 0) return [];
-
-  activeFilters.forEach(filter => {
-    const previousLength = filteredData.length;
-    
-    switch (filter.id) {
-      case "age":
-        if (userData.age && userData.age > 0) {
-          console.log("[DEBUG] Filtering by age:", userData.age);
-          filteredData = filteredData.filter(response => {
-            const ageMatch = response.age === userData.age;
-            console.log(`[DEBUG] Comparing response age ${response.age} with user age ${userData.age}: ${ageMatch}`);
-            return ageMatch;
-          });
-        }
-        break;
-
-      case "class":
-        if (userData.classCode) {
-          filteredData = filteredData.filter(response => 
-            response.classCode === userData.classCode
-          );
-        }
-        break;
-
-      case "country":
-        const userCountry = userData.countryRole?.country?.toLowerCase() || "";
-        if (userCountry) {
-          filteredData = filteredData.filter(response =>
-            response.country.toLowerCase() === userCountry
-          );
-        }
-        break;
-    }
-
-    console.log(`[DEBUG] After ${filter.id} filter:`, {
-      remaining: filteredData.length,
-      was: previousLength
+    console.log('[DEBUG] Iniciando filtrado con datos:', {
+      totalResponses: allResponses.length,
+      activeFilters: activeFilters.map(f => f.id),
+      userData: {
+        userId: userData.userId,
+        age: userData.age,
+        classCode: userData.classCode,
+        country: userData.countryRole?.country
+      }
     });
-  });
 
-  return filteredData;
-};
+    if (activeFilters.length === 0) return [];
+
+    // Obtener el classCode del estudiante que estamos observando
+    const studentClassCode = userData.classCode || allResponses.find(r => r.userId === userData.userId)?.classCode;
+
+    // Obtener datos del estudiante desde la base de datos
+    const studentData = allResponses.find(r => r.userId === userData.userId);
+
+    // Obtener la edad correcta según el contexto
+    const studentAge = studentData?.age || 0;
+
+    console.log('[DEBUG] Datos del estudiante:', {
+      studentClassCode,
+      studentAge,
+      isTeacherView: !!formResponse
+    });
+
+    activeFilters.forEach(filter => {
+      const prevCount = filteredData.length;
+      switch (filter.id) {
+        case "class":
+          if (studentClassCode) {
+            filteredData = filteredData.filter(response => {
+              const match = response.classCode === studentClassCode;
+              return match;
+            });
+          }
+          break;
+
+        case "age":
+          if (studentAge > 0) {
+            console.log('[DEBUG] Filtrando por edad:', {
+              studentAge,
+              responsesBeforeFilter: filteredData.length,
+              edadesDisponibles: [...new Set(filteredData.map(r => r.age))]
+            });
+
+            filteredData = filteredData.filter(r => r.age === studentAge);
+
+            console.log('[DEBUG] Resultados después del filtro por edad:', {
+              responsesBefore: prevCount,
+              responsesAfter: filteredData.length,
+              filtered: prevCount - filteredData.length
+            });
+          }
+          break;
+
+        case "country":
+          const userCountry = (userData.countryRole?.country || "").toLowerCase();
+          filteredData = filteredData.filter(r =>
+            r.country.toLowerCase() === userCountry
+          );
+          break;
+
+        case "global":
+          // No additional filtering for global
+          break;
+      }
+    });
+
+    return filteredData;
+  };
 
   // Modificamos la función getComparisonTitle
   const getComparisonTitle = () => {
     const activeFilters = filters.filter(f => f.active);
     if (activeFilters.length === 0) return translations[language].selectFiltersToCompare;
 
+    // Obtener datos del estudiante desde allResponses
+    const studentData = allResponses.find(r => r.userId === userData.userId);
+    const studentAge = studentData?.age || 0;
+
     return activeFilters
       .map(f => {
         switch (f.id) {
-          case "class": return translations[language].classComparison;
+          case "class": 
+          if (classDetails) {
+            return `${translations[language].classComparison} (${classDetails.description})`;
+          }
+          return translations[language].classComparison;
           case "global": return translations[language].globalComparison;
           case "country": return `${translations[language].countryComparison} ${userData.countryRole?.country || ""}`;
-          case "age": return userData?.age
-            ? `${translations[language].ageComparison} (${userData.age} ${translations[language].years})`
+          case "age": return studentAge > 0
+            ? `${translations[language].ageComparison} (${studentAge} ${translations[language].years})`
             : translations[language].ageComparison;
           default: return "";
         }
