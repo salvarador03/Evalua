@@ -121,7 +121,20 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const [fadeAnim] = useState(new Animated.Value(1));
   const [studentClassCode, setStudentClassCode] = useState<string>("");
   const [studentAge, setStudentAge] = useState<number | undefined>();
+  const [localAnswers, setLocalAnswers] = useState<(number | null)[]>(answers);
   const { user } = useAuth();
+
+  useEffect(() => {
+    // Log para intentar corregir los fallos.
+    console.log("-----------------------------------------------------------------------------------------")
+    console.log("[DEBUG] User name:", user?.name);
+    console.log("[DEBUG] Loaded answers:", answers);
+    console.log("[DEBUG] Questions length:", getAgeAppropriateQuestions(language).length);
+    console.log("[DEBUG] User role:", isTeacherView ? "teacher" : "student");
+    console.log("[DEBUG] Student age:", studentAge);
+    console.log("[DEBUG] User age:", user?.age);
+    console.log("-----------------------------------------------------------------------------------------")
+  }, [answers, language, isTeacherView, studentAge, user?.age]);
 
   const loadStudentData = async () => {
     if (isTeacherView && studentData?.uid) {
@@ -143,24 +156,58 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     }
   };
 
+  // 1. Primero, asegurarse de que las respuestas se cargan correctamente
+  useEffect(() => {
+    const loadAnswers = async () => {
+      try {
+        // Si es vista de profesor, cargar las respuestas del estudiante
+        if (isTeacherView && studentData?.uid) {
+          const formResponseRef = await db()
+            .ref(`/form_responses/${studentData.uid}/physical_literacy`)
+            .once('value');
 
-  // Actualizar la función getAgeAppropriateQuestions
+          const formResponseData = formResponseRef.val();
+          console.log("[DEBUG] Teacher view - loaded answers:", formResponseData?.answers);
+
+          if (formResponseData?.answers) {
+            setLocalAnswers(formResponseData.answers);
+          }
+        } else {
+          // Si no es vista de profesor, usar las respuestas proporcionadas como prop
+          setLocalAnswers(answers);
+        }
+      } catch (error) {
+        console.error("Error loading answers:", error);
+      }
+    };
+
+    loadAnswers();
+  }, [isTeacherView, studentData?.uid, answers]);
+
+
+  // 2. Modificar getAgeAppropriateQuestions para asegurar que siempre devuelve todas las preguntas
   const getAgeAppropriateQuestions = (language: Language) => {
     const targetAge = isTeacherView ? studentAge : user?.age;
+    console.log("[DEBUG] getAgeAppropriateQuestions - targetAge:", targetAge);
+    console.log("[DEBUG] isTeacherView:", isTeacherView);
+    console.log("[DEBUG] studentAge:", studentAge);
+    console.log("[DEBUG] user?.age:", user?.age);
 
+    let questionSet;
     if (targetAge) {
       if (targetAge >= 18 && targetAge <= 24) {
-        // Universitarios (18-24)
-        return teenQuestions[language];
+        questionSet = teenQuestions[language];
       } else if (targetAge >= 12 && targetAge <= 17) {
-        // Adolescentes (12-17)
-        return teenQuestions[language];
+        questionSet = teenQuestions[language];
       } else {
-        // Niños (6-11)
-        return questions[language];
+        questionSet = questions[language];
       }
+    } else {
+      questionSet = questions[language];
     }
-    return questions[language]; // Default a preguntas de niños si no hay edad
+
+    console.log("[DEBUG] Selected question set length:", questionSet.length);
+    return questionSet.slice();
   };
 
 
@@ -310,126 +357,140 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     return targetAge ? targetAge >= 18 && targetAge <= 24 : false;
   }, [studentAge, user?.age, isTeacherView]);
 
-  const renderResponses = () => (
-    <View style={styles.responsesContainer}>
-      {getAgeAppropriateQuestions(language).map((question, index) => {
-        const userAnswer = answers[index];
-        if (userAnswer === undefined) return null;
+  const renderResponses = () => {
+    // Obtener preguntas y asegurarnos de que tenemos todas las respuestas
+    const questions = getAgeAppropriateQuestions(language);
+    // Usar localAnswers en lugar de answers directamente
+    const validAnswers = isTeacherView ? localAnswers : answers;
 
-        // Determinar la edad y el tipo de usuario
-        const targetAge = isTeacherView ? studentAge : user?.age;
-        const isUniversityStudent = targetAge ? targetAge >= 18 && targetAge <= 24 : false;
-        const isTeenStudent = targetAge ? targetAge >= 12 && targetAge <= 17 : false;
+    console.log("[DEBUG] Rendering responses:");
+    console.log("[DEBUG] Questions length:", questions.length);
+    console.log("[DEBUG] Valid answers:", validAnswers);
+    console.log("[DEBUG] Local answers:", localAnswers);
+    console.log("[DEBUG] Original answers:", answers);
+    console.log("[DEBUG] User role:", isTeacherView ? "teacher" : "student");
+    console.log("[DEBUG] Target age:", isTeacherView ? studentAge : user?.age);
 
-        // Obtener el texto de la pregunta
-        let questionText = question.text;
+    return (
+      <View style={styles.responsesContainer}>
+        {questions.map((question, index) => {
+          const userAnswer = validAnswers?.[index];
 
-        // Si es la última pregunta, manejar según el grupo de edad
-        if (index === getAgeAppropriateQuestions(language).length - 1) {
-          if (isUniversityStudent || isTeenStudent) {
-            // Usar la última pregunta de teenQuestions para universitarios y adolescentes
-            questionText = teenQuestions[language][teenQuestions[language].length - 1].text;
-          } else {
-            // Para niños, usar el formato especial con las opciones
-            const lastQuestion = {
-              'es': 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:',
-              'en': 'Now that you know what physical literacy is. Compared to children my age, my physical literacy is:',
-              'pt-PT': 'Depois de saber o que é literacia física. Em comparação com as crianças da minha idade, a minha literacia física é:',
-              'pt-BR': 'Depois de saber o que é letramento físico. Em comparação com crianças da minha idade, meu letramento físico é:'
-            };
+          // Determinar la edad y el tipo de usuario
+          const targetAge = isTeacherView ? studentAge : user?.age;
+          const isUniversityStudent = targetAge ? targetAge >= 18 && targetAge <= 24 : false;
+          const isTeenStudent = targetAge ? targetAge >= 12 && targetAge <= 17 : false;
 
-            questionText = `${lastKidsQuestionTranslations[language].title}\n\n${lastKidsQuestionTranslations[language].options.join('\n')}\n\n${lastQuestion[language]}`;
+          // Obtener el texto de la pregunta
+          let questionText = question.text;
+
+          // Si es la última pregunta, manejar según el grupo de edad
+          if (index === questions.length - 1) {
+            if (isUniversityStudent || isTeenStudent) {
+              // Usar la última pregunta de teenQuestions para universitarios y adolescentes
+              questionText = teenQuestions[language][teenQuestions[language].length - 1].text;
+            } else {
+              // Para niños, usar el formato especial con las opciones
+              const lastQuestion = {
+                'es': 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:',
+                'en': 'Now that you know what physical literacy is. Compared to children my age, my physical literacy is:',
+                'pt-PT': 'Depois de saber o que é literacia física. Em comparação com as crianças da minha idade, a minha literacia física é:',
+                'pt-BR': 'Depois de saber o que é letramento físico. Em comparação com crianças da minha idade, meu letramento físico é:'
+              };
+
+              questionText = `${lastKidsQuestionTranslations[language].title}\n\n${lastKidsQuestionTranslations[language].options.join('\n')}\n\n${lastQuestion[language]}`;
+            }
           }
-        }
 
-        // Determinar el color y el icono basado en la puntuación
-        const getScoreStyle = (score: number | null) => {
-          if (score === null) return {
-            color: '#666',
-            backgroundColor: '#f5f5f5',
-            icon: 'help-circle',
-            label: translations[language].pendingResponse,
-            borderColor: '#666'
+          // Determinar el color y el icono basado en la puntuación
+          const getScoreStyle = (score: number | null) => {
+            if (score === null || score === undefined) return {
+              color: '#666',
+              backgroundColor: '#f5f5f5',
+              icon: 'help-circle',
+              label: translations[language].pendingResponse,
+              borderColor: '#666'
+            };
+            if (score <= 3) return {
+              color: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              icon: 'alert-circle',
+              label: translations[language].lowLevel,
+              borderColor: '#ef4444'
+            };
+            if (score <= 6) return {
+              color: '#fbbf24',
+              backgroundColor: 'rgba(251, 191, 36, 0.1)',
+              icon: 'warning',
+              label: translations[language].mediumLevel,
+              borderColor: '#fbbf24'
+            };
+            return {
+              color: '#4ade80',
+              backgroundColor: 'rgba(74, 222, 128, 0.1)',
+              icon: 'checkmark-circle',
+              label: translations[language].highLevel,
+              borderColor: '#4ade80'
+            };
           };
-          if (score <= 3) return {
-            color: '#ef4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            icon: 'alert-circle',
-            label: translations[language].lowLevel,
-            borderColor: '#ef4444'
-          };
-          if (score <= 6) return {
-            color: '#fbbf24',
-            backgroundColor: 'rgba(251, 191, 36, 0.1)',
-            icon: 'warning',
-            label: translations[language].mediumLevel,
-            borderColor: '#fbbf24'
-          };
-          return {
-            color: '#4ade80',
-            backgroundColor: 'rgba(74, 222, 128, 0.1)',
-            icon: 'checkmark-circle',
-            label: translations[language].highLevel,
-            borderColor: '#4ade80'
-          };
-        };
 
-        const scoreStyle = getScoreStyle(userAnswer);
+          const scoreStyle = getScoreStyle(userAnswer);
 
-        return (
-          <View key={index} style={styles.responseCard}>
-            <View style={styles.questionContainer}>
-              <View style={styles.questionNumberBadge}>
-                <Text style={styles.questionNumberText}>
-                  {`${translations[language].question} ${index + 1}`}
-                </Text>
-              </View>
-              <Text style={styles.questionText}>{questionText}</Text>
-            </View>
-
-            <View style={styles.scoreContainer}>
-              <View style={[
-                styles.trafficLight,
-                { backgroundColor: scoreStyle.backgroundColor }
-              ]}>
-                <View style={[
-                  styles.scoreCircle,
-                  { borderColor: scoreStyle.borderColor }
-                ]}>
-                  <Ionicons
-                    name={scoreStyle.icon as any}
-                    size={24}
-                    color={scoreStyle.color}
-                  />
-                  <Text style={[styles.scoreValue, { color: scoreStyle.color }]}>
-                    {userAnswer !== null ? userAnswer.toString() : '-'}
+          return (
+            <View key={index} style={styles.responseCard}>
+              <View style={styles.questionContainer}>
+                <View style={styles.questionNumberBadge}>
+                  <Text style={styles.questionNumberText}>
+                    {`${translations[language].question} ${index + 1}`}
                   </Text>
                 </View>
-                <Text style={[styles.scoreLabel, { color: scoreStyle.color }]}>
-                  {scoreStyle.label}
-                </Text>
+                <Text style={styles.questionText}>{questionText}</Text>
               </View>
-            </View>
 
-            {isTeacherView && userAnswer !== null && (
-              <View style={[styles.teacherNote, { backgroundColor: `${scoreStyle.color}20` }]}>
-                <Ionicons
-                  name="information-circle"
-                  size={20}
-                  color={scoreStyle.color}
-                />
-                <Text style={[styles.teacherNoteText, { color: scoreStyle.color }]}>
-                  {userAnswer >= 8 ? translations[language].excellentGlobalUnderstanding :
-                    userAnswer >= 6 ? translations[language].goodComponentsUnderstanding :
-                      translations[language].needsImprovement}
-                </Text>
+              <View style={styles.scoreContainer}>
+                <View style={[
+                  styles.trafficLight,
+                  { backgroundColor: scoreStyle.backgroundColor }
+                ]}>
+                  <View style={[
+                    styles.scoreCircle,
+                    { borderColor: scoreStyle.borderColor }
+                  ]}>
+                    <Ionicons
+                      name={scoreStyle.icon as any}
+                      size={24}
+                      color={scoreStyle.color}
+                    />
+                    <Text style={[styles.scoreValue, { color: scoreStyle.color }]}>
+                      {userAnswer !== null && userAnswer !== undefined ? userAnswer.toString() : '-'}
+                    </Text>
+                  </View>
+                  <Text style={[styles.scoreLabel, { color: scoreStyle.color }]}>
+                    {scoreStyle.label}
+                  </Text>
+                </View>
               </View>
-            )}
-          </View>
-        );
-      })}
-    </View>
-  );
+
+              {isTeacherView && userAnswer !== null && userAnswer !== undefined && (
+                <View style={[styles.teacherNote, { backgroundColor: `${scoreStyle.color}20` }]}>
+                  <Ionicons
+                    name="information-circle"
+                    size={20}
+                    color={scoreStyle.color}
+                  />
+                  <Text style={[styles.teacherNoteText, { color: scoreStyle.color }]}>
+                    {userAnswer >= 8 ? translations[language].excellentGlobalUnderstanding :
+                      userAnswer >= 6 ? translations[language].goodComponentsUnderstanding :
+                        translations[language].needsImprovement}
+                  </Text>
+                </View>
+              )}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
 
   const renderComparison = () => {
     return getAgeAppropriateQuestions(language).map((question, index) => {

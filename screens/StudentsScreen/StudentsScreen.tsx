@@ -245,7 +245,7 @@ export const StudentsScreen: React.FC = () => {
       const registeredStudents = Object.entries(studentsData)
         .filter(
           ([_, data]: [string, any]) =>
-            data.role === "student" && data.classCode === teacherClassCode
+            data.role === "student" && data.classCode === selectedClassCode  // Cambiado de teacherClassCode a selectedClassCode
         )
         .map(([uid, data]: [string, any]) => ({
           uid,
@@ -619,10 +619,10 @@ export const StudentsScreen: React.FC = () => {
     const trimmedAnswers = physicalLiteracyResponse.answers.slice(0, expectedAnswers);
 
     const country = student.isGuest
-    ? (physicalLiteracyResponse as any).country ||
+      ? (physicalLiteracyResponse as any).country ||
       student.countryRole?.country ||
       "Unknown"
-    : student.countryRole?.country || "Unknown";
+      : student.countryRole?.country || "Unknown";
 
     // Crear el countryRole basado en la información disponible
     const countryRole = {

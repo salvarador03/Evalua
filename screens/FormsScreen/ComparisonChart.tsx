@@ -70,6 +70,7 @@ const ComparisonChart: React.FC<ChartProps> = ({
     const loadResponses = async () => {
       setIsLoading(true);
       try {
+        // Obtener los datos igual que en StudentsScreen
         const [formResponsesSnapshot, usersSnapshot, guestsSnapshot] =
           await Promise.all([
             db().ref("/form_responses").once("value"),
@@ -81,33 +82,53 @@ const ComparisonChart: React.FC<ChartProps> = ({
         const users = usersSnapshot.val() || {};
         const guests = guestsSnapshot.val() || {};
 
-        // Obtener el classCode del estudiante que estamos observando
-        const studentData = users[userData.userId] || guests[userData.userId];
+        console.log("[DEBUG] Loading data for user:", userData);
 
         const responses: ComparisonData[] = [];
 
-        Object.entries(formResponses).forEach(([userId, responseData]: [string, any]) => {
-          const physicalLiteracy = responseData.physical_literacy;
+        // Procesar usuarios registrados primero
+        Object.entries(users)
+          .filter(([_, data]: [string, any]) => data.role === "student")
+          .forEach(([uid, userData]: [string, any]) => {
+            const userResponses = formResponses[uid]?.physical_literacy;
+            if (userResponses?.answers?.[questionIndex] !== undefined) {
+              responses.push({
+                userId: uid,
+                userName: userData.name,
+                score: userResponses.answers[questionIndex],
+                classCode: userData.classCode || "",
+                country: userData.countryRole?.country || "Unknown",
+                age: userData.age || 0,
+                completedAt: userResponses.completedAt,
+                isGuest: false
+              });
+            }
+          });
 
-          if (physicalLiteracy?.answers?.[questionIndex] !== undefined) {
-            const userInfo = users[userId] || guests[userId];
-
-            // Usar el classCode del estudiante si es el usuario que estamos observando
-            const classCode = userId === userData.userId
-              ? studentData?.classCode
-              : userInfo?.classCode || physicalLiteracy.classCode;
-
-
+        // Procesar usuarios invitados
+        Object.entries(guests).forEach(([uid, guestData]: [string, any]) => {
+          const guestResponses = formResponses[uid]?.physical_literacy;
+          if (guestResponses?.answers?.[questionIndex] !== undefined) {
             responses.push({
-              userId,
-              userName: userInfo?.name || "Anónimo",
-              score: physicalLiteracy.answers[questionIndex],
-              classCode: classCode || "",
-              country: userInfo?.countryRole?.country || physicalLiteracy.country || "Unknown",
-              age: userInfo?.age || 0,
-              completedAt: physicalLiteracy.completedAt,
+              userId: uid,
+              userName: guestData.name,
+              score: guestResponses.answers[questionIndex],
+              classCode: guestData.classCode || "",
+              country: guestData.countryRole?.country || guestResponses.country || "Unknown",
+              age: guestData.age || 0,
+              completedAt: guestResponses.completedAt,
+              isGuest: true
             });
           }
+        });
+
+        console.log("[DEBUG] Processed responses:", {
+          total: responses.length,
+          ages: [...new Set(responses.map(r => r.age))].sort((a, b) => a - b),
+          ageDistribution: responses.reduce((acc, r) => {
+            acc[r.age] = (acc[r.age] || 0) + 1;
+            return acc;
+          }, {} as Record<number, number>)
         });
 
         setAllResponses(responses);
@@ -187,48 +208,59 @@ const ComparisonChart: React.FC<ChartProps> = ({
     );
   };
 
-  // Modificamos la función getFilteredResponses
-  const getFilteredResponses = () => {
-    let filteredData = [...allResponses];
-    const activeFilters = filters.filter(f => f.active);
+  // Actualizar getFilteredResponses
+// Modificar getFilteredResponses para usar la edad correctamente
+const getFilteredResponses = () => {
+  console.log("[DEBUG] Starting filter process:");
+  console.log("[DEBUG] User data:", userData);
+  console.log("[DEBUG] Available responses:", allResponses.length);
 
-    if (activeFilters.length === 0) return [];
+  let filteredData = [...allResponses];
+  const activeFilters = filters.filter(f => f.active);
 
-    // Obtener el classCode del estudiante que estamos observando
-    const studentClassCode = userData.classCode || allResponses.find(r => r.userId === userData.userId)?.classCode;
+  if (activeFilters.length === 0) return [];
 
-    activeFilters.forEach(filter => {
-      switch (filter.id) {
-        case "class":
-          if (studentClassCode) {
-            filteredData = filteredData.filter(response => {
-              const match = response.classCode === studentClassCode;
-              return match;
-            });
-          }
-          break;
+  activeFilters.forEach(filter => {
+    const previousLength = filteredData.length;
+    
+    switch (filter.id) {
+      case "age":
+        if (userData.age && userData.age > 0) {
+          console.log("[DEBUG] Filtering by age:", userData.age);
+          filteredData = filteredData.filter(response => {
+            const ageMatch = response.age === userData.age;
+            console.log(`[DEBUG] Comparing response age ${response.age} with user age ${userData.age}: ${ageMatch}`);
+            return ageMatch;
+          });
+        }
+        break;
 
-        case "age":
-          if (userData.age) {
-            filteredData = filteredData.filter(r => r.age === userData.age);
-          }
-          break;
-
-        case "country":
-          const userCountry = (userData.countryRole?.country || "").toLowerCase();
-          filteredData = filteredData.filter(r =>
-            r.country.toLowerCase() === userCountry
+      case "class":
+        if (userData.classCode) {
+          filteredData = filteredData.filter(response => 
+            response.classCode === userData.classCode
           );
-          break;
+        }
+        break;
 
-        case "global":
-          // No additional filtering for global
-          break;
-      }
+      case "country":
+        const userCountry = userData.countryRole?.country?.toLowerCase() || "";
+        if (userCountry) {
+          filteredData = filteredData.filter(response =>
+            response.country.toLowerCase() === userCountry
+          );
+        }
+        break;
+    }
+
+    console.log(`[DEBUG] After ${filter.id} filter:`, {
+      remaining: filteredData.length,
+      was: previousLength
     });
+  });
 
-    return filteredData;
-  };
+  return filteredData;
+};
 
   // Modificamos la función getComparisonTitle
   const getComparisonTitle = () => {
