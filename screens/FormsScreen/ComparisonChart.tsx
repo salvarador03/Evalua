@@ -97,16 +97,6 @@ const ComparisonChart: React.FC<ChartProps> = ({
         const studentData = users[userData.userId] || guests[userData.userId];
         const studentClassCode = studentData?.classCode;
 
-        // Buscar los detalles de la clase
-        if (studentClassCode) {
-          const classEntry = Object.entries(classCodes).find(([_, classData]: [string, any]) => 
-            classData.code === studentClassCode
-          );
-          if (classEntry) {
-            setClassDetails(classEntry[1]);
-          }
-        }
-
         const responses: ComparisonData[] = [];
 
         Object.entries(formResponses).forEach(([userId, responseData]: [string, any]) => {
