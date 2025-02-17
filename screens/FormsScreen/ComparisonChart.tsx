@@ -97,6 +97,16 @@ const ComparisonChart: React.FC<ChartProps> = ({
         const studentData = users[userData.userId] || guests[userData.userId];
         const studentClassCode = studentData?.classCode;
 
+        // Buscar los detalles de la clase
+        if (studentClassCode) {
+          const classEntry = Object.entries(classCodes).find(entry => {
+            const [_, data] = entry as [string, ClassDetails];
+            return data.code === studentClassCode;
+          });
+          if (classEntry) {
+            setClassDetails(classEntry[1] as ClassDetails);
+          }
+        }
         const responses: ComparisonData[] = [];
 
         Object.entries(formResponses).forEach(([userId, responseData]: [string, any]) => {
@@ -206,17 +216,6 @@ const ComparisonChart: React.FC<ChartProps> = ({
     let filteredData = [...allResponses];
     const activeFilters = filters.filter(f => f.active);
 
-    console.log('[DEBUG] Iniciando filtrado con datos:', {
-      totalResponses: allResponses.length,
-      activeFilters: activeFilters.map(f => f.id),
-      userData: {
-        userId: userData.userId,
-        age: userData.age,
-        classCode: userData.classCode,
-        country: userData.countryRole?.country
-      }
-    });
-
     if (activeFilters.length === 0) return [];
 
     // Obtener el classCode del estudiante que estamos observando
@@ -227,12 +226,6 @@ const ComparisonChart: React.FC<ChartProps> = ({
 
     // Obtener la edad correcta según el contexto
     const studentAge = studentData?.age || 0;
-
-    console.log('[DEBUG] Datos del estudiante:', {
-      studentClassCode,
-      studentAge,
-      isTeacherView: !!formResponse
-    });
 
     activeFilters.forEach(filter => {
       const prevCount = filteredData.length;
@@ -248,19 +241,7 @@ const ComparisonChart: React.FC<ChartProps> = ({
 
         case "age":
           if (studentAge > 0) {
-            console.log('[DEBUG] Filtrando por edad:', {
-              studentAge,
-              responsesBeforeFilter: filteredData.length,
-              edadesDisponibles: [...new Set(filteredData.map(r => r.age))]
-            });
-
             filteredData = filteredData.filter(r => r.age === studentAge);
-
-            console.log('[DEBUG] Resultados después del filtro por edad:', {
-              responsesBefore: prevCount,
-              responsesAfter: filteredData.length,
-              filtered: prevCount - filteredData.length
-            });
           }
           break;
 
@@ -292,11 +273,11 @@ const ComparisonChart: React.FC<ChartProps> = ({
     return activeFilters
       .map(f => {
         switch (f.id) {
-          case "class": 
-          if (classDetails) {
-            return `${translations[language].classComparison} (${classDetails.description})`;
-          }
-          return translations[language].classComparison;
+          case "class":
+            if (classDetails) {
+              return `${translations[language].classComparison} (${classDetails.description})`;
+            }
+            return translations[language].classComparison;
           case "global": return translations[language].globalComparison;
           case "country": return `${translations[language].countryComparison} ${userData.countryRole?.country || ""}`;
           case "age": return studentAge > 0

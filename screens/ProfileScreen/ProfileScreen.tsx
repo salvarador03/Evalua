@@ -124,11 +124,37 @@ export const ProfileScreen: React.FC = () => {
         <Ionicons name={iconName} size={24} color="#9E7676" />
         <View style={styles.infoContent}>
           <Text style={styles.infoLabel}>{label}</Text>
-          <Text style={[styles.infoValue, field === 'email' && styles.emailValue]}>
-            {value || 'No disponible'}
-          </Text>
+          {isEditing === field ? (
+            <View style={styles.editContainer}>
+              <TextInput
+                style={styles.editInput}
+                value={editValue}
+                onChangeText={setEditValue}
+                placeholder={`Ingresa tu ${label.toLowerCase()}`}
+                autoFocus
+              />
+              <View style={styles.editActions}>
+                <TouchableOpacity onPress={handleSave} style={styles.actionButton}>
+                  <Ionicons name="checkmark" size={20} color="#4CAF50" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setIsEditing('');
+                    setEditValue('');
+                  }} 
+                  style={styles.actionButton}
+                >
+                  <Ionicons name="close" size={20} color="#F44336" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <Text style={[styles.infoValue, field === 'email' && styles.emailValue]}>
+              {value || 'No disponible'}
+            </Text>
+          )}
         </View>
-        {editable && (
+        {editable && !isEditing && (
           <TouchableOpacity 
             onPress={() => handleEdit(field, value)}
             style={styles.editButton}
@@ -390,28 +416,27 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   editContainer: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingRight: 5,
+    flex: 1,
   },
   editInput: {
     flex: 1,
     borderWidth: 1,
     borderColor: '#9E7676',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 16,
+    borderRadius: 5,
+    padding: 8,
+    marginRight: 10,
     color: '#333',
     backgroundColor: '#fff',
   },
-  saveButton: {
-    padding: 8,
+  editActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  cancelButton: {
-    padding: 8,
+  actionButton: {
+    padding: 5,
+    marginLeft: 5,
   },
   roleContainer: {
     flexDirection: 'row',
@@ -483,7 +508,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
-  // Nuevos estilos para mejorar la visualización del formulario de contraseña
   passwordForm: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 15,
