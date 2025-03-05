@@ -186,20 +186,6 @@ export class ExcelDataHandler {
     return user?.role === "student";
   }
 
-  private static validateDate(dateStr: string): string | null {
-    try {
-      if (dateStr === "-") return null;
-      const [day, month, year] = dateStr.split("/");
-      // Validar que sea una fecha válida
-      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-      if (isNaN(date.getTime())) return null;
-      // Devolver en formato YYYY-MM-DD
-      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-    } catch {
-      return null;
-    }
-  }
-
   private static async getStoragePermission(): Promise<boolean> {
     if (Platform.OS === "ios") return true;
 
@@ -261,88 +247,6 @@ export class ExcelDataHandler {
       return `${RNFS.DocumentDirectoryPath}/${fileName}`;
     }
     return `${RNFS.CachesDirectoryPath}/${fileName}`;
-  }
-
-  private static async verifyDatabaseConnection(): Promise<boolean> {
-    try {
-      const connectedRef = database().ref(".info/connected");
-      return new Promise((resolve) => {
-        connectedRef.once("value", (snapshot) => {
-          if (snapshot.val() === true) {
-            resolve(true);
-          } else {
-            resolve(false);
-          }
-        });
-      });
-    } catch (error) {
-      console.error("Error verificando conexión:", error);
-      return false;
-    }
-  }
-
-  private static async writeToDatabase(path: string, data: any): Promise<void> {
-    try {
-      const db = this.getDatabase();
-      if (!db) {
-        throw new Error("Base de datos no inicializada");
-      }
-
-      // Validar el path antes de escribir
-      if (!path.startsWith("/")) {
-        path = "/" + path;
-      }
-
-      const reference = db.ref(path);
-
-      // Intentar escribir con retry
-      let retryCount = 0;
-      const maxRetries = 3;
-
-      while (retryCount < maxRetries) {
-        try {
-          await reference.set(data);
-          return;
-        } catch (writeError) {
-          retryCount++;
-          if (retryCount === maxRetries) {
-            throw writeError;
-          }
-          // Esperar antes de reintentar
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      }
-    } catch (error: unknown) {
-      console.error(`Error escribiendo en ${path}:`, error);
-      if (error instanceof Error) {
-        throw new Error(
-          `Error de escritura en base de datos: ${error.message}`
-        );
-      } else {
-        throw new Error("Error desconocido al escribir en base de datos");
-      }
-    }
-  }
-
-  private static validateUserData(userData: UserData): boolean {
-    return (
-      typeof userData.uid === "string" &&
-      userData.uid.length > 0 &&
-      typeof userData.name === "string" &&
-      ["student", "guest"].includes(userData.role) &&
-      typeof userData.createdAt === "number" &&
-      typeof userData.lastLogin === "number"
-    );
-  }
-
-  private static validateResponseData(responseData: ResponseData): boolean {
-    return (
-      Array.isArray(responseData.answers) &&
-      responseData.answers.length > 0 &&
-      typeof responseData.completedAt === "number" &&
-      typeof responseData.language === "string" &&
-      typeof responseData.isGuest === "boolean"
-    );
   }
 
   private static async verifyTeacherAccess(): Promise<boolean> {

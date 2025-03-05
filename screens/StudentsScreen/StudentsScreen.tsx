@@ -10,6 +10,7 @@ import {
   Modal,
   ActivityIndicator,
   ScrollView,
+  Image,
 } from "react-native";
 import { BackgroundContainer } from "../../Components/BackgroundContainer/BackgroundContainer";
 import db from "@react-native-firebase/database";
@@ -104,6 +105,80 @@ export const StudentsScreen: React.FC = () => {
   );
   const [selectedClassCode, setSelectedClassCode] = useState<string>("");
 
+  // Filtros
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<{
+    classCode: string | null;
+    country: string | null;
+    ageRange: string | null;
+    specificAge: number | null;
+  }>({
+    classCode: null,
+    country: null,
+    ageRange: null,
+    specificAge: null,
+  });
+
+  // Datos para los filtros de edad
+  const ageRanges = [
+    { id: 'children', label: 'Niños (6-12)', min: 6, max: 12 },
+    { id: 'teens', label: 'Adolescentes (12-18)', min: 12, max: 18 },
+    { id: 'youngAdults', label: 'Universitarios (18-24)', min: 18, max: 24 },
+  ];
+
+  // Lista de países disponibles
+  const countries = [
+    { id: 'es_ES', name: 'España', flag: 'spain' },
+    { id: 'en_US', name: 'United States', flag: 'usa' },
+    { id: 'es_MX', name: 'México', flag: 'mexico' },
+    { id: 'es_CO', name: 'Colombia', flag: 'colombia' },
+    { id: 'es_PE', name: 'Perú', flag: 'peru' },
+    { id: 'es_EC', name: 'Ecuador', flag: 'ecuador' },
+    { id: 'es_CL', name: 'Chile', flag: 'chile' },
+    { id: 'es_AR', name: 'Argentina', flag: 'argentina' },
+    { id: 'es_PA', name: 'Panamá', flag: 'panama' },
+    { id: 'es_CU', name: 'Cuba', flag: 'cuba' },
+    { id: 'pt_PT', name: 'Portugal', flag: 'portugal' },
+    { id: 'pt_BR', name: 'Brasil', flag: 'brazil' },
+  ];
+
+  // Función para aplicar los filtros
+  const applyFilters = (studentsList: Student[]) => {
+    return studentsList.filter(student => {
+      // Filtro por código de clase
+      if (activeFilters.classCode && student.classCode !== activeFilters.classCode) {
+        return false;
+      }
+
+      // Filtro por país
+      if (activeFilters.country && student.countryRole?.country !== activeFilters.country) {
+        return false;
+      }
+
+      // Filtro por edad específica
+      if (activeFilters.specificAge !== null && student.age !== activeFilters.specificAge) {
+        return false;
+      }
+
+      // Filtro por rango de edad
+      if (activeFilters.ageRange) {
+        const range = ageRanges.find(r => r.id === activeFilters.ageRange);
+        if (range && student.age) {
+          // Para el caso del límite (12 y 18), incluimos en ambos rangos
+          if (range.id === 'children' && (student.age < range.min || student.age > range.max)) {
+            return false;
+          } else if (range.id === 'teens' && (student.age < range.min || student.age > range.max)) {
+            return false;
+          } else if (range.id === 'youngAdults' && (student.age < range.min || student.age > range.max)) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
+  };
+
   interface ClassCode {
     id: string;
     code: string;
@@ -124,10 +199,11 @@ export const StudentsScreen: React.FC = () => {
     }
   }, [teacherClassCode]);
 
+  // Modifica el useEffect para los filtros
   useEffect(() => {
     const filtered = students.filter((student) => {
       const searchLower = searchQuery.toLowerCase();
-      return (
+      const matchesSearch = (
         student.name.toLowerCase().includes(searchLower) ||
         student.email.toLowerCase().includes(searchLower) ||
         new Date(student.lastLogin)
@@ -135,10 +211,37 @@ export const StudentsScreen: React.FC = () => {
           .toLowerCase()
           .includes(searchLower)
       );
+
+      // Si no pasa el filtro de búsqueda, retorna falso inmediatamente
+      if (!matchesSearch) return false;
+
+      // Aplica los filtros adicionales
+      return applyFilters([student]).length > 0;
     });
+
     setFilteredStudents(filtered);
     setCurrentPage(1);
-  }, [searchQuery, students]);
+  }, [searchQuery, students, activeFilters]);
+
+  // Añade esta función para obtener el indicador de filtros activos
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (activeFilters.classCode) count++;
+    if (activeFilters.country) count++;
+    if (activeFilters.ageRange) count++;
+    if (activeFilters.specificAge !== null) count++;
+    return count;
+  };
+
+  // Función para restablecer los filtros
+  const resetFilters = () => {
+    setActiveFilters({
+      classCode: null,
+      country: null,
+      ageRange: null,
+      specificAge: null,
+    });
+  };
 
   // Modifica estas funciones y efectos
   const loadClassCodes = async () => {
@@ -222,18 +325,13 @@ export const StudentsScreen: React.FC = () => {
   };
 
   const fetchStudents = async () => {
-    if (!selectedClassCode) return;
-
     try {
       setLoading(true);
       const [usersSnapshot, guestsSnapshot, responsesSnapshot] =
         await Promise.all([
           db().ref("/users").once("value"),
-          db()
-            .ref("/guests")
-            .orderByChild("classCode")
-            .equalTo(selectedClassCode)
-            .once("value"),
+          // Quitar el filtro por selectedClassCode aquí
+          db().ref("/guests").once("value"),
           db().ref("/form_responses").once("value"),
         ]);
 
@@ -241,11 +339,11 @@ export const StudentsScreen: React.FC = () => {
       const guestsData = guestsSnapshot.val() || {};
       const responsesData = responsesSnapshot.val() || {};
 
-      // Process registered students
+      // Eliminar el filtro por rol y clase aquí
       const registeredStudents = Object.entries(studentsData)
         .filter(
           ([_, data]: [string, any]) =>
-            data.role === "student" && data.classCode === selectedClassCode  // Cambiado de teacherClassCode a selectedClassCode
+            data.role === "student" // Quitamos el filtro por classCode
         )
         .map(([uid, data]: [string, any]) => ({
           uid,
@@ -262,7 +360,7 @@ export const StudentsScreen: React.FC = () => {
           createdAt: data.createdAt,
         }));
 
-      // Process guest students with all fields
+      // También modificar para no filtrar los invitados
       const guestStudents = Object.entries(guestsData).map(
         ([uid, data]: [string, any]) => ({
           uid,
@@ -301,11 +399,17 @@ export const StudentsScreen: React.FC = () => {
     loadClassCodes();
   }, []);
 
-  // Modificar efecto para cargar estudiantes cuando cambie el código
+  // Modificar este useEffect
   useEffect(() => {
-    if (selectedClassCode) {
+    if (teacherClassCode) {
       fetchStudents();
     }
+  }, [teacherClassCode]);
+
+  // Y este otro
+  useEffect(() => {
+    // Eliminar la condición, siempre queremos cargar estudiantes
+    fetchStudents();
   }, [selectedClassCode]);
 
   const handleRefresh = async () => {
@@ -326,109 +430,209 @@ export const StudentsScreen: React.FC = () => {
     }
   };
 
-  // Modificación del botón en el renderClassCodeSelector
-  const renderClassCodeSelector = () => (
-    <View style={styles.classCodeSelectorContainer}>
-      <View style={styles.classCodeSelectorHeader}>
-        <View style={styles.selectorDropdown}>
-          <Ionicons name="school-outline" size={20} color={COLORS.primary} />
-          <View style={styles.dropdownContainer}>
-            <Text style={styles.selectorLabel}>Clase actual:</Text>
-            <TouchableOpacity
-              style={styles.dropdownButton}
-              onPress={() => setShowCodePicker(true)}
-            >
-              <Text style={styles.selectedCodeText}>
-                {selectedClassCode
-                  ? availableClassCodes.find(
-                    (c) => c.code === selectedClassCode
-                  )?.code
-                  : "Seleccionar clase"}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color={COLORS.text} />
-            </TouchableOpacity>
-          </View>
-        </View>
 
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={styles.refreshButton}
-            onPress={handleRefresh}
-            disabled={loading}
-          >
-            <Ionicons
-              name="refresh"
-              size={20}
-              color={loading ? COLORS.inactive : COLORS.primary}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerManageButton}
-            onPress={() => navigation.navigate("ClassCodes")}
-          >
-            <Text style={styles.manageButtonText}>Gestionar</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+  // Modal de filtros
+  const FilterModal = () => {
+    const [tempFilters, setTempFilters] = useState({ ...activeFilters });
+    const [specificAgeInput, setSpecificAgeInput] = useState(
+      tempFilters.specificAge !== null ? tempFilters.specificAge.toString() : ""
+    );
 
-      {selectedClassCode && (
-        <View style={styles.classInfoContainer}>
-          <View style={styles.classStatusContainer}>
-            <Text style={styles.classDescription}>
-              {availableClassCodes.find((c) => c.code === selectedClassCode)
-                ?.description || "Sin descripción"}
-            </Text>
-          </View>
-          <View style={styles.studentCountContainer}>
-            <Text style={styles.studentCount}>
-              {students.filter((s) => s.classCode === selectedClassCode).length}
-            </Text>
-            <Text style={styles.studentCountLabel}>alumnos</Text>
-          </View>
-        </View>
-      )}
+    const applyTempFilters = () => {
+      setActiveFilters(tempFilters);
+      setFilterModalVisible(false);
+    };
 
-      {/* Modal del selector */}
+    const handleSpecificAgeChange = (text: string) => {
+      setSpecificAgeInput(text);
+      if (text.trim() === "") {
+        setTempFilters(prev => ({ ...prev, specificAge: null }));
+      } else {
+        const age = parseInt(text);
+        if (!isNaN(age) && age > 0) {
+          setTempFilters(prev => ({ ...prev, specificAge: age }));
+        }
+      }
+    };
+
+    return (
       <Modal
-        visible={showCodePicker}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCodePicker(false)}
+        visible={filterModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setFilterModalVisible(false)}
       >
-        <TouchableOpacity
+        <View
           style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowCodePicker(false)}
         >
-          <View style={styles.codePickerContainer}>
-            <Text style={styles.codePickerTitle}>Seleccionar Clase</Text>
-            {availableClassCodes.map((code) => (
+          <View style={styles.filterModalContainer}>
+            <View style={styles.filterModalHeader}>
+              <Text style={styles.filterModalTitle}>Filtros</Text>
+              <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
+                <Ionicons name="close" size={24} color={COLORS.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.filterScrollView}>
+              {/* Filtro por código de clase */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Código de clase</Text>
+                <View style={styles.filterOptions}>
+                  {availableClassCodes.map(classCode => (
+                    <TouchableOpacity
+                      key={classCode.id}
+                      style={[
+                        styles.filterChip,
+                        tempFilters.classCode === classCode.code && styles.filterChipActive
+                      ]}
+                      onPress={() => setTempFilters(prev => ({
+                        ...prev,
+                        classCode: prev.classCode === classCode.code ? null : classCode.code
+                      }))}
+                    >
+                      <Text style={[
+                        styles.filterChipText,
+                        tempFilters.classCode === classCode.code && styles.filterChipTextActive
+                      ]}>
+                        {classCode.code}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Filtro por país */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>País</Text>
+                <View style={styles.countryFilterGrid}>
+                  {countries.map(country => (
+                    <TouchableOpacity
+                      key={country.id}
+                      style={[
+                        styles.countryFilterItem,
+                        tempFilters.country === country.name && styles.countryFilterItemActive
+                      ]}
+                      onPress={() => setTempFilters(prev => ({
+                        ...prev,
+                        country: prev.country === country.name ? null : country.name
+                      }))}
+                    >
+                      <Image
+                        source={getCountryFlagSource(country.flag)}
+                        style={styles.countryFilterFlag}
+                      />
+                      <Text style={[
+                        styles.countryFilterText,
+                        tempFilters.country === country.name && styles.countryFilterTextActive
+                      ]}>
+                        {country.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Filtro por rango de edad */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Rango de edad</Text>
+                <View style={styles.filterOptions}>
+                  {ageRanges.map(range => (
+                    <TouchableOpacity
+                      key={range.id}
+                      style={[
+                        styles.filterChip,
+                        tempFilters.ageRange === range.id && styles.filterChipActive
+                      ]}
+                      onPress={() => {
+                        if (tempFilters.ageRange === range.id) {
+                          setTempFilters(prev => ({ ...prev, ageRange: null }));
+                        } else {
+                          setTempFilters(prev => ({
+                            ...prev,
+                            ageRange: range.id,
+                            specificAge: null // Desactivar edad específica si se selecciona un rango
+                          }));
+                          setSpecificAgeInput("");
+                        }
+                      }}
+                    >
+                      <Text style={[
+                        styles.filterChipText,
+                        tempFilters.ageRange === range.id && styles.filterChipTextActive
+                      ]}>
+                        {range.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Filtro por edad específica */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Edad específica</Text>
+                <TextInput
+                  style={styles.ageInput}
+                  value={specificAgeInput}
+                  onChangeText={handleSpecificAgeChange}
+                  placeholder="Ingresa una edad"
+                  placeholderTextColor={COLORS.inactive}
+                  keyboardType="numeric"
+                  maxLength={2}
+                />
+                <Text style={styles.filterNote}>
+                  Nota: Al seleccionar una edad específica, se desactivará el filtro por rango de edad
+                </Text>
+              </View>
+            </ScrollView>
+
+            <View style={styles.filterButtonsContainer}>
               <TouchableOpacity
-                key={code.id}
-                style={styles.codeOption}
+                style={styles.filterResetButton}
                 onPress={() => {
-                  setSelectedClassCode(code.code);
-                  setShowCodePicker(false);
+                  setTempFilters({
+                    classCode: null,
+                    country: null,
+                    ageRange: null,
+                    specificAge: null,
+                  });
+                  setSpecificAgeInput("");
                 }}
               >
-                <View style={styles.codeOptionContent}>
-                  <View style={styles.codeMainInfo}>
-                    <Text style={styles.codeText}>{code.code}</Text>
-                  </View>
-                  <Text style={styles.codeDescription} numberOfLines={1}>
-                    {code.description || "Sin descripción"}
-                  </Text>
-                </View>
-                {selectedClassCode === code.code && (
-                  <Ionicons name="checkmark" size={24} color={COLORS.primary} />
-                )}
+                <Text style={styles.filterResetButtonText}>Restablecer</Text>
               </TouchableOpacity>
-            ))}
+
+              <TouchableOpacity
+                style={styles.filterApplyButton}
+                onPress={applyTempFilters}
+              >
+                <Text style={styles.filterApplyButtonText}>Aplicar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
-    </View>
-  );
+    );
+  };
+
+  // Función auxiliar para obtener la fuente de la imagen de la bandera
+  const getCountryFlagSource = (flagName: string) => {
+    const flagSources: { [key: string]: any } = {
+      "spain": require("../../assets/flags/spain.webp"),
+      "usa": require("../../assets/flags/usa.webp"),
+      "mexico": require("../../assets/flags/mexico.webp"),
+      "colombia": require("../../assets/flags/colombia.webp"),
+      "peru": require("../../assets/flags/peru.webp"),
+      "ecuador": require("../../assets/flags/ecuador.webp"),
+      "chile": require("../../assets/flags/chile.webp"),
+      "argentina": require("../../assets/flags/argentina.webp"),
+      "panama": require("../../assets/flags/panama.webp"),
+      "cuba": require("../../assets/flags/cuba.webp"),
+      "portugal": require("../../assets/flags/portugal.webp"),
+      "brazil": require("../../assets/flags/brazil.webp"),
+    };
+
+    return flagSources[flagName] || flagSources["spain"]; // Por defecto devuelve España
+  };
 
   // Añade este efecto para actualizar al volver de la pantalla de gestión
   useEffect(() => {
@@ -558,6 +762,14 @@ export const StudentsScreen: React.FC = () => {
       "United States": "usa",
       Brasil: "brazil",
       Portugal: "portugal",
+      México: "mexico",
+      Colombia: "colombia",
+      Perú: "peru",
+      Ecuador: "ecuador",
+      Chile: "chile",
+      Argentina: "argentina",
+      Panamá: "panama",
+      Cuba: "cuba",
       // Agregar más países según sea necesario
     };
     return countryFlags[country] || "unknown";
@@ -570,12 +782,13 @@ export const StudentsScreen: React.FC = () => {
       "United States": "usa",
       "Portugal": "portugal",
       "Brasil": "brazil",
-      "Panamá": "panama",
-      "Colombia": "colombia",
-      "Chile": "chile",
-      "Ecuador": "ecuador",
-      "Argentina": "argentina",
       "México": "mexico",
+      "Colombia": "colombia",
+      "Perú": "peru",
+      "Ecuador": "ecuador",
+      "Chile": "chile",
+      "Argentina": "argentina",
+      "Panamá": "panama",
       "Cuba": "cuba",
       "Unknown": "unknown"
     };
@@ -1023,8 +1236,63 @@ export const StudentsScreen: React.FC = () => {
         <View style={styles.header}>
           <Text style={styles.title}>Gestión de Alumnos</Text>
         </View>
-        {renderClassCodeSelector()}
 
+        {/* Contenedor para encapsular los botones de filtro y gestionar */}
+        <View style={styles.classCodeSelectorContainer}>
+          <View style={styles.classCodeSelectorHeader}>
+            {/* Movemos el botón de filtro aquí */}
+            <TouchableOpacity
+              style={styles.filterButtonInHeader}
+              onPress={() => setFilterModalVisible(true)}
+            >
+              <Ionicons name="options-outline" size={20} color={COLORS.primary} />
+              <Text style={styles.filterButtonText}>Filtros</Text>
+              {getActiveFiltersCount() > 0 && (
+                <View style={styles.filterBadge}>
+                  <Text style={styles.filterBadgeText}>{getActiveFiltersCount()}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.headerButtons}>
+              <TouchableOpacity
+                style={styles.refreshButton}
+                onPress={handleRefresh}
+                disabled={loading}
+              >
+                <Ionicons
+                  name="refresh"
+                  size={20}
+                  color={loading ? COLORS.inactive : COLORS.primary}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.headerManageButton}
+                onPress={() => navigation.navigate("ClassCodes")}
+              >
+                <Text style={styles.manageButtonText}>Gestión clases</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.classInfoContainer}>
+            <View style={styles.classStatusContainer}>
+              <Text style={styles.classDescription}>
+                {getActiveFiltersCount() > 0
+                  ? "Alumnos filtrados"
+                  : "Todos los alumnos"}
+              </Text>
+            </View>
+            <View style={styles.studentCountContainer}>
+              <Text style={styles.studentCount}>
+                {filteredStudents.length}
+              </Text>
+              <Text style={styles.studentCountLabel}>alumnos</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* La barra de búsqueda */}
         <View style={styles.searchContainer}>
           <Ionicons
             name="search"
@@ -1049,6 +1317,10 @@ export const StudentsScreen: React.FC = () => {
           )}
         </View>
 
+        {/* Quitamos el renderFilterButton() aquí, ya que ahora está en la cabecera */}
+        <FilterModal />
+
+        {/* El resto del código permanece igual */}
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#9E7676" />
@@ -1060,15 +1332,6 @@ export const StudentsScreen: React.FC = () => {
               renderItem={renderStudent}
               keyExtractor={(item) => item.uid}
               contentContainerStyle={styles.listContainer}
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    {searchQuery
-                      ? "No se encontraron alumnos que coincidan con la búsqueda"
-                      : "No hay alumnos registrados"}
-                  </Text>
-                </View>
-              }
             />
             {filteredStudents.length > ITEMS_PER_PAGE && renderPagination()}
           </>
@@ -1090,23 +1353,23 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
     color: COLORS.text,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   // Selector de clase
   classCodeSelectorContainer: {
     backgroundColor: "white",
-    marginHorizontal: 10,
-    marginBottom: 10,
-    borderRadius: 12,
-    padding: 12,
-    elevation: 2,
+    marginHorizontal: 6,
+    marginBottom: 14,
+    borderRadius: 14,
+    padding: 14,
+    elevation: 3,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
   },
   classCodeSelectorHeader: {
     flexDirection: "row",
@@ -1145,14 +1408,14 @@ const styles = StyleSheet.create({
   headerManageButton: {
     marginLeft: 12,
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 16,
     marginTop: 20,
   },
   classInfoContainer: {
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 10,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: "#eee",
   },
@@ -1180,7 +1443,8 @@ const styles = StyleSheet.create({
     color: COLORS.inactive,
   },
   classDescription: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: "500",
     color: COLORS.text,
     flex: 1,
     marginLeft: 8,
@@ -1191,14 +1455,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   studentCount: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
     color: COLORS.primary,
   },
   studentCountLabel: {
-    fontSize: 14,
-    color: COLORS.inactive,
-    marginLeft: 4,
+    fontSize: 16,
+    color: COLORS.text,
+    marginLeft: 6,
+    opacity: 0.8,
   },
   // Modal de código
   modalOverlay: {
@@ -1208,10 +1473,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   manageButtonText: {
-    // Añadido el estilo faltante
     color: "white",
-    fontSize: 13,
-    fontWeight: "500",
+    fontSize: 14,
+    fontWeight: "600",
   },
   codePickerContainer: {
     backgroundColor: "white",
@@ -1219,6 +1483,22 @@ const styles = StyleSheet.create({
     padding: 16,
     width: "90%",
     maxHeight: "80%",
+  },
+  filterButtonInHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    flex: 1,
+    marginRight: 12,
+    marginTop: 20,
   },
   codePickerTitle: {
     fontSize: 18,
@@ -1280,10 +1560,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "white",
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderRadius: 10,
+    paddingHorizontal: 14,
     marginBottom: 16,
-    height: 48,
+    height: 52,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -1291,12 +1571,13 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: COLORS.text,
+    height: '100%',
   },
   clearButton: {
     padding: 4,
@@ -1326,7 +1607,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 16,
-    marginBottom: 8,
+    marginBottom: 12,
+    paddingVertical: 6,
   },
   paginationButton: {
     padding: 8,
@@ -1337,22 +1619,23 @@ const styles = StyleSheet.create({
   },
   paginationText: {
     marginHorizontal: 16,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: "500",
     color: COLORS.text,
   },
   // Tarjeta de estudiante
   studentCard: {
     backgroundColor: "white",
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
-    marginBottom: 8,
+    marginBottom: 10,
     flexDirection: "row",
     alignItems: "center",
     elevation: 2,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 3,
   },
   guestCard: {
     borderLeftWidth: 4,
@@ -1374,40 +1657,45 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   studentName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
     color: COLORS.text,
+    marginBottom: 2,
   },
   studentEmail: {
-    fontSize: 13,
-    color: COLORS.inactive,
+    fontSize: 14,
+    color: COLORS.text,
+    opacity: 0.7,
+    marginBottom: 2,
   },
   lastLogin: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.inactive,
     marginTop: 4,
   },
   guestBadge: {
     backgroundColor: COLORS.warning,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 12,
+    marginLeft: 8,
   },
   guestBadgeText: {
     color: "white",
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   pendingBadge: {
     backgroundColor: COLORS.inactive,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 12,
+    marginLeft: 8,
   },
   pendingBadgeText: {
     color: "white",
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   actionButtons: {
     flexDirection: "row",
@@ -1423,7 +1711,7 @@ const styles = StyleSheet.create({
   // Modal de acciones
   modalContent: {
     backgroundColor: "white",
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
     width: "80%",
     maxWidth: 400,
@@ -1431,9 +1719,9 @@ const styles = StyleSheet.create({
   modalButton: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 10,
   },
   modalButtonText: {
     marginLeft: 12,
@@ -1446,7 +1734,7 @@ const styles = StyleSheet.create({
   // Modal de edición
   editModalContent: {
     backgroundColor: "white",
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 20,
     width: "90%",
     maxWidth: 500,
@@ -1456,7 +1744,7 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   editModalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: COLORS.text,
     marginBottom: 20,
@@ -1465,13 +1753,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   inputLabel: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: "500",
     color: COLORS.text,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   editInput: {
     backgroundColor: "#f8f8f8",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
     fontSize: 16,
     color: COLORS.text,
@@ -1483,14 +1772,14 @@ const styles = StyleSheet.create({
   },
   editButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: "center",
     marginHorizontal: 8,
   },
   editButtonText: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   cancelButton: {
     backgroundColor: "#f8f8f8",
@@ -1498,4 +1787,209 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: COLORS.primary,
   },
+  
+  // Estilos para el botón de filtros
+  filterButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  filterButtonText: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: COLORS.text,
+    marginLeft: 10,
+  },
+  filterBadge: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  filterBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  resetFiltersButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  resetFiltersText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.primary,
+  },
+  
+  // Estilos para el modal de filtros
+  filterModalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 14,
+    padding: 18,
+    width: '90%',
+    maxHeight: '80%',
+    maxWidth: 500,
+  },
+  filterModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  filterModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  filterScrollView: {
+    maxHeight: 450,
+  },
+  filterSection: {
+    marginBottom: 24,
+  },
+  filterSectionTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 14,
+  },
+  filterOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  filterChip: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    margin: 4,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  filterChipActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  filterChipText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.text,
+  },
+  filterChipTextActive: {
+    color: 'white',
+  },
+  
+  // Estilos para el filtro de países
+  countryFilterGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -6,
+  },
+  countryFilterItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    margin: 6,
+    width: '45%',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  countryFilterItemActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  countryFilterFlag: {
+    width: 24,
+    height: 16,
+    marginRight: 8,
+    borderRadius: 2,
+  },
+  countryFilterText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: COLORS.text,
+    flex: 1,
+  },
+  countryFilterTextActive: {
+    color: 'white',
+  },
+  
+  // Estilos para el filtro de edad específica
+  ageInput: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: COLORS.text,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  filterNote: {
+    fontSize: 13,
+    color: COLORS.inactive,
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  
+  // Estilos para los botones del modal
+  filterButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 18,
+    paddingTop: 18,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  filterResetButton: {
+    flex: 1,
+    paddingVertical: 14,
+    marginRight: 8,
+    borderRadius: 10,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+  },
+  filterResetButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: COLORS.text,
+  },
+  filterApplyButton: {
+    flex: 1,
+    paddingVertical: 14,
+    marginLeft: 8,
+    borderRadius: 10,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+  },
+  filterApplyButtonText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: '600',
+  },
 });
+
