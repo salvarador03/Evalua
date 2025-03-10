@@ -187,7 +187,7 @@ export const WelcomeScreen: React.FC = () => {
 
         <View style={styles.footer}>
                       <Text style={styles.footerText}>
-            Universidad de Extremadura • Universidade de Lisboa • Universidade Federal do Ceará • Universidad del Atlántico • Universidad de Ciencias de la Cultura Física y el Deporte • Universidad Santo Tomás • Universidad Europea - Real Madrid • Universidad Nacional Mayor de San Marcos
+            Universidad de Extremadura • Universidade de Lisboa • Universidade Federal do Ceará • Universidad del Atlántico • Universidad de Ciencias de la Cultura Física y el Deporte • Universidad Santo Tomás • Universidad Europea • Universidad Nacional Mayor de San Marcos
           </Text>
         </View>
       </View>

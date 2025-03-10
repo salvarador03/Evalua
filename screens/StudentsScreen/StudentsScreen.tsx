@@ -65,6 +65,7 @@ interface ClassDetails {
   teacherName: string;
 }
 
+
 interface Student {
   uid: string;
   name: string;
@@ -187,6 +188,12 @@ export const StudentsScreen: React.FC = () => {
     teacherName: string;
     createdAt: number;
     active: boolean;
+    // Añade los nuevos campos
+    country?: string;
+    state?: string;
+    city?: string;
+    institution?: string;
+    className?: string;
   }
 
   useEffect(() => {
@@ -431,16 +438,48 @@ export const StudentsScreen: React.FC = () => {
   };
 
 
-  // Modal de filtros
+  // Componente FilterModal completamente corregido
   const FilterModal = () => {
     const [tempFilters, setTempFilters] = useState({ ...activeFilters });
     const [specificAgeInput, setSpecificAgeInput] = useState(
       tempFilters.specificAge !== null ? tempFilters.specificAge.toString() : ""
     );
+    // Estado para la búsqueda dentro del selector de códigos
+    const [classCodeSearchQuery, setClassCodeSearchQuery] = useState("");
+    // Estado para controlar el modal de selección de clase
+    const [showClassCodeModal, setShowClassCodeModal] = useState(false);
+
+    // Códigos filtrados basados en la búsqueda
+    const filteredClassCodes = availableClassCodes.filter(classCode => {
+      const query = classCodeSearchQuery.toLowerCase();
+      return (
+        classCode.code.toLowerCase().includes(query) ||
+        (classCode.description && classCode.description.toLowerCase().includes(query)) ||
+        (classCode.institution && classCode.institution.toLowerCase().includes(query)) ||
+        (classCode.country && classCode.country.toLowerCase().includes(query))
+      );
+    });
+
+    // Sincronización entre filtros de país y clase
+    useEffect(() => {
+      // Si se selecciona un país en los filtros, filtramos los códigos de clase que coincidan
+      if (tempFilters.country) {
+        // Si el código de clase seleccionado actual no coincide con el país seleccionado, lo reseteamos
+        const currentSelectedCode = availableClassCodes.find(code => code.code === tempFilters.classCode);
+
+        if (currentSelectedCode && currentSelectedCode.country !== tempFilters.country) {
+          setTempFilters(prev => ({
+            ...prev,
+            classCode: null
+          }));
+        }
+      }
+    }, [tempFilters.country]);
 
     const applyTempFilters = () => {
       setActiveFilters(tempFilters);
       setFilterModalVisible(false);
+      setShowClassCodeModal(false);
     };
 
     const handleSpecificAgeChange = (text: string) => {
@@ -455,162 +494,323 @@ export const StudentsScreen: React.FC = () => {
       }
     };
 
-    return (
-      <Modal
-        visible={filterModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setFilterModalVisible(false)}
-      >
-        <View
-          style={styles.modalOverlay}
+    // Función para renderizar cada código de clase con su información detallada
+    const renderClassCodeItem = (classCode: ClassCode) => {
+      // Comprobamos si el país del código coincide con el filtro de país
+      const matchesCountryFilter = tempFilters.country ?
+        classCode.country === tempFilters.country : true;
+
+      if (!matchesCountryFilter) return null;
+
+      return (
+        <TouchableOpacity
+          key={classCode.id}
+          style={[
+            styles.classCodeItem,
+            tempFilters.classCode === classCode.code && styles.classCodeItemActive,
+            !matchesCountryFilter && styles.classCodeItemDisabled
+          ]}
+          onPress={() => {
+            setTempFilters(prev => ({
+              ...prev,
+              classCode: prev.classCode === classCode.code ? null : classCode.code
+            }));
+            // Cerrar el modal al seleccionar
+            setShowClassCodeModal(false);
+          }}
+          disabled={!matchesCountryFilter}
         >
-          <View style={styles.filterModalContainer}>
-            <View style={styles.filterModalHeader}>
-              <Text style={styles.filterModalTitle}>Filtros</Text>
-              <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
-              </TouchableOpacity>
+          <View style={styles.classCodeItemContent}>
+            <View style={styles.classCodeItemHeader}>
+              <Text style={[
+                styles.classCodeItemCode,
+                tempFilters.classCode === classCode.code && styles.classCodeItemTextActive
+              ]}>
+                {classCode.code}
+              </Text>
+              {classCode.active && (
+                <View style={styles.classCodeItemActiveStatus}>
+                  <Text style={styles.classCodeItemActiveText}>Activo</Text>
+                </View>
+              )}
             </View>
 
-            <ScrollView style={styles.filterScrollView}>
-              {/* Filtro por código de clase */}
-              <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>Código de clase</Text>
-                <View style={styles.filterOptions}>
-                  {availableClassCodes.map(classCode => (
-                    <TouchableOpacity
-                      key={classCode.id}
-                      style={[
-                        styles.filterChip,
-                        tempFilters.classCode === classCode.code && styles.filterChipActive
-                      ]}
-                      onPress={() => setTempFilters(prev => ({
-                        ...prev,
-                        classCode: prev.classCode === classCode.code ? null : classCode.code
-                      }))}
-                    >
-                      <Text style={[
-                        styles.filterChipText,
-                        tempFilters.classCode === classCode.code && styles.filterChipTextActive
-                      ]}>
-                        {classCode.code}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+            <Text style={[
+              styles.classCodeItemDescription,
+              tempFilters.classCode === classCode.code && styles.classCodeItemTextActive
+            ]}>
+              {classCode.description || 'Sin descripción'}
+            </Text>
+
+            <View style={styles.classCodeItemDetails}>
+              {classCode.country && (
+                <View style={styles.classCodeItemDetail}>
+                  <Ionicons
+                    name="globe-outline"
+                    size={12}
+                    color={tempFilters.classCode === classCode.code ? "#fff" : COLORS.inactive}
+                  />
+                  <Text style={[
+                    styles.classCodeItemDetailText,
+                    tempFilters.classCode === classCode.code && styles.classCodeItemTextActive
+                  ]}>
+                    {classCode.country}
+                  </Text>
                 </View>
-              </View>
-
-              {/* Filtro por país */}
-              <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>País</Text>
-                <View style={styles.countryFilterGrid}>
-                  {countries.map(country => (
-                    <TouchableOpacity
-                      key={country.id}
-                      style={[
-                        styles.countryFilterItem,
-                        tempFilters.country === country.name && styles.countryFilterItemActive
-                      ]}
-                      onPress={() => setTempFilters(prev => ({
-                        ...prev,
-                        country: prev.country === country.name ? null : country.name
-                      }))}
-                    >
-                      <Image
-                        source={getCountryFlagSource(country.flag)}
-                        style={styles.countryFilterFlag}
-                      />
-                      <Text style={[
-                        styles.countryFilterText,
-                        tempFilters.country === country.name && styles.countryFilterTextActive
-                      ]}>
-                        {country.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+              )}
+              {classCode.institution && (
+                <View style={styles.classCodeItemDetail}>
+                  <Ionicons
+                    name="school-outline"
+                    size={12}
+                    color={tempFilters.classCode === classCode.code ? "#fff" : COLORS.inactive}
+                  />
+                  <Text style={[
+                    styles.classCodeItemDetailText,
+                    tempFilters.classCode === classCode.code && styles.classCodeItemTextActive
+                  ]}>
+                    {classCode.institution}
+                  </Text>
                 </View>
-              </View>
-
-              {/* Filtro por rango de edad */}
-              <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>Rango de edad</Text>
-                <View style={styles.filterOptions}>
-                  {ageRanges.map(range => (
-                    <TouchableOpacity
-                      key={range.id}
-                      style={[
-                        styles.filterChip,
-                        tempFilters.ageRange === range.id && styles.filterChipActive
-                      ]}
-                      onPress={() => {
-                        if (tempFilters.ageRange === range.id) {
-                          setTempFilters(prev => ({ ...prev, ageRange: null }));
-                        } else {
-                          setTempFilters(prev => ({
-                            ...prev,
-                            ageRange: range.id,
-                            specificAge: null // Desactivar edad específica si se selecciona un rango
-                          }));
-                          setSpecificAgeInput("");
-                        }
-                      }}
-                    >
-                      <Text style={[
-                        styles.filterChipText,
-                        tempFilters.ageRange === range.id && styles.filterChipTextActive
-                      ]}>
-                        {range.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {/* Filtro por edad específica */}
-              <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>Edad específica</Text>
-                <TextInput
-                  style={styles.ageInput}
-                  value={specificAgeInput}
-                  onChangeText={handleSpecificAgeChange}
-                  placeholder="Ingresa una edad"
-                  placeholderTextColor={COLORS.inactive}
-                  keyboardType="numeric"
-                  maxLength={2}
-                />
-                <Text style={styles.filterNote}>
-                  Nota: Al seleccionar una edad específica, se desactivará el filtro por rango de edad
-                </Text>
-              </View>
-            </ScrollView>
-
-            <View style={styles.filterButtonsContainer}>
-              <TouchableOpacity
-                style={styles.filterResetButton}
-                onPress={() => {
-                  setTempFilters({
-                    classCode: null,
-                    country: null,
-                    ageRange: null,
-                    specificAge: null,
-                  });
-                  setSpecificAgeInput("");
-                }}
-              >
-                <Text style={styles.filterResetButtonText}>Restablecer</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.filterApplyButton}
-                onPress={applyTempFilters}
-              >
-                <Text style={styles.filterApplyButtonText}>Aplicar</Text>
-              </TouchableOpacity>
+              )}
             </View>
           </View>
+        </TouchableOpacity>
+      );
+    };
+
+    // Rendereizar el contenido principal de filtros
+    const renderFilterContent = () => {
+      return (
+        <View>
+          {/* Filtro por país */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>País</Text>
+            <View style={styles.countryFilterGrid}>
+              {countries.map(country => (
+                <TouchableOpacity
+                  key={country.id}
+                  style={[
+                    styles.countryFilterItem,
+                    tempFilters.country === country.name && styles.countryFilterItemActive
+                  ]}
+                  onPress={() => setTempFilters(prev => ({
+                    ...prev,
+                    country: prev.country === country.name ? null : country.name
+                  }))}
+                >
+                  <Image
+                    source={getCountryFlagSource(country.flag)}
+                    style={styles.countryFilterFlag}
+                  />
+                  <Text style={[
+                    styles.countryFilterText,
+                    tempFilters.country === country.name && styles.countryFilterTextActive
+                  ]}>
+                    {country.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Filtro por código de clase mejorado como botón de selección */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Institución/Clase</Text>
+
+            {/* Botón para abrir el modal de selección */}
+            <TouchableOpacity
+              style={styles.classCodeDropdownButton}
+              onPress={() => setShowClassCodeModal(true)}
+            >
+              <View style={styles.classCodeDropdownButtonContent}>
+                <Text style={styles.classCodeDropdownLabel}>
+                  {tempFilters.classCode
+                    ? availableClassCodes.find(c => c.code === tempFilters.classCode)?.description || tempFilters.classCode
+                    : "Seleccionar institución o clase"}
+                </Text>
+                {tempFilters.classCode && (
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      setTempFilters(prev => ({ ...prev, classCode: null }));
+                    }}
+                    style={styles.classCodeDropdownClearButton}
+                  >
+                    <Ionicons name="close-circle" size={18} color={COLORS.inactive} />
+                  </TouchableOpacity>
+                )}
+              </View>
+              <Ionicons name="chevron-down" size={18} color={COLORS.inactive} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Filtro por rango de edad */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Rango de edad</Text>
+            <View style={styles.filterOptions}>
+              {ageRanges.map(range => (
+                <TouchableOpacity
+                  key={range.id}
+                  style={[
+                    styles.filterChip,
+                    tempFilters.ageRange === range.id && styles.filterChipActive
+                  ]}
+                  onPress={() => {
+                    if (tempFilters.ageRange === range.id) {
+                      setTempFilters(prev => ({ ...prev, ageRange: null }));
+                    } else {
+                      setTempFilters(prev => ({
+                        ...prev,
+                        ageRange: range.id,
+                        specificAge: null // Desactivar edad específica si se selecciona un rango
+                      }));
+                      setSpecificAgeInput("");
+                    }
+                  }}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    tempFilters.ageRange === range.id && styles.filterChipTextActive
+                  ]}>
+                    {range.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Filtro por edad específica */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Edad específica</Text>
+            <TextInput
+              style={styles.ageInput}
+              value={specificAgeInput}
+              onChangeText={handleSpecificAgeChange}
+              placeholder="Ingresa una edad"
+              placeholderTextColor={COLORS.inactive}
+              keyboardType="numeric"
+              maxLength={2}
+            />
+            <Text style={styles.filterNote}>
+              Nota: Al seleccionar una edad específica, se desactivará el filtro por rango de edad
+            </Text>
+          </View>
         </View>
-      </Modal>
+      );
+    };
+
+    return (
+      <>
+        {/* Modal principal de filtros */}
+        <Modal
+          visible={filterModalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setFilterModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.filterModalContainer}>
+              <View style={styles.filterModalHeader}>
+                <Text style={styles.filterModalTitle}>Filtros</Text>
+                <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
+                  <Ionicons name="close" size={24} color={COLORS.text} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Usar FlatList en lugar de ScrollView para evitar el error de VirtualizedLists anidados */}
+              <FlatList
+                data={[1]} // Solo necesitamos un elemento ya que renderizamos todo en renderItem
+                renderItem={() => renderFilterContent()}
+                keyExtractor={() => "filters"}
+                showsVerticalScrollIndicator={true}
+                style={styles.filterScrollView}
+              />
+
+              <View style={styles.filterButtonsContainer}>
+                <TouchableOpacity
+                  style={styles.filterResetButton}
+                  onPress={() => {
+                    setTempFilters({
+                      classCode: null,
+                      country: null,
+                      ageRange: null,
+                      specificAge: null,
+                    });
+                    setSpecificAgeInput("");
+                    setClassCodeSearchQuery("");
+                  }}
+                >
+                  <Text style={styles.filterResetButtonText}>Restablecer</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.filterApplyButton}
+                  onPress={applyTempFilters}
+                >
+                  <Text style={styles.filterApplyButtonText}>Aplicar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal separado para selección de código de clase */}
+        <Modal
+          visible={showClassCodeModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowClassCodeModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.classCodeModalContainer}>
+              <View style={styles.classCodeModalHeader}>
+                <Text style={styles.classCodeModalTitle}>Seleccionar Institución/Clase</Text>
+                <TouchableOpacity onPress={() => setShowClassCodeModal(false)}>
+                  <Ionicons name="close" size={24} color={COLORS.text} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Buscador */}
+              <View style={styles.classCodeSearchContainer}>
+                <Ionicons name="search" size={18} color={COLORS.inactive} />
+                <TextInput
+                  style={styles.classCodeSearchInput}
+                  value={classCodeSearchQuery}
+                  onChangeText={setClassCodeSearchQuery}
+                  placeholder="Buscar institución o clase..."
+                  placeholderTextColor={COLORS.inactive}
+                />
+                {classCodeSearchQuery !== "" && (
+                  <TouchableOpacity
+                    onPress={() => setClassCodeSearchQuery("")}
+                    style={styles.classCodeSearchClear}
+                  >
+                    <Ionicons name="close-circle" size={18} color={COLORS.inactive} />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Lista de códigos en un FlatList independiente */}
+              <FlatList
+                data={filteredClassCodes.filter(classCode =>
+                  tempFilters.country ? classCode.country === tempFilters.country : true
+                )}
+                renderItem={({ item }) => renderClassCodeItem(item)}
+                keyExtractor={(item) => item.id}
+                style={styles.classCodeList}
+                ListEmptyComponent={() => (
+                  <Text style={styles.noClassCodesText}>
+                    {classCodeSearchQuery ?
+                      `No se encontraron resultados para "${classCodeSearchQuery}"` :
+                      "No hay códigos de clase disponibles"}
+                  </Text>
+                )}
+              />
+            </View>
+          </View>
+        </Modal>
+      </>
     );
   };
 
@@ -1361,10 +1561,10 @@ const styles = StyleSheet.create({
   // Selector de clase
   classCodeSelectorContainer: {
     backgroundColor: "white",
-    marginHorizontal: 6,
+    marginHorizontal: 5,
     marginBottom: 14,
     borderRadius: 14,
-    padding: 14,
+    padding: 6,
     elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -1656,6 +1856,202 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 4,
   },
+  // Añade estos estilos adicionales a tu objeto styles
+  // Estilos para el modal de código de clase
+  classCodeModalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 14,
+    padding: 18,
+    width: '90%',
+    maxHeight: '80%',
+    maxWidth: 500,
+  },
+  classCodeModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  classCodeModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  classCodeList: {
+    height: 350,
+    flexGrow: 0,
+  },
+  // Actualizar los estilos existentes
+  filterScrollView: {
+    flex: 1,
+  },
+  filterModalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 14,
+    padding: 20,
+    width: '90%',
+    height: '80%', // Altura fija
+    maxWidth: 500,
+    flexDirection: 'column', // Asegurar diseño correcto
+  },
+
+  // Estilos para el selector de códigos de clase mejorado
+  classCodeSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  classCodeSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    marginLeft: 8,
+    color: COLORS.text,
+  },
+  classCodeSearchClear: {
+    padding: 4,
+  },
+  classCodesList: {
+    marginBottom: 8,
+  },
+  noClassCodesText: {
+    fontSize: 14,
+    color: COLORS.inactive,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    padding: 12,
+  },
+  // Estilos para el dropdown de Institución/Clase
+  classCodeDropdownContainer: {
+    position: 'relative',
+    zIndex: 1,
+    marginBottom: 16,
+  },
+  classCodeDropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  classCodeDropdownButtonContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  classCodeDropdownLabel: {
+    fontSize: 15,
+    color: COLORS.text,
+    flex: 1,
+  },
+  classCodeDropdownClearButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  classCodeDropdownContent: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    borderRadius: 10,
+    marginTop: 6,
+    padding: 10,
+    maxHeight: 300,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  classCodeDropdownList: {
+    maxHeight: 220,
+  },
+  noSearchResultsText: {
+    fontSize: 14,
+    color: COLORS.inactive,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    padding: 12,
+  },
+  // Modificaciones al estilo actual de classCodeItem para que funcione bien en el dropdown
+  classCodeItem: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    overflow: 'hidden',
+  },
+  classCodeItemActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  classCodeItemDisabled: {
+    opacity: 0.5,
+  },
+  classCodeItemContent: {
+    padding: 12,
+  },
+  classCodeItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  classCodeItemCode: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  classCodeItemActiveStatus: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  classCodeItemActiveText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  classCodeItemDescription: {
+    fontSize: 14,
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  classCodeItemDetails: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  classCodeItemDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  classCodeItemDetailText: {
+    fontSize: 12,
+    color: COLORS.inactive,
+    marginLeft: 4,
+  },
+  classCodeItemTextActive: {
+    color: 'white',
+  },
   studentName: {
     fontSize: 17,
     fontWeight: "600",
@@ -1787,7 +2183,7 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: COLORS.primary,
   },
-  
+
   // Estilos para el botón de filtros
   filterButtonContainer: {
     flexDirection: 'row',
@@ -1837,16 +2233,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: COLORS.primary,
   },
-  
-  // Estilos para el modal de filtros
-  filterModalContainer: {
-    backgroundColor: 'white',
-    borderRadius: 14,
-    padding: 18,
-    width: '90%',
-    maxHeight: '80%',
-    maxWidth: 500,
-  },
+
   filterModalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1861,9 +2248,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.text,
   },
-  filterScrollView: {
-    maxHeight: 450,
-  },
+
   filterSection: {
     marginBottom: 24,
   },
@@ -1899,7 +2284,7 @@ const styles = StyleSheet.create({
   filterChipTextActive: {
     color: 'white',
   },
-  
+
   // Estilos para el filtro de países
   countryFilterGrid: {
     flexDirection: 'row',
@@ -1937,7 +2322,7 @@ const styles = StyleSheet.create({
   countryFilterTextActive: {
     color: 'white',
   },
-  
+
   // Estilos para el filtro de edad específica
   ageInput: {
     backgroundColor: '#f5f5f5',
@@ -1955,7 +2340,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontStyle: 'italic',
   },
-  
+
   // Estilos para los botones del modal
   filterButtonsContainer: {
     flexDirection: 'row',

@@ -215,7 +215,7 @@ const CREATORS: Creator[] = [
   {
     name: "Natalia Triviño Amigo",
     role: "Profesora e Investigadora",
-    institution: "Universidad Europea - Real Madrid",
+    institution: "Universidad Europea",
     email: "natalia.trivino@universidadeuropea.es",
     orcid: "",
     imageUrl: require("../../assets/images/natalia.webp"),
@@ -278,7 +278,7 @@ const INSTITUTIONS: Institution[] = [
     website: "https://www.santotomas.cl"
   },
   {
-    name: "Universidad Europea - Real Madrid",
+    name: "Universidad Europea de Madrid",
     description: "Institución especializada en ciencias del deporte y medicina deportiva, con estrecha colaboración con el Real Madrid para la formación e investigación deportiva.",
     country: "España",
     logo: require("../../assets/images/europea.webp"),
