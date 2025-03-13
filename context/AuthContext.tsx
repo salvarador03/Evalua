@@ -2,10 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import auth from "@react-native-firebase/auth";
 import db from "@react-native-firebase/database";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { User, GuestUser, CountryRole } from "../types/user";
-import {
-  createLoginNotification,
-} from "../utils/notifications";
+import type { User, GuestUser, TeacherUser } from "../types/user";
+import { createLoginNotification } from "../utils/notifications";
 
 // Función de utilidad para calcular la edad
 const calculateAge = (birthDate: Date | string): number => {
@@ -58,7 +56,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (storedUser) {
           const userData = JSON.parse(storedUser);
-          setUser(userData);
+          // Solo permitir usuarios profesores o invitados
+          if (userData.role === "teacher" || userData.role === "guest") {
+            setUser(userData);
+          } else {
+            // Si no es profesor o invitado, eliminar datos de usuario almacenados
+            await AsyncStorage.removeItem("userData");
+          }
         }
       } catch (error) {
         console.error("[AuthProvider] Error loading stored user:", error);
@@ -168,6 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(false);
     }
   };
+
   useEffect(() => {
     const verifyUserAge = async () => {
       if (user?.dateOfBirth && user?.age) {
@@ -191,6 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true);
       const response = await auth().signInWithEmailAndPassword(email, password);
 
       const userDoc = await db()
@@ -198,27 +204,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         .once("value");
       const userData = userDoc.val();
 
-      if (userData) {
-        try {
-          // Crear notificación de login
-          await createLoginNotification(
-            response.user.uid,
-            "login",
-            userData.name
-          );
-        } catch (notifError) {
-          console.error("[signIn] Notification error:", notifError);
-          // Continuamos con el login aunque falle la notificación
-        }
-
-        await AsyncStorage.setItem("userData", JSON.stringify(userData));
-        setUser(userData);
+      if (!userData || userData.role !== "teacher") {
+        throw new Error("Acceso denegado. Solo profesores pueden iniciar sesión.");
       }
+
+      try {
+        // Actualizar último login
+        await db()
+          .ref(`/users/${response.user.uid}/lastLogin`)
+          .set(Date.now());
+          
+        // Crear notificación de login
+        await createLoginNotification(
+          response.user.uid,
+          "login",
+          userData.name
+        );
+      } catch (notifError) {
+        console.error("[signIn] Notification error:", notifError);
+        // Continuamos con el login aunque falle la notificación
+      }
+
+      await AsyncStorage.setItem("userData", JSON.stringify(userData));
+      setUser(userData);
     } catch (error) {
       console.error("[signIn] Error during sign in:", error);
       throw error;
+    } finally {
+      setLoading(false);
     }
-};
+  };
 
   const signOut = async () => {
     try {
@@ -237,12 +252,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-  }, [user]);
-
-  useEffect(() => {
-  }, [loading]);
 
   return (
     <AuthContext.Provider

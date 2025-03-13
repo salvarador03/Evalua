@@ -148,6 +148,12 @@ export const WelcomeScreen: React.FC = () => {
                   style={[styles.logo, { width: 60, height: 60 }]}
                   resizeMode="contain"
                 />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/managua.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
               </ScrollView>
               {showRightArrow && (
                 <TouchableOpacity 

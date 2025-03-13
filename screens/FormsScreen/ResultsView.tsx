@@ -64,6 +64,19 @@ const lastKidsQuestionTranslations = {
     ],
     finalQuestion: 'Sabiendo que la alfabetización física es la suma de las preguntas anteriores: 1) forma física global/condición física; 2) cantidad de actividad física realizada semanalmente; 3) lo que sabes sobre educación física; 4) motivación para realizar actividad física, incluyendo hacer nuevos amigos y sentirte mejor con tus compañeros/as gracias a la actividad física. En comparación con los/las niños/as de mi edad mi alfabetización física es:'
   },
+  'es-PA': {
+    title: 'Tener una buena alfabetización física significa:',
+    options: [
+      'A) Tener una buena condición física.',
+      'B) Saber mucho sobre la Educación Física.',
+      'C) Tener interés y ganas de hacer actividad física.',
+      'D) Hacer amigos/as gracias a la actividad física.',
+      'E) Ser más seguro/a cuando se hace actividad física.',
+      'F) Hacer bien actividad física.',
+      'G) Hacer actividad física varias veces a la semana.'
+    ],
+    finalQuestion: 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:'
+  },
   'en': {
     title: 'Having good physical literacy means:',
     options: [
@@ -367,6 +380,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
               // Para niños, usar el formato especial con las opciones
               const lastQuestion = {
                 'es': 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:',
+                'es-PA': 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:',
                 'en': 'Now that you know what physical literacy is. Compared to children my age, my physical literacy is:',
                 'pt-PT': 'Depois de saber o que é literacia física. Em comparação com as crianças da minha idade, a minha literacia física é:',
                 'pt-BR': 'Depois de saber o que é letramento físico. Em comparação com crianças da minha idade, meu letramento físico é:'

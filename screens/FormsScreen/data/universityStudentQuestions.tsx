@@ -69,6 +69,64 @@ export const universityStudentQuestions: Questions = {
             range: Array.from({ length: 11 }, (_, i) => i)
         }
     ],
+    "es-PA": [
+        {
+            id: 1,
+            text: 'En comparación con las personas de mi edad, mi forma física global o condición física es:',
+            min: 'MUY MALA/\nPÉSIMA',
+            max: 'MUY BUENA/\nEXCELENTE',
+            range: Array.from({ length: 11 }, (_, i) => i)
+        },
+        {
+            id: 2,
+            text: 'En comparación con las personas de mi edad, la cantidad de actividad física que realizo semanalmente (por ejemplo: practicar deportes, caminar o ir en bicicleta, etc.) es:',
+            min: 'NADA/\nNINGUNA',
+            max: 'MUCHÍSIMA',
+            range: Array.from({ length: 11 }, (_, i) => i)
+        },
+        {
+            id: 3,
+            text: 'En comparación con las personas de mi clase (solo con aquellas que tienen tu misma edad), mi conocimiento sobre los contenidos de actividad física es:',
+            min: 'NINGUNO',
+            max: 'MUY BUENO/\nEXCELENTE',
+            range: Array.from({ length: 11 }, (_, i) => i)
+        },
+        {
+            id: 4,
+            text: 'En comparación con las personas de mi edad, mi motivación para realizar actividad física es:',
+            min: 'NINGUNA',
+            max: 'MUCHÍSIMA',
+            range: Array.from({ length: 11 }, (_, i) => i)
+        },
+        {
+            id: 5,
+            text: 'En comparación con las personas de mi edad, hago nuevos amigos/as y me siento mejor con mis compañeros/as gracias a la actividad física que realizo:',
+            min: 'NINGUNO/\nNADA',
+            max: 'MUCHÍSIMOS(AS)/\nMUCHÍSIMO',
+            range: Array.from({ length: 11 }, (_, i) => i)
+        },
+        {
+            id: 6,
+            text: 'En comparación con las personas de mi edad, mi seguridad en relación con la actividad física es:',
+            min: 'NINGUNA',
+            max: 'MUCHÍSIMA',
+            range: Array.from({ length: 11 }, (_, i) => i)
+        },
+        {
+            id: 7,
+            text: 'En comparación con las personas de mi edad, mi competencia física es:',
+            min: 'MUY MALA/\nPÉSIMA',
+            max: 'MUY BUENA/\nEXCELENTE',
+            range: Array.from({ length: 11 }, (_, i) => i)
+        },
+        {
+            id: 8,
+            text: 'Las personas que tienen una buena alfabetización física tienen una serie de características:\n\nA) Tienen una buena condición física.\n\nB) Tienen más conocimientos sobre los contenidos sobre actividad física.\n\nC) Están más motivadas para la realización de actividad física.\n\nD) Son capaces de socializar (hacer amigos/as y mejorar sus relaciones) gracias a la actividad física.\n\nE) Son más seguras a la hora de realizar actividad física.\n\nF) Son más habilidosas y competentes realizando actividad física.\n\nEstas personas, tras valorar las diferentes opciones para realizar actividad física, eligen participar con frecuencia en ellas durante toda la vida.\n\nUna vez que conoces las características de una persona con una buena alfabetización física, en comparación con las personas de mi edad, mi alfabetización física es:',
+            min: 'MUY MALA/\nPÉSIMA',
+            max: 'MUY BUENA/\nEXCELENTE',
+            range: Array.from({ length: 11 }, (_, i) => i)
+        }
+    ],
     en: [
         {
             id: 1,
@@ -202,7 +260,7 @@ export const universityStudentQuestions: Questions = {
         },
         {
             id: 3,
-            text: 'Em comparação com as pessoas da minha turma (apenas com aquelas que têm a minha idade), meu conhecimento sobre os conteúdos de atividade física é:',
+            text: 'Em comparação com as pessoas da minha idade, meu conhecimento sobre os conteúdos de atividade física é:',
             min: 'NENHUM',
             max: 'MUITO BOM/\nEXCELENTE',
             range: Array.from({ length: 11 }, (_, i) => i)

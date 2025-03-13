@@ -58,6 +58,8 @@ const countries = [
   { id: 'es_CU', name: 'Cuba', flag: 'cuba' },
   { id: 'pt_PT', name: 'Portugal', flag: 'portugal' },
   { id: 'pt_BR', name: 'Brasil', flag: 'brazil' },
+  { id: 'es_NI', name: 'Nicaragua', flag: 'nicaragua' }, // Añadido
+  { id: 'es_PY', name: 'Paraguay', flag: 'paraguay' }   // Añadido
 ];
 
 export const ClassCodeManager: React.FC<{
@@ -69,7 +71,7 @@ export const ClassCodeManager: React.FC<{
   const [showModal, setShowModal] = useState(false);
   const [codeDescription, setCodeDescription] = useState("");
   const [showCountryPicker, setShowCountryPicker] = useState(false);
-  
+
   // Nuevos estados para los campos adicionales
   const [selectedCountry, setSelectedCountry] = useState<{ id: string; name: string; flag: string } | null>(null);
   const [state, setState] = useState("");
@@ -92,6 +94,8 @@ export const ClassCodeManager: React.FC<{
       "cuba": require("../../assets/flags/cuba.webp"),
       "portugal": require("../../assets/flags/portugal.webp"),
       "brazil": require("../../assets/flags/brazil.webp"),
+      "nicaragua": require("../../assets/flags/nicaragua.webp"), // Añadido
+      "paraguay": require("../../assets/flags/paraguay.webp")   // Añadido
     };
 
     return flagSources[flagName] || flagSources["spain"]; // Por defecto devuelve España
@@ -158,7 +162,7 @@ export const ClassCodeManager: React.FC<{
       Alert.alert("Error", "Por favor selecciona un país");
       return;
     }
-    
+
     if (!institution.trim()) {
       Alert.alert("Error", "Por favor ingresa el nombre de la institución");
       return;
@@ -166,14 +170,14 @@ export const ClassCodeManager: React.FC<{
 
     try {
       const newCode = generateRandomCode();
-      
+
       // Construir la descripción en formato estructurado
       let formattedDescription = `${selectedCountry.name}`;
       if (state.trim()) formattedDescription += `, ${state}`;
       if (city.trim()) formattedDescription += `, ${city}`;
       formattedDescription += ` - ${institution}`;
       if (className.trim()) formattedDescription += ` (${className})`;
-      
+
       const classCodeData = {
         code: newCode,
         description: formattedDescription,
@@ -250,7 +254,7 @@ export const ClassCodeManager: React.FC<{
       <View style={styles.codeInfo}>
         <Text style={styles.codeText}>{item.code}</Text>
         <Text style={styles.codeDescription}>{item.description}</Text>
-        
+
         {/* Información adicional */}
         <View style={styles.detailsContainer}>
           {item.country && (
@@ -321,8 +325,9 @@ export const ClassCodeManager: React.FC<{
               <Ionicons name="close" size={24} color={COLORS.text} />
             </TouchableOpacity>
           </View>
-          
-          <ScrollView style={styles.countryList}>
+
+          <ScrollView style={styles.countryList}
+          contentContainerStyle={{ paddingBottom: 20 }}>
             {countries.map((country) => (
               <TouchableOpacity
                 key={country.id}
@@ -737,10 +742,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     width: "90%",
     maxWidth: 500,
-    maxHeight: "80%",
+    maxHeight: "85%", // Aumentado de 80% a 85% para dar más espacio
+    paddingBottom: 16, // Añadir padding inferior para evitar corte
   },
   countryList: {
     padding: 16,
+    paddingBottom: 24, // Añadir padding adicional al final de la lista
   },
   countryItem: {
     flexDirection: "row",

@@ -127,7 +127,7 @@ export const StudentsScreen: React.FC = () => {
     { id: 'youngAdults', label: 'Universitarios (18-24)', min: 18, max: 24 },
   ];
 
-  // Lista de países disponibles
+  // Lista de países disponibles - añade Nicaragua y Paraguay
   const countries = [
     { id: 'es_ES', name: 'España', flag: 'spain' },
     { id: 'en_US', name: 'United States', flag: 'usa' },
@@ -141,6 +141,8 @@ export const StudentsScreen: React.FC = () => {
     { id: 'es_CU', name: 'Cuba', flag: 'cuba' },
     { id: 'pt_PT', name: 'Portugal', flag: 'portugal' },
     { id: 'pt_BR', name: 'Brasil', flag: 'brazil' },
+    { id: 'es_NI', name: 'Nicaragua', flag: 'nicaragua' }, // Añadido
+    { id: 'es_PY', name: 'Paraguay', flag: 'paraguay' }   // Añadido
   ];
 
   // Función para aplicar los filtros
@@ -829,8 +831,10 @@ export const StudentsScreen: React.FC = () => {
       "cuba": require("../../assets/flags/cuba.webp"),
       "portugal": require("../../assets/flags/portugal.webp"),
       "brazil": require("../../assets/flags/brazil.webp"),
+      "nicaragua": require("../../assets/flags/nicaragua.webp"), // Añadido
+      "paraguay": require("../../assets/flags/paraguay.webp")   // Añadido
     };
-
+  
     return flagSources[flagName] || flagSources["spain"]; // Por defecto devuelve España
   };
 
@@ -990,9 +994,11 @@ export const StudentsScreen: React.FC = () => {
       "Argentina": "argentina",
       "Panamá": "panama",
       "Cuba": "cuba",
+      "Nicaragua": "nicaragua", // Añadido
+      "Paraguay": "paraguay",   // Añadido
       "Unknown": "unknown"
     };
-
+  
     return countryToFlag[country] || "unknown";
   };
 

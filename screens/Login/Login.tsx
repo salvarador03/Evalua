@@ -58,7 +58,7 @@ export const LoginScreen: React.FC = () => {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
-  
+
   // Estados para el selector de clase
   const [showClassModal, setShowClassModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,7 +75,7 @@ export const LoginScreen: React.FC = () => {
       try {
         const snapshot = await db().ref('/classCodes').once('value');
         const data = snapshot.val();
-        
+
         if (data) {
           const codesArray = Object.entries(data).map(([id, codeData]: [string, any]) => {
             const typedCodeData = codeData as ClassCodeData;
@@ -88,7 +88,7 @@ export const LoginScreen: React.FC = () => {
               active: typedCodeData.active
             } as ClassCode;
           }).filter((code: ClassCode) => code.active);
-          
+
           setClassCodes(codesArray);
         } else {
           setClassCodes([]);
@@ -99,12 +99,12 @@ export const LoginScreen: React.FC = () => {
         setLoadingClassCodes(false);
       }
     };
-    
+
     if (!isLoginMode) {
       fetchClassCodes();
     }
   }, [isLoginMode]);
-  
+
   // Filtrar códigos basados en la búsqueda
   const filteredClassCodes = classCodes.filter(classCode => {
     const query = searchQuery.toLowerCase();
@@ -115,7 +115,7 @@ export const LoginScreen: React.FC = () => {
       (classCode.country && classCode.country.toLowerCase().includes(query))
     );
   });
-  
+
   // Renderizar un código de clase
   const renderClassCodeItem = ({ item }: { item: ClassCode }) => (
     <TouchableOpacity
@@ -134,11 +134,11 @@ export const LoginScreen: React.FC = () => {
             <Text style={styles.classCodeItemActiveText}>Activo</Text>
           </View>
         </View>
-        
+
         <Text style={styles.classCodeItemDescription}>
           {item.description || 'Sin descripción'}
         </Text>
-        
+
         <View style={styles.classCodeItemDetails}>
           {item.country && (
             <View style={styles.classCodeItemDetail}>
@@ -163,28 +163,28 @@ export const LoginScreen: React.FC = () => {
     if (isSubmitting) {
       return;
     }
-  
+
     if (!guestName.trim()) {
       Alert.alert("Error", "Por favor ingresa tu nombre");
       return;
     }
-  
+
     if (!classCode.trim()) {
       Alert.alert("Error", "Por favor selecciona una institución o clase");
       return;
     }
-  
+
     setIsSubmitting(true);
-  
+
     try {
       const classSnapshot = await db()
         .ref('/classCodes')
         .orderByChild('code')
         .equalTo(classCode.trim())
         .once('value');
-  
+
       const classData = classSnapshot.val();
-      
+
       if (!classData) {
         Alert.alert(
           "Código no válido",
@@ -193,12 +193,12 @@ export const LoginScreen: React.FC = () => {
         );
         return;
       }
-  
+
       await signInAsGuest(guestName.trim(), classCode.trim(), dateOfBirth);
-      
+
     } catch (error: any) {
       console.error("[LoginScreen] Error in guest access:", error);
-      
+
       if (error.message === "Código de clase no válido") {
         Alert.alert(
           "Código no válido",
@@ -235,6 +235,37 @@ export const LoginScreen: React.FC = () => {
       );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Función para refrescar los códigos de clase
+  const refreshClassCodes = async () => {
+    setLoadingClassCodes(true);
+    try {
+      const snapshot = await db().ref('/classCodes').once('value');
+      const data = snapshot.val();
+
+      if (data) {
+        const codesArray = Object.entries(data).map(([id, codeData]: [string, any]) => {
+          const typedCodeData = codeData as ClassCodeData;
+          return {
+            id,
+            code: typedCodeData.code,
+            description: typedCodeData.description,
+            institution: typedCodeData.institution,
+            country: typedCodeData.country,
+            active: typedCodeData.active
+          } as ClassCode;
+        }).filter((code: ClassCode) => code.active);
+
+        setClassCodes(codesArray);
+      } else {
+        setClassCodes([]);
+      }
+    } catch (error: any) {
+      console.error("Error al cargar códigos de clase:", error);
+    } finally {
+      setLoadingClassCodes(false);
     }
   };
 
@@ -284,7 +315,7 @@ export const LoginScreen: React.FC = () => {
         >
           <View style={styles.content}>
             <Text style={[typography.title, styles.title]}>
-              {isLoginMode ? "Inicio sesión" : "Acceso Invitado"}
+              {isLoginMode ? "Área de Profesores" : "Acceso Invitado"}
             </Text>
 
             <View style={styles.form}>
@@ -326,7 +357,7 @@ export const LoginScreen: React.FC = () => {
                       styles.classSelectorText,
                       !classCode && styles.classSelectorPlaceholder
                     ]}>
-                      {classCode 
+                      {classCode
                         ? classCodes.find(c => c.code === classCode)?.description || classCode
                         : "Seleccionar institución o clase"}
                     </Text>
@@ -365,7 +396,7 @@ export const LoginScreen: React.FC = () => {
                     editable={!isLoading}
                   />
 
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={handlePasswordReset}
                     disabled={isLoading}
                     style={styles.forgotPasswordContainer}
@@ -379,8 +410,8 @@ export const LoginScreen: React.FC = () => {
                     <View style={styles.loadingContainer}>
                       <ActivityIndicator size="large" color="#9E7676" />
                       <Text style={styles.loadingText}>
-                        {isResettingPassword 
-                          ? "Enviando correo..." 
+                        {isResettingPassword
+                          ? "Enviando correo..."
                           : "Iniciando sesión..."}
                       </Text>
                     </View>
@@ -392,7 +423,7 @@ export const LoginScreen: React.FC = () => {
                         disabled={isLoading}
                       />
                       <CustomButton
-                        title="Registrarse"
+                        title="Registrarse como Profesor"
                         onPress={() => navigation.navigate("Registro")}
                         variant="secondary"
                         disabled={isLoading}
@@ -407,7 +438,7 @@ export const LoginScreen: React.FC = () => {
                   title={
                     isLoginMode
                       ? "Volver al acceso invitado"
-                      : "¿Ya tienes cuenta?"
+                      : "Área de Profesores"
                   }
                   onPress={() => {
                     setIsLoginMode(!isLoginMode);
@@ -440,12 +471,24 @@ export const LoginScreen: React.FC = () => {
           <View style={styles.classModalContainer}>
             <View style={styles.classModalHeader}>
               <Text style={styles.classModalTitle}>Seleccionar Institución/Clase</Text>
-              <TouchableOpacity onPress={() => setShowClassModal(false)}>
-                <Text style={styles.classModalCloseButton}>✕</Text>
-              </TouchableOpacity>
+              <View style={styles.headerActions}>
+                {/* Botón de refresco */}
+                <TouchableOpacity
+                  onPress={refreshClassCodes}
+                  disabled={loadingClassCodes}
+                  style={styles.refreshButton}
+                >
+                  <Text style={styles.refreshIcon}>🔄</Text>
+                </TouchableOpacity>
+
+                {/* Botón de cerrar (existente) */}
+                <TouchableOpacity onPress={() => setShowClassModal(false)}>
+                  <Text style={styles.classModalCloseButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            
-            {/* Buscador */}
+
+            {/* Buscador (existente) */}
             <View style={styles.classSearchContainer}>
               <Text style={styles.searchIcon}>🔍</Text>
               <TextInput
@@ -464,7 +507,7 @@ export const LoginScreen: React.FC = () => {
                 </TouchableOpacity>
               )}
             </View>
-            
+
             {loadingClassCodes ? (
               <ActivityIndicator size="large" color="#9E7676" style={styles.loadingIndicator} />
             ) : (
@@ -572,6 +615,18 @@ const styles = StyleSheet.create({
   },
   disabledInput: {
     opacity: 0.7,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  refreshButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  refreshIcon: {
+    fontSize: 18,
+    color: "#594545",
   },
   // Estilos para el modal
   modalOverlay: {

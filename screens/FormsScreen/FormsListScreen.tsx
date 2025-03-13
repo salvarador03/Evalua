@@ -223,6 +223,34 @@ const CREATORS: Creator[] = [
       linkedin: "https://es.linkedin.com/in/natalia-trivi%C3%B1o-amigo-899718162",
       researchGate: "https://www.researchgate.net/profile/Natalia-Trivino-Amigo"
     }
+  },
+  // New researchers added
+  {
+    name: "Eddy Silva",
+    role: "Investigador",
+    institution: "Nicaragua",
+    email: "",
+    orcid: "https://orcid.org/0000-0002-1180-9804",
+    imageUrl: require("../../assets/images/eddy.webp"),
+    socialLinks: {}
+  },
+  {
+    name: "Maristela De Lima Ferreira",
+    role: "Investigadora",
+    institution: "E-8-77527",
+    email: "",
+    orcid: "https://orcid.org/0009-0005-1252-6995",
+    imageUrl: require("../../assets/images/investigadoralima.webp"),
+    socialLinks: {}
+  },
+  {
+    name: "Milton Fernando Rosero Duque",
+    role: "Investigador",
+    institution: "Ecuador",
+    email: "",
+    orcid: "https://orcid.org/0000-0002-5702-3524",
+    imageUrl: require("../../assets/images/investigadorecuador.webp"),
+    socialLinks: {}
   }
 ];
 
@@ -283,6 +311,13 @@ const INSTITUTIONS: Institution[] = [
     country: "España",
     logo: require("../../assets/images/europea.webp"),
     website: "https://universidadeuropea.es"
+  },
+  {
+    name: "Universidad Nacional Autónoma de Nicaragua, Managua",
+    description: "Institución dedicada a la formación de profesionales e investigación en diversos campos académicos, incluyendo ciencias del deporte y educación física.",
+    country: "Nicaragua",
+    logo: require("../../assets/images/managua.webp"),
+    website: "https://www.unan.edu.ni"
   }
 ];
 
@@ -489,6 +524,12 @@ export const FormsListScreen: React.FC = () => {
                 <View style={styles.logoDivider} />
                 <Image
                   source={require("../../assets/images/san_marcos.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/managua.webp")}
                   style={[styles.logo, { width: 60, height: 60 }]}
                   resizeMode="contain"
                 />

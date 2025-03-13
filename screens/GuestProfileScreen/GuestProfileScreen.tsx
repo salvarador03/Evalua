@@ -1,5 +1,5 @@
 // Components/GuestProfileScreen.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -10,7 +10,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
-  StyleSheet
+  StyleSheet,
+  FlatList
 } from 'react-native';
 import { BackgroundContainer } from '../../Components/BackgroundContainer/BackgroundContainer';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,24 @@ import { GuestUser } from '../../types/user';
 import { DateButton } from "../../Components/DateButton/DateButton";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import db from '@react-native-firebase/database';
+
+interface ClassCode {
+  id: string;
+  code: string;
+  description?: string;
+  institution?: string;
+  country?: string;
+  active: boolean;
+}
+
+// Definición de la interfaz para los datos sin procesar
+interface ClassCodeData {
+  code: string;
+  description?: string;
+  institution?: string;
+  country?: string;
+  active: boolean;
+}
 
 export const GuestProfileScreen: React.FC = () => {
   const { user, signOut, updateUserProfile } = useAuth();
@@ -31,6 +50,207 @@ export const GuestProfileScreen: React.FC = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(
     guestUser?.dateOfBirth ? new Date(guestUser.dateOfBirth) : new Date()
+  );
+  
+  // Estado para mostrar información de la clase
+  const [showClassInfo, setShowClassInfo] = useState(false);
+  const [currentClassInfo, setCurrentClassInfo] = useState<ClassCode | null>(null);
+
+  // Estados para el selector de clase
+  const [showClassModal, setShowClassModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [classCodes, setClassCodes] = useState<ClassCode[]>([]);
+  const [loadingClassCodes, setLoadingClassCodes] = useState(false);
+  const [selectedClassCode, setSelectedClassCode] = useState<string>(guestUser?.classCode || "");
+
+  // Cargar códigos de clase disponibles
+  useEffect(() => {
+    if (showClassModal) {
+      fetchClassCodes();
+    }
+  }, [showClassModal]);
+
+  // Cargar información de la clase actual
+  useEffect(() => {
+    if (guestUser?.classCode) {
+      fetchCurrentClassInfo(guestUser.classCode);
+    }
+  }, [guestUser?.classCode]);
+
+  const fetchCurrentClassInfo = async (classCode: string) => {
+    try {
+      const snapshot = await db()
+        .ref('/classCodes')
+        .orderByChild('code')
+        .equalTo(classCode)
+        .once('value');
+      
+      const data = snapshot.val();
+      
+      if (data) {
+        const classId = Object.keys(data)[0];
+        const classData = data[classId] as ClassCodeData;
+        
+        setCurrentClassInfo({
+          id: classId,
+          code: classData.code,
+          description: classData.description,
+          institution: classData.institution,
+          country: classData.country,
+          active: classData.active
+        });
+      }
+    } catch (error) {
+      console.error("Error al obtener información de la clase:", error);
+    }
+  };
+
+  const fetchClassCodes = async () => {
+    setLoadingClassCodes(true);
+    try {
+      const snapshot = await db().ref('/classCodes').once('value');
+      const data = snapshot.val();
+      
+      if (data) {
+        const codesArray = Object.entries(data).map(([id, codeData]: [string, any]) => {
+          const typedCodeData = codeData as ClassCodeData;
+          return {
+            id,
+            code: typedCodeData.code,
+            description: typedCodeData.description,
+            institution: typedCodeData.institution,
+            country: typedCodeData.country,
+            active: typedCodeData.active
+          } as ClassCode;
+        }).filter((code: ClassCode) => code.active);
+        
+        setClassCodes(codesArray);
+      } else {
+        setClassCodes([]);
+      }
+    } catch (error: any) {
+      console.error("Error al cargar códigos de clase:", error);
+    } finally {
+      setLoadingClassCodes(false);
+    }
+  };
+
+  // Filtrar códigos basados en la búsqueda
+  const filteredClassCodes = classCodes.filter(classCode => {
+    const query = searchQuery.toLowerCase();
+    return (
+      classCode.code.toLowerCase().includes(query) ||
+      (classCode.description && classCode.description.toLowerCase().includes(query)) ||
+      (classCode.institution && classCode.institution.toLowerCase().includes(query)) ||
+      (classCode.country && classCode.country.toLowerCase().includes(query))
+    );
+  });
+
+  // Función para refrescar los códigos de clase
+  const refreshClassCodes = async () => {
+    setLoadingClassCodes(true);
+    try {
+      const snapshot = await db().ref('/classCodes').once('value');
+      const data = snapshot.val();
+
+      if (data) {
+        const codesArray = Object.entries(data).map(([id, codeData]: [string, any]) => {
+          const typedCodeData = codeData as ClassCodeData;
+          return {
+            id,
+            code: typedCodeData.code,
+            description: typedCodeData.description,
+            institution: typedCodeData.institution,
+            country: typedCodeData.country,
+            active: typedCodeData.active
+          } as ClassCode;
+        }).filter((code: ClassCode) => code.active);
+
+        setClassCodes(codesArray);
+      } else {
+        setClassCodes([]);
+      }
+    } catch (error: any) {
+      console.error("Error al cargar códigos de clase:", error);
+    } finally {
+      setLoadingClassCodes(false);
+    }
+  };
+
+  const handleClassCodeSelected = async (code: string) => {
+    try {
+      setIsValidating(true);
+      const classSnapshot = await db()
+        .ref('/classCodes')
+        .orderByChild('code')
+        .equalTo(code.trim())
+        .once('value');
+
+      const classData = classSnapshot.val();
+      
+      if (!classData) {
+        Alert.alert(
+          "Código no válido",
+          "El código de clase seleccionado no existe o no está activo."
+        );
+        return;
+      }
+
+      const updatedUser = {
+        ...guestUser,
+        classCode: code
+      };
+      
+      await updateUserProfile(updatedUser, { preventNavigation: true });
+      setSelectedClassCode(code);
+      setShowClassModal(false);
+      
+    } catch (error) {
+      console.error("Error al actualizar clase:", error);
+      Alert.alert("Error", "No se pudo actualizar la clase seleccionada");
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  // Renderizar un código de clase
+  const renderClassCodeItem = ({ item }: { item: ClassCode }) => (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.classCodeItem}
+      onPress={() => handleClassCodeSelected(item.code)}
+      disabled={isValidating}
+    >
+      <View style={styles.classCodeItemContent}>
+        <View style={styles.classCodeItemHeader}>
+          <Text style={styles.classCodeItemCode}>{item.code}</Text>
+          <View style={styles.classCodeItemActiveStatus}>
+            <Text style={styles.classCodeItemActiveText}>Activo</Text>
+          </View>
+        </View>
+        
+        <Text style={styles.classCodeItemDescription}>
+          {item.description || 'Sin descripción'}
+        </Text>
+        
+        <View style={styles.classCodeItemDetails}>
+          {item.country && (
+            <View style={styles.classCodeItemDetail}>
+              <Text style={styles.classCodeItemDetailText}>
+                {item.country}
+              </Text>
+            </View>
+          )}
+          {item.institution && (
+            <View style={styles.classCodeItemDetail}>
+              <Text style={styles.classCodeItemDetailText}>
+                {item.institution}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 
   const validateClassCode = async (code: string) => {
@@ -53,6 +273,8 @@ export const GuestProfileScreen: React.FC = () => {
     if (field === 'dateOfBirth') {
       setSelectedDate(currentValue ? new Date(currentValue) : new Date());
       setShowDatePicker(true);
+    } else if (field === 'classCode') {
+      setShowClassModal(true);
     } else {
       setEditValue(currentValue || '');
     }
@@ -181,6 +403,38 @@ export const GuestProfileScreen: React.FC = () => {
       );
     }
 
+    // Personalizar la fila para el código de clase
+    if (field === 'classCode') {
+      return (
+        <View style={styles.infoRow}>
+          <Ionicons 
+            name="school-outline" 
+            size={24} 
+            color="#9E7676" 
+          />
+          <Text style={styles.infoLabel}>{label}:</Text>
+          <Text style={styles.infoValue}>
+            {value || 'No disponible'}
+          </Text>
+          
+          {/* Botón para mostrar información adicional de la clase */}
+          {value && (
+            <TouchableOpacity 
+              onPress={() => setShowClassInfo(true)} 
+              style={styles.infoIconButton}
+            >
+              <Ionicons name="information-circle-outline" size={20} color="#9E7676" />
+            </TouchableOpacity>
+          )}
+          
+          {/* Botón para cambiar la clase */}
+          <TouchableOpacity onPress={() => handleEdit(field, value)}>
+            <Ionicons name="list" size={20} color="#9E7676" />
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.infoRow}>
         {field === isEditing ? (
@@ -278,6 +532,55 @@ export const GuestProfileScreen: React.FC = () => {
           />
         )}
 
+        {/* Modal para información adicional de la clase */}
+        <Modal
+          visible={showClassInfo}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowClassInfo(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Información de la Clase</Text>
+              
+              <View style={styles.classInfoContainer}>
+                <View style={styles.classInfoRow}>
+                  <Text style={styles.classInfoLabel}>Código:</Text>
+                  <Text style={styles.classInfoValue}>{currentClassInfo?.code || ''}</Text>
+                </View>
+                
+                {currentClassInfo?.description && (
+                  <View style={styles.classInfoRow}>
+                    <Text style={styles.classInfoLabel}>Descripción:</Text>
+                    <Text style={styles.classInfoValue}>{currentClassInfo.description}</Text>
+                  </View>
+                )}
+                
+                {currentClassInfo?.institution && (
+                  <View style={styles.classInfoRow}>
+                    <Text style={styles.classInfoLabel}>Institución:</Text>
+                    <Text style={styles.classInfoValue}>{currentClassInfo.institution}</Text>
+                  </View>
+                )}
+                
+                {currentClassInfo?.country && (
+                  <View style={styles.classInfoRow}>
+                    <Text style={styles.classInfoLabel}>País:</Text>
+                    <Text style={styles.classInfoValue}>{currentClassInfo.country}</Text>
+                  </View>
+                )}
+              </View>
+              
+              <CustomButton
+                title="Cerrar"
+                onPress={() => setShowClassInfo(false)}
+                variant="secondary"
+              />
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal para información de acceso temporal */}
         <Modal
           visible={showTempAccessInfo}
           transparent
@@ -308,6 +611,81 @@ export const GuestProfileScreen: React.FC = () => {
                 onPress={() => setShowTempAccessInfo(false)}
                 variant="secondary"
               />
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal para selección de clase */}
+        <Modal
+          visible={showClassModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowClassModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.classModalContainer}>
+              <View style={styles.classModalHeader}>
+                <Text style={styles.classModalTitle}>Seleccionar Institución/Clase</Text>
+                <View style={styles.headerActions}>
+                  {/* Botón de refresco */}
+                  <TouchableOpacity
+                    onPress={refreshClassCodes}
+                    disabled={loadingClassCodes}
+                    style={styles.refreshButton}
+                  >
+                    <Text style={styles.refreshIcon}>🔄</Text>
+                  </TouchableOpacity>
+
+                  {/* Botón de cerrar */}
+                  <TouchableOpacity onPress={() => setShowClassModal(false)}>
+                    <Text style={styles.classModalCloseButton}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Buscador */}
+              <View style={styles.classSearchContainer}>
+                <Text style={styles.searchIcon}>🔍</Text>
+                <TextInput
+                  style={styles.classSearchInput}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Buscar institución o clase..."
+                  placeholderTextColor="#666"
+                />
+                {searchQuery !== "" && (
+                  <TouchableOpacity
+                    onPress={() => setSearchQuery("")}
+                    style={styles.classSearchClear}
+                  >
+                    <Text style={styles.clearButtonText}>✕</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {loadingClassCodes ? (
+                <ActivityIndicator size="large" color="#9E7676" style={styles.loadingIndicator} />
+              ) : (
+                <>
+                  {classCodes.length === 0 ? (
+                    <Text style={styles.noClassCodesText}>
+                      No hay clases disponibles
+                    </Text>
+                  ) : (
+                    <FlatList
+                      data={filteredClassCodes}
+                      renderItem={renderClassCodeItem}
+                      keyExtractor={(item) => item.id}
+                      style={styles.classCodeList}
+                      ListEmptyComponent={
+                        <Text style={styles.noClassCodesText}>
+                          No se encontraron resultados para "{searchQuery}"
+                        </Text>
+                      }
+                    />
+                  )}
+                </>
+              )}
             </View>
           </View>
         </Modal>
@@ -408,6 +786,10 @@ const styles = StyleSheet.create({
   infoIcon: {
     marginLeft: 8,
   },
+  infoIconButton: {
+    padding: 5,
+    marginRight: 5,
+  },
   bulletPoints: {
     marginVertical: 10,
     paddingLeft: 10,
@@ -498,8 +880,9 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(158, 118, 118, 0.1)',
+    width: '100%',
   },
-  infoLabel: {
+      infoLabel: {
     fontSize: 16,
     color: '#333',
     marginLeft: 12,
@@ -508,7 +891,7 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 16,
     color: '#666',
-    marginLeft: 8,
+    marginRight: 10,
   },
   optionItem: {
     flexDirection: 'row',
@@ -533,4 +916,163 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingHorizontal: 20,
   },
+  // Estilos para el modal de selección de clase
+  classModalContainer: {
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 20,
+    width: "90%",
+    maxHeight: "70%",
+  },
+  classModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  classModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#594545",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  refreshButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  refreshIcon: {
+    fontSize: 18,
+    color: "#594545",
+  },
+  classModalCloseButton: {
+    fontSize: 20,
+    color: "#666",
+    padding: 5,
+  },
+  classSearchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  searchIcon: {
+    marginRight: 8,
+    fontSize: 16,
+  },
+  classSearchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+  },
+  classSearchClear: {
+    padding: 4,
+  },
+  clearButtonText: {
+    fontSize: 16,
+    color: "#666",
+  },
+  classCodeList: {
+    maxHeight: 300,
+  },
+  loadingIndicator: {
+    marginVertical: 20,
+  },
+  noClassCodesText: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#666",
+    padding: 20,
+    fontStyle: "italic",
+  },
+  // Estilos para los items de código de clase
+  classCodeItem: {
+    backgroundColor: "#f8f8f8",
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+    overflow: "hidden",
+  },
+  classCodeItemContent: {
+    padding: 15,
+  },
+  classCodeItemHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  classCodeItemCode: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#594545",
+  },
+  classCodeItemActiveStatus: {
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  classCodeItemActiveText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  classCodeItemDescription: {
+    fontSize: 14,
+    color: "#333",
+    marginBottom: 8,
+  },
+  classCodeItemDetails: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  classCodeItemDetail: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(158, 118, 118, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+  },
+  classCodeItemDetailText: {
+    fontSize: 12,
+    color: "#9E7676",
+  },
+  // Estilos para el modal de información de clase
+  classInfoContainer: {
+    marginVertical: 15,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 10,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  classInfoRow: {
+    flexDirection: "row",
+    marginBottom: 10,
+  },
+  classInfoLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#594545",
+    width: 100,
+  },
+  classInfoValue: {
+    fontSize: 14,
+    color: "#666",
+    flex: 1,
+  }
 });

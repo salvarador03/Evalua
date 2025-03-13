@@ -23,9 +23,7 @@ import { RootStackParamList } from "../../navigation/types";
 import auth from "@react-native-firebase/auth";
 import db from "@react-native-firebase/database";
 import { TEACHER_SECRET_CODE } from "../../utils/roles";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import type { User, StudentUser, TeacherUser } from "../../types/user";
-import { DateButton } from "../../Components/DateButton/DateButton";
+import type { TeacherUser } from "../../types/user";
 import { useAuth } from "../../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PasswordInput } from "../../Components/PasswordInput/PasswordInput";
@@ -42,11 +40,7 @@ export const RegisterScreen: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [secretCode, setSecretCode] = useState("");
-  const [classCode, setClassCode] = useState("");
-  const [showSecretCode, setShowSecretCode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showClassCodeManager, setShowClassCodeManager] = useState(false);
   const [registeredUser, setRegisteredUser] = useState<{
@@ -57,73 +51,8 @@ export const RegisterScreen: React.FC = () => {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
   const { setUser } = useAuth();
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDateOfBirth(selectedDate);
-    }
-  };
-
-  const validateStudentFields = async () => {
-    if (!classCode.trim()) {
-      Alert.alert("Error", "El código de clase es obligatorio");
-      return false;
-    }
-
-    try {
-      const classSnapshot = await db()
-        .ref("/classCodes")
-        .orderByChild("code")
-        .equalTo(classCode.trim())
-        .once("value");
-
-      const classData = classSnapshot.val();
-
-      if (!classData) {
-        Alert.alert(
-          "Código no válido",
-          "El código de clase ingresado no existe. Por favor, verifica e intenta nuevamente.",
-          [
-            {
-              text: "OK",
-              onPress: () => setClassCode(""), // Limpiamos el campo
-            },
-          ]
-        );
-        return false;
-      }
-
-      if (!dateOfBirth) {
-        Alert.alert("Error", "La fecha de nacimiento es obligatoria");
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error validating class code:", error);
-      Alert.alert(
-        "Error",
-        "No se pudo verificar el código de clase. Por favor, intenta nuevamente."
-      );
-      return false;
-    }
-  };
-
-  const calculateAge = (birthDate: Date): number => {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age;
-  };
-
   const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password) {
+    if (!name.trim() || !email.trim() || !password || !secretCode.trim()) {
       Alert.alert("Error", "Todos los campos son obligatorios");
       return;
     }
@@ -133,10 +62,8 @@ export const RegisterScreen: React.FC = () => {
       return;
     }
 
-    const isTeacher = showSecretCode && secretCode === TEACHER_SECRET_CODE;
-
-    // Validar campos específicos de estudiante
-    if (!isTeacher && !(await validateStudentFields())) {
+    if (secretCode !== TEACHER_SECRET_CODE) {
+      Alert.alert("Error", "El código de profesor no es válido");
       return;
     }
 
@@ -156,31 +83,19 @@ export const RegisterScreen: React.FC = () => {
         });
 
         // 3. Preparar datos de usuario
-        const userData: TeacherUser | StudentUser = isTeacher
-          ? {
-              uid: userCredential.user.uid,
-              name: name.trim(),
-              email: email.trim(),
-              role: "teacher",
-              createdAt: Date.now(),
-              lastLogin: Date.now(),
-              countryRole: {
-                country: "España",
-                language: "es",
-                flag: "spain",
-              },
-            }
-          : {
-              uid: userCredential.user.uid,
-              name: name.trim(),
-              email: email.trim(),
-              role: "student",
-              dateOfBirth: dateOfBirth.toISOString().split("T")[0],
-              age: calculateAge(dateOfBirth),
-              classCode: classCode.trim(),
-              createdAt: Date.now(),
-              lastLogin: Date.now(),
-            };
+        const userData: TeacherUser = {
+          uid: userCredential.user.uid,
+          name: name.trim(),
+          email: email.trim(),
+          role: "teacher",
+          createdAt: Date.now(),
+          lastLogin: Date.now(),
+          countryRole: {
+            country: "España",
+            language: "es",
+            flag: "spain",
+          },
+        };
 
         // 4. Guardar en la base de datos
         try {
@@ -193,16 +108,11 @@ export const RegisterScreen: React.FC = () => {
             name.trim()
           );
 
-          if (isTeacher) {
-            setRegisteredUser({
-              id: userCredential.user.uid,
-              name: name.trim(),
-            });
-            setShowClassCodeManager(true);
-          } else {
-            await AsyncStorage.setItem("userData", JSON.stringify(userData));
-            setUser(userData);
-          }
+          setRegisteredUser({
+            id: userCredential.user.uid,
+            name: name.trim(),
+          });
+          setShowClassCodeManager(true);
         } catch (dbError) {
           console.error("Error guardando en base de datos:", dbError);
 
@@ -282,7 +192,7 @@ export const RegisterScreen: React.FC = () => {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.innerContent}>
-              <Text style={styles.title}>Registro</Text>
+              <Text style={styles.title}>Registro de Profesor</Text>
               <View style={styles.form}>
                 <CustomInput
                   placeholder="Nombre"
@@ -306,57 +216,13 @@ export const RegisterScreen: React.FC = () => {
                   editable={!loading}
                 />
 
-                {/* Mostrar campos solo para estudiantes */}
-                {!showSecretCode && (
-                  <>
-                    <DateButton
-                      date={dateOfBirth}
-                      onPress={() => setShowDatePicker(true)}
-                      disabled={loading}
-                    />
-
-                    {showDatePicker && (
-                      <DateTimePicker
-                        value={dateOfBirth}
-                        mode="date"
-                        display="default"
-                        onChange={handleDateChange}
-                        maximumDate={new Date()}
-                      />
-                    )}
-
-                    <CustomInput
-                      placeholder="Código de clase"
-                      value={classCode}
-                      onChangeText={setClassCode}
-                      editable={!loading}
-                    />
-                  </>
-                )}
-
-                <CustomButton
-                  title={
-                    showSecretCode
-                      ? "Registrarse como alumno"
-                      : "¿Eres profesor?"
-                  }
-                  onPress={() => {
-                    setShowSecretCode(!showSecretCode);
-                    setSecretCode("");
-                    setClassCode("");
-                  }}
-                  variant="secondary"
+                <CustomInput
+                  placeholder="Código de profesor"
+                  value={secretCode}
+                  onChangeText={setSecretCode}
+                  editable={!loading}
+                  secureTextEntry
                 />
-
-                {showSecretCode && (
-                  <CustomInput
-                    placeholder="Código de profesor"
-                    value={secretCode}
-                    onChangeText={setSecretCode}
-                    editable={!loading}
-                    secureTextEntry
-                  />
-                )}
 
                 <View style={styles.buttonContainer}>
                   {loading ? (

@@ -9,8 +9,6 @@ const { width } = Dimensions.get('window');
 const BUTTON_MARGIN = 8;
 const GRID_PADDING = 20;
 
-
-
 // Define the interface for country configuration
 interface CountryConfig {
   country: string;
@@ -19,7 +17,7 @@ interface CountryConfig {
 }
 
 // Define the type for the countryConfigs object
-type CountryCodeType = "es_ES" | "es_CU" | "es_PE" | "es_PA" | "es_CO" | "es_CL" | "es_EC" | "es_AR" | "es_MX" | "en_US" | "pt_PT" | "pt_BR";
+type CountryCodeType = "es_ES" | "es_CU" | "es_PE" | "es_PA" | "es_CO" | "es_CL" | "es_EC" | "es_AR" | "es_MX" | "en_US" | "pt_PT" | "pt_BR" | "es_NI" | "es_PY";
 
 // Define the countryConfigs object with the correct type annotations
 const countryConfigs: Record<CountryCodeType, CountryConfig> = {
@@ -82,6 +80,16 @@ const countryConfigs: Record<CountryCodeType, CountryConfig> = {
     country: "Brasil",
     language: "pt-BR" as Language,
     flag: "brazil"
+  },
+  "es_NI": {
+    country: "Nicaragua",
+    language: "es" as Language,
+    flag: "nicaragua"
+  },
+  "es_PY": {
+    country: "Paraguay",
+    language: "es" as Language,
+    flag: "paraguay"
   }
 };
 
@@ -162,8 +170,8 @@ const handleCountrySelection = async (countryCode: CountryCodeType) => {
           </View>
 
           <View style={styles.gridContainer}>
-            {/* European and North American flags */}
-            <View style={styles.row}>
+            {/* Fila 1: España y USA */}
+            <View style={styles.rowTwo}>
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("es_ES")}
@@ -182,6 +190,10 @@ const handleCountrySelection = async (countryCode: CountryCodeType) => {
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
+            </View>
+
+            {/* Fila 2: México y Colombia */}
+            <View style={styles.rowTwo}>
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("es_MX")}
@@ -191,10 +203,6 @@ const handleCountrySelection = async (countryCode: CountryCodeType) => {
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
-            </View>
-
-            {/* South American flags row 1 */}
-            <View style={styles.row}>
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("es_CO")}
@@ -204,6 +212,10 @@ const handleCountrySelection = async (countryCode: CountryCodeType) => {
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
+            </View>
+
+            {/* Fila 3: Perú y Ecuador */}
+            <View style={styles.rowTwo}>
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("es_PE")}
@@ -224,8 +236,8 @@ const handleCountrySelection = async (countryCode: CountryCodeType) => {
               </TouchableOpacity>
             </View>
 
-            {/* South American flags row 2 */}
-            <View style={styles.row}>
+            {/* Fila 4: Chile y Argentina */}
+            <View style={styles.rowTwo}>
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("es_CL")}
@@ -244,6 +256,10 @@ const handleCountrySelection = async (countryCode: CountryCodeType) => {
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
+            </View>
+
+            {/* Fila 5: Panamá y Cuba */}
+            <View style={styles.rowTwo}>
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("es_PA")}
@@ -253,10 +269,6 @@ const handleCountrySelection = async (countryCode: CountryCodeType) => {
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
-            </View>
-
-            {/* Caribbean and Portuguese flags */}
-            <View style={styles.row}>
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("es_CU")}
@@ -266,6 +278,10 @@ const handleCountrySelection = async (countryCode: CountryCodeType) => {
                   style={styles.flagImage}
                 />
               </TouchableOpacity>
+            </View>
+
+            {/* Fila 6: Portugal y Brasil */}
+            <View style={styles.rowTwo}>
               <TouchableOpacity
                 style={styles.flagButton}
                 onPress={() => handleCountrySelection("pt_PT")}
@@ -285,13 +301,33 @@ const handleCountrySelection = async (countryCode: CountryCodeType) => {
                 />
               </TouchableOpacity>
             </View>
+
+            {/* Fila 7: Nicaragua y Paraguay */}
+            <View style={styles.rowTwo}>
+              <TouchableOpacity
+                style={styles.flagButton}
+                onPress={() => handleCountrySelection("es_NI")}
+              >
+                <Image
+                  source={require("../../assets/flags/nicaragua.webp")}
+                  style={styles.flagImage}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.flagButton}
+                onPress={() => handleCountrySelection("es_PY")}
+              >
+                <Image
+                  source={require("../../assets/flags/paraguay.webp")}
+                  style={styles.flagImage}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
     </SafeAreaView>
   );
-
-
 };
 
 const styles = StyleSheet.create({
@@ -307,20 +343,20 @@ const styles = StyleSheet.create({
   },
   welcomeContainer: {
     alignItems: 'center',
-    marginBottom: '5%', // Cambiado a porcentaje
+    marginBottom: '5%',
     width: '100%',
     paddingHorizontal: 38
   },
   welcomeTitle: {
-    fontSize: Math.min(26, width * 0.06), // Tamaño responsivo
+    fontSize: Math.min(26, width * 0.06),
     fontWeight: 'bold',
     color: '#2c3e50',
     textAlign: 'center',
-    marginBottom: '3%', // Cambiado a porcentaje
+    marginBottom: '3%',
     lineHeight: 34,
   },
   welcomeSubtitle: {
-    fontSize: Math.min(18, width * 0.045), // Tamaño responsivo
+    fontSize: Math.min(18, width * 0.045),
     color: '#34495e',
     textAlign: 'center',
     lineHeight: 26,
@@ -332,16 +368,23 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly', // Cambiado a space-evenly
+    justifyContent: 'space-evenly',
     width: '100%',
-    marginBottom: '3%', // Cambiado a porcentaje
+    marginBottom: '3%',
     paddingHorizontal: 10,
+  },
+  rowTwo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: '3%',
+    paddingHorizontal: width * 0.08, // Reducido para dar más espacio
   },
   flagButton: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding: Math.min(12, width * 0.02), // Padding responsivo
-    marginHorizontal: BUTTON_MARGIN,
+    padding: 8,
+    marginHorizontal: 5, // Reducido
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -350,16 +393,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
-    flex: 1, // Añadido flex: 1
-    maxWidth: width * 0.25, // Máximo ancho responsivo
-    aspectRatio: 1.5, // Mantener proporción
+    flex: 0,
+    width: width * 0.19, // Reducido para que encajen en la pantalla
+    aspectRatio: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  
   flagImage: {
     width: '100%',
     height: undefined,
-    aspectRatio: 1.44, // Proporción de banderas estándar
+    aspectRatio: 1.44,
     borderRadius: 8,
+  },
+  emptySpace: {
+    backgroundColor: 'transparent',
+    shadowColor: 'transparent',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
 });

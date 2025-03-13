@@ -310,6 +310,19 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
       ],
       finalQuestion: 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:'
     },
+    'es-PA': {
+      title: 'Tener una buena alfabetización física significa:',
+      options: [
+        'A) Tener una buena condición física.',
+        'B) Saber mucho sobre la Educación Física.',
+        'C) Tener interés y ganas de hacer actividad física.',
+        'D) Hacer amigos/as gracias a la actividad física.',
+        'E) Ser más seguro/a cuando se hace actividad física.',
+        'F) Hacer bien actividad física.',
+        'G) Hacer actividad física varias veces a la semana.'
+      ],
+      finalQuestion: 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:'
+    },
     'en': {
       title: 'Having good physical literacy means:',
       options: [

@@ -1,5 +1,5 @@
 // types/language.ts
-export type Language = "es" | "en" | "pt-PT" | "pt-BR";
+export type Language = "es" | "en" | "pt-PT" | "pt-BR" | "es-PA";
 
 export type CountryCode = 
   | "es"    // Añadir códigos base
@@ -10,7 +10,9 @@ export type CountryCode =
   | "es_PE" | "es_EC" | "es_PA" | "es_CU" 
   | "en_US" 
   | "pt_PT" 
-  | "pt_BR";
+  | "pt_BR"
+  | "es_NI"
+  | "es_PY";
 
 export const countryCodeToName: Record<CountryCode, string> = {
   'es': 'España',    // Añadir códigos base
@@ -28,7 +30,9 @@ export const countryCodeToName: Record<CountryCode, string> = {
   'es_CU': 'Cuba',
   'en_US': 'United States',
   'pt_PT': 'Portugal',
-  'pt_BR': 'Brasil'
+  'pt_BR': 'Brasil',
+  'es_NI': 'Nicaragua',
+  'es_PY': 'Paraguay'
 };
 
 export const countryToLanguage: Record<CountryCode, Language> = {
@@ -43,9 +47,11 @@ export const countryToLanguage: Record<CountryCode, Language> = {
   'es_CL': 'es',
   'es_PE': 'es',
   'es_EC': 'es',
-  'es_PA': 'es',
+  'es_PA': 'es-PA',
   'es_CU': 'es',
   'en_US': 'en',
   'pt_PT': 'pt-PT',
-  'pt_BR': 'pt-BR'
+  'pt_BR': 'pt-BR',
+  'es_NI': 'es',
+  'es_PY': 'es'
 };

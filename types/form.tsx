@@ -34,7 +34,7 @@ export const countryCodeMap: Record<string, CountryInfo> = {
   'en': { country: 'United States', flag: 'usa', language: 'en' },
   'pt-PT': { country: 'Portugal', flag: 'portugal', language: 'pt-PT' },
   'pt-BR': { country: 'Brasil', flag: 'brazil', language: 'pt-BR' },
-  
+
   // Códigos específicos de país
   'es_ES': { country: 'España', flag: 'spain', language: 'es' },
   'es_AR': { country: 'Argentina', flag: 'argentina', language: 'es' },
@@ -47,5 +47,9 @@ export const countryCodeMap: Record<string, CountryInfo> = {
   'es_CU': { country: 'Cuba', flag: 'cuba', language: 'es' },
   'en_US': { country: 'United States', flag: 'usa', language: 'en' },
   'pt_PT': { country: 'Portugal', flag: 'portugal', language: 'pt-PT' },
-  'pt_BR': { country: 'Brasil', flag: 'brazil', language: 'pt-BR' }
+  'pt_BR': { country: 'Brasil', flag: 'brazil', language: 'pt-BR' },
+  // Nuevos países
+  'es_NI': { country: 'Nicaragua', flag: 'nicaragua', language: 'es' },
+  'es_PY': { country: 'Paraguay', flag: 'paraguay', language: 'es' }
+
 };
