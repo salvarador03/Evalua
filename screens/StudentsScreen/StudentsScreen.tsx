@@ -94,6 +94,7 @@ export const StudentsScreen: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [hasNoClassCodes, setHasNoClassCodes] = useState(false);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [teacherClassCode, setTeacherClassCode] = useState<string>("");
@@ -267,6 +268,7 @@ export const StudentsScreen: React.FC = () => {
       const classCodesData = classCodesSnapshot.val();
       if (!classCodesData) {
         setAvailableClassCodes([]);
+        setHasNoClassCodes(true);
         return;
       }
 
@@ -278,6 +280,7 @@ export const StudentsScreen: React.FC = () => {
       );
 
       setAvailableClassCodes(codes);
+      setHasNoClassCodes(false);
 
       // Solo establecer el código seleccionado si no hay ninguno
       if (!selectedClassCode && codes.length > 0) {
@@ -305,7 +308,9 @@ export const StudentsScreen: React.FC = () => {
       const classCodesData = classCodesSnapshot.val();
 
       if (!classCodesData) {
-        throw new Error("No class code found for teacher");
+        setHasNoClassCodes(true);
+        setTeacherClassCode("");
+        return;
       }
 
       // Convert the Firebase object to an array of ClassCode objects
@@ -320,9 +325,12 @@ export const StudentsScreen: React.FC = () => {
       const activeClassCode = classCodes.find((code) => code.active);
 
       if (!activeClassCode) {
-        throw new Error("No active class code found for teacher");
+        setHasNoClassCodes(true);
+        setTeacherClassCode("");
+        return;
       }
 
+      setHasNoClassCodes(false);
       setTeacherClassCode(activeClassCode.code);
     } catch (error) {
       console.error("Error fetching teacher class code:", error);
@@ -336,10 +344,37 @@ export const StudentsScreen: React.FC = () => {
   const fetchStudents = async () => {
     try {
       setLoading(true);
+
+      // Obtener ID del usuario actual
+      const currentUser = auth().currentUser;
+      if (!currentUser) {
+        throw new Error("No user authenticated");
+      }
+
+      // Obtener solo los códigos de clase que pertenecen a este profesor
+      const teacherClassCodesSnapshot = await db()
+        .ref("classCodes")
+        .orderByChild("teacherId")
+        .equalTo(currentUser.uid)
+        .once("value");
+
+      const classCodesData = teacherClassCodesSnapshot.val() || {};
+      const teacherClassCodes = Object.values(classCodesData).map(
+        (code: any) => code.code
+      );
+
+      // Si el profesor no tiene códigos de clase, mostrar lista vacía
+      if (teacherClassCodes.length === 0) {
+        setStudents([]);
+        setHasNoClassCodes(true);
+        setLoading(false);
+        return;
+      }
+
+      // Obtener datos de usuarios, invitados y respuestas
       const [usersSnapshot, guestsSnapshot, responsesSnapshot] =
         await Promise.all([
           db().ref("/users").once("value"),
-          // Quitar el filtro por selectedClassCode aquí
           db().ref("/guests").once("value"),
           db().ref("/form_responses").once("value"),
         ]);
@@ -348,11 +383,13 @@ export const StudentsScreen: React.FC = () => {
       const guestsData = guestsSnapshot.val() || {};
       const responsesData = responsesSnapshot.val() || {};
 
-      // Eliminar el filtro por rol y clase aquí
+      // Filtrar estudiantes registrados por rol y classCode pertenecientes a este profesor
       const registeredStudents = Object.entries(studentsData)
         .filter(
           ([_, data]: [string, any]) =>
-            data.role === "student" // Quitamos el filtro por classCode
+            data.role === "student" &&
+            data.classCode &&
+            teacherClassCodes.includes(data.classCode)
         )
         .map(([uid, data]: [string, any]) => ({
           uid,
@@ -369,9 +406,14 @@ export const StudentsScreen: React.FC = () => {
           createdAt: data.createdAt,
         }));
 
-      // También modificar para no filtrar los invitados
-      const guestStudents = Object.entries(guestsData).map(
-        ([uid, data]: [string, any]) => ({
+      // Filtrar estudiantes invitados por classCode pertenecientes a este profesor
+      const guestStudents = Object.entries(guestsData)
+        .filter(
+          ([_, data]: [string, any]) =>
+            data.classCode &&
+            teacherClassCodes.includes(data.classCode)
+        )
+        .map(([uid, data]: [string, any]) => ({
           uid,
           name: data.name,
           email: data.email,
@@ -385,8 +427,7 @@ export const StudentsScreen: React.FC = () => {
           dateOfBirth: data.dateOfBirth,
           createdAt: data.createdAt,
           classDetails: data.classDetails,
-        })
-      );
+        }));
 
       const allStudents = [...registeredStudents, ...guestStudents].sort(
         (a, b) => a.name.localeCompare(b.name)
@@ -834,7 +875,7 @@ export const StudentsScreen: React.FC = () => {
       "nicaragua": require("../../assets/flags/nicaragua.webp"), // Añadido
       "paraguay": require("../../assets/flags/paraguay.webp")   // Añadido
     };
-  
+
     return flagSources[flagName] || flagSources["spain"]; // Por defecto devuelve España
   };
 
@@ -998,7 +1039,7 @@ export const StudentsScreen: React.FC = () => {
       "Paraguay": "paraguay",   // Añadido
       "Unknown": "unknown"
     };
-  
+
     return countryToFlag[country] || "unknown";
   };
 
@@ -1450,9 +1491,21 @@ export const StudentsScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.filterButtonInHeader}
               onPress={() => setFilterModalVisible(true)}
+              disabled={hasNoClassCodes}
             >
-              <Ionicons name="options-outline" size={20} color={COLORS.primary} />
-              <Text style={styles.filterButtonText}>Filtros</Text>
+              <Ionicons
+                name="options-outline"
+                size={20}
+                color={hasNoClassCodes ? COLORS.inactive : COLORS.primary}
+              />
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  hasNoClassCodes && { color: COLORS.inactive }
+                ]}
+              >
+                Filtros
+              </Text>
               {getActiveFiltersCount() > 0 && (
                 <View style={styles.filterBadge}>
                   <Text style={styles.filterBadgeText}>{getActiveFiltersCount()}</Text>
@@ -1481,55 +1534,73 @@ export const StudentsScreen: React.FC = () => {
             </View>
           </View>
 
-          <View style={styles.classInfoContainer}>
-            <View style={styles.classStatusContainer}>
-              <Text style={styles.classDescription}>
-                {getActiveFiltersCount() > 0
-                  ? "Alumnos filtrados"
-                  : "Todos los alumnos"}
-              </Text>
+          {!hasNoClassCodes && (
+            <View style={styles.classInfoContainer}>
+              <View style={styles.classStatusContainer}>
+                <Text style={styles.classDescription}>
+                  {getActiveFiltersCount() > 0
+                    ? "Alumnos filtrados"
+                    : "Todos los alumnos"}
+                </Text>
+              </View>
+              <View style={styles.studentCountContainer}>
+                <Text style={styles.studentCount}>
+                  {filteredStudents.length}
+                </Text>
+                <Text style={styles.studentCountLabel}>alumnos</Text>
+              </View>
             </View>
-            <View style={styles.studentCountContainer}>
-              <Text style={styles.studentCount}>
-                {filteredStudents.length}
-              </Text>
-              <Text style={styles.studentCountLabel}>alumnos</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* La barra de búsqueda */}
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={20}
-            color="#9E7676"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar alumno..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor="#666"
-          />
-          {searchQuery !== "" && (
-            <TouchableOpacity
-              onPress={() => setSearchQuery("")}
-              style={styles.clearButton}
-            >
-              <Ionicons name="close-circle" size={20} color="#9E7676" />
-            </TouchableOpacity>
           )}
         </View>
 
-        {/* Quitamos el renderFilterButton() aquí, ya que ahora está en la cabecera */}
-        <FilterModal />
+        {/* La barra de búsqueda - solo mostrarla si hay códigos de clase */}
+        {!hasNoClassCodes && (
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search"
+              size={20}
+              color="#9E7676"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar alumno..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#666"
+            />
+            {searchQuery !== "" && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={styles.clearButton}
+              >
+                <Ionicons name="close-circle" size={20} color="#9E7676" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
-        {/* El resto del código permanece igual */}
+        {/* Modal de filtros - solo se muestra cuando es necesario */}
+        {!hasNoClassCodes && <FilterModal />}
+
+        {/* Contenido principal con lógica mejorada para mostrar pantalla de "sin clases" */}
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#9E7676" />
+          </View>
+        ) : hasNoClassCodes ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="school-outline" size={64} color={COLORS.inactive} />
+            <Text style={styles.emptyTitle}>No hay clases creadas</Text>
+            <Text style={styles.emptyText}>
+              Para ver estudiantes, primero debes crear un código de clase.
+            </Text>
+            <TouchableOpacity
+              style={styles.createClassButton}
+              onPress={() => navigation.navigate("ClassCodes")}
+            >
+              <Text style={styles.createClassButtonText}>Crear Clase</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <>
@@ -1538,6 +1609,13 @@ export const StudentsScreen: React.FC = () => {
               renderItem={renderStudent}
               keyExtractor={(item) => item.uid}
               contentContainerStyle={styles.listContainer}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>
+                    No se encontraron estudiantes.
+                  </Text>
+                </View>
+              }
             />
             {filteredStudents.length > ITEMS_PER_PAGE && renderPagination()}
           </>
@@ -1779,6 +1857,36 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: 10,
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: COLORS.inactive,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  createClassButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  createClassButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   searchInput: {
     flex: 1,
     fontSize: 16,
@@ -1796,16 +1904,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: COLORS.inactive,
-    textAlign: "center",
   },
   // Paginación
   paginationContainer: {
