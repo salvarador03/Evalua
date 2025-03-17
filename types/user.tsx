@@ -16,6 +16,7 @@ interface BaseUser {
   createdAt: number;
   lastLogin: number;
   countryRole?: CountryRole;
+  language?: Language;
 }
 
 interface StudentUser extends BaseUser {

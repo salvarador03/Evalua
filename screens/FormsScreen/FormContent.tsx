@@ -1,5 +1,4 @@
-// screens/FormsScreen/FormContent.tsx
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +15,8 @@ import { teenQuestions, isTeenager } from "./data/teenQuestions";
 import { universityStudentQuestions, isUniversityStudent } from "./data/universityStudentQuestions";
 import { translations } from "../../Components/LanguageSelection/translations";
 import PhysicalLiteracySlider from "../../Components/PhysicalLiteracySlider/PhysicalLiteracySlider";
+// Importar componente de feedback
+import FormCompletionFeedback from '../../Components/FormCompletionFeedback/FormCompletionFeedback';
 
 // Imágenes para niños (6-12)
 const childQuestionImages = [
@@ -163,6 +164,10 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
   onSubmit,
   userAge,
 }) => {
+  // Estado para controlar el modal de feedback
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
   // Memoizar los valores de tipo de usuario para evitar recálculos innecesarios
   const isTeenUser = React.useMemo(() => isTeenager(userAge), [userAge]);
   const isUniversityUser = React.useMemo(() => isUniversityStudent(userAge), [userAge]);
@@ -187,8 +192,18 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
     return childQuestionImages;
   }, [isUniversityUser, isTeenUser]);
 
-  // Modificar solo la función confirmAnswer en el componente FormContent
+  // Función para manejar la finalización del formulario
+  const handleFormSubmitted = useCallback(() => {
+    setFormSubmitted(true);
+    setShowFeedback(true);
+  }, []);
 
+  // Después de enviar el feedback, llamar al onSubmit original
+  const handleFeedbackCompleted = useCallback(() => {
+    onSubmit();
+  }, [onSubmit]);
+
+  // Modificar la función confirmAnswer en el componente FormContent
   const confirmAnswer = useCallback((action: () => void) => {
     const currentScore = answers[currentQuestion];
     if (currentScore === null) return;
@@ -211,28 +226,19 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
           },
           {
             text: 'Sí',
-            onPress: action
+            onPress: () => {
+              // Primero marcamos como enviado, lo que mostrará el feedback
+              handleFormSubmitted();
+              // También llamamos directamente a onSubmit
+              onSubmit();
+            }
           }
         ]
       );
     } else {
-      // Para preguntas individuales, mostrar solo la respuesta actual
-      Alert.alert(
-        translations[language].confirmAnswer,
-        `${translations[language].question} ${currentQuestion + 1}: ${currentScore.toFixed(1)}\n\n${translations[language].confirmScoreQuestion}`,
-        [
-          {
-            text: 'No',
-            style: 'cancel'
-          },
-          {
-            text: 'Sí',
-            onPress: action
-          }
-        ]
-      );
+      // Para preguntas individuales...
     }
-  }, [answers, currentQuestion, language, currentQuestions]);
+  }, [answers, currentQuestion, language, currentQuestions, handleFormSubmitted]);
 
   // Memoizar la función de formateo de texto
   const formatText = useCallback((text: string) => {
@@ -284,8 +290,8 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
       );
       return;
     }
-    confirmAnswer(onSubmit);
-  }, [canProceedToNext, language, onSubmit, confirmAnswer]);
+    confirmAnswer(() => { });
+  }, [canProceedToNext, language, confirmAnswer]);
 
   // Memoizar la función handleAnswerChange
   const handleAnswerChange = useCallback((value: number) => {
@@ -295,7 +301,6 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
   }, [answers, currentQuestion, onAnswerChange]);
 
   // Traducción de la última pregunta para niños
-
   const lastKidsQuestionTranslations = {
     'es': {
       title: 'Tener una buena alfabetización física significa:',
@@ -589,6 +594,30 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Botón de valoración y Componente de Feedback */}
+      {formSubmitted && !showFeedback && (
+        <View style={styles.feedbackContainer}>
+          <Text style={styles.feedbackTitle}>
+            {language === 'es' && '¡Gracias por completar el formulario!'}
+            {language === 'en' && 'Thank you for completing the form!'}
+            {language === 'pt-PT' && 'Obrigado por completar o formulário!'}
+            {language === 'pt-BR' && 'Obrigado por completar o formulário!'}
+          </Text>
+          <TouchableOpacity
+            style={styles.feedbackButton}
+            onPress={() => setShowFeedback(true)}
+          >
+            <Ionicons name="star" size={24} color="#fff" />
+            <Text style={styles.feedbackButtonText}>
+              {language === 'es' && 'Valora tu experiencia'}
+              {language === 'en' && 'Rate your experience'}
+              {language === 'pt-PT' && 'Avalie sua experiência'}
+              {language === 'pt-BR' && 'Avalie sua experiência'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 });
@@ -609,6 +638,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     gap: 10,
+  },
+  feedbackContainer: {
+    marginTop: 30,
+    padding: 20,
+    backgroundColor: '#f0fdf4',
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4ade80',
+  },
+  feedbackTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  feedbackButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4ade80',
+    padding: 15,
+    borderRadius: 10,
+    gap: 10,
+  },
+  feedbackButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   headerText: {
     fontSize: 18,
@@ -808,5 +866,3 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
 });
-
-export default FormContent;

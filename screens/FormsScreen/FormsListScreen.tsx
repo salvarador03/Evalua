@@ -13,6 +13,7 @@ import {
   SafeAreaView,
   Platform,
   StatusBar,
+  Modal,
 } from "react-native";
 import { BackgroundContainer } from "../../Components/BackgroundContainer/BackgroundContainer";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,6 +33,7 @@ import { Language } from "../../types/language";
 import { isUniversityStudent } from "./data/universityStudentQuestions";
 import { isTeenager } from "./data/teenQuestions";
 import FormImageCarousel from "./FormImageCarousel";
+import FormCompletionFeedback from '../../Components/FormCompletionFeedback/FormCompletionFeedback';
 
 // Actualiza la interfaz Creator para incluir el tipo correcto de imageUrl
 interface Creator {
@@ -237,7 +239,7 @@ const CREATORS: Creator[] = [
   {
     name: "Maristela De Lima Ferreira",
     role: "Investigadora",
-    institution: "E-8-77527",
+    institution: "Panamá",
     email: "",
     orcid: "https://orcid.org/0009-0005-1252-6995",
     imageUrl: require("../../assets/images/investigadoralima.webp"),
@@ -337,6 +339,15 @@ export const FormsListScreen: React.FC = () => {
   const scrollViewRef = React.useRef<ScrollView>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [formType, setFormType] = useState("physical_literacy");
+
+  useEffect(() => {
+    if (!showFeedback && !loading) {
+      // Solo si el modal estaba abierto y ahora está cerrado, recargamos datos
+      loadFormResponse();
+    }
+  }, [showFeedback]);
 
   useEffect(() => {
     loadFormResponse();
@@ -350,34 +361,132 @@ export const FormsListScreen: React.FC = () => {
     return guestId;
   };
 
+  const checkExistingFeedback = async (userId: string): Promise<boolean> => {
+    try {
+      // Limpiar el estado de feedback
+      setShowFeedback(false);
+
+
+      // 1. BÚSQUEDA EXACTA: Primero buscar con ID exacto
+      const feedbackId = `${userId}_${formType}`;
+
+      let snapshot = await db()
+        .ref(`/feedback/${feedbackId}`)
+        .once("value");
+
+      if (snapshot.exists()) {
+        return true;
+      }
+
+
+      snapshot = await db()
+        .ref(`/form_responses/${userId}/feedback_${formType}`)
+        .once("value");
+
+      if (snapshot.exists()) {
+
+        // Migrar datos a nueva ubicación si es necesario
+        // [código de migración existente]
+
+        return true;
+      }
+
+
+      // Obtener todos los feedbacks
+      const allFeedbackSnapshot = await db()
+        .ref('/feedback')
+        .once('value');
+
+      if (allFeedbackSnapshot.exists()) {
+        const allFeedbacks = allFeedbackSnapshot.val();
+
+        // Buscar feedbacks que coincidan con el prefijo
+        const matchingKeys = Object.keys(allFeedbacks).filter(key =>
+          key.startsWith(`${userId}_${formType}`) ||
+          key.includes(`${userId}_${formType}`) ||
+          key.startsWith(`${userId}`) && key.includes(formType)
+        );
+
+
+        if (matchingKeys.length > 0) {
+          return true;
+        }
+      }
+
+      // 4. BÚSQUEDA PROFUNDA: Buscar por userId y formType dentro de los objetos
+
+      if (allFeedbackSnapshot && allFeedbackSnapshot.exists()) {
+        const allFeedbacks = allFeedbackSnapshot.val();
+
+        // Buscar en todas las entradas si contienen el userId y formType
+        for (const key in allFeedbacks) {
+          const feedback = allFeedbacks[key];
+          if (feedback.userId === userId && feedback.formType === formType) {
+            return true;
+          }
+        }
+      }
+
+      // Depuración final
+
+      // Como último recurso, revisa todas las claves en la DB para debugging
+      const allKeys = await db().ref('/feedback').once('value');
+
+      return false;
+    } catch (error) {
+      console.error("[checkExistingFeedback] Error durante la búsqueda:", error);
+      if (error instanceof Error) {
+        console.error("[checkExistingFeedback] Detalles:", error.message, error.stack);
+      }
+      return false;
+    }
+  };
+  // Reemplaza la función loadFormResponse con esta versión:
   const loadFormResponse = async () => {
     try {
       setError(null);
+      setLoading(true);
+
+      // Obtener el ID de usuario correctamente
       let userId = user?.uid;
 
       if (!userId) {
-        const storedGuestId = await AsyncStorage.getItem("@guest_user_id");
-        userId = storedGuestId || (await generateAndSaveGuestId());
+        const storedUser = await AsyncStorage.getItem("userData");
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          userId = userData.uid;
+        } else {
+          const guestId = await AsyncStorage.getItem("@guest_user_id");
+          if (guestId) {
+            userId = guestId;
+          } else {
+            setError("Error al identificar usuario");
+            return;
+          }
+        }
       }
 
-      const snapshot = await db()
+      // Cargar formulario
+      const formSnapshot = await db()
         .ref(`/form_responses/${userId}/physical_literacy`)
         .once("value");
 
-      setFormResponse(snapshot.val() || null);
+      const formData = formSnapshot.val();
+      setFormResponse(formData || null);
+
+      // IMPORTANTE: Verificar feedback SOLO si hay formulario completado
+      if (formData && userId) {
+        const hasFeedbackResult = await checkExistingFeedback(userId);
+      }
     } catch (error) {
-      console.error("Error in loadFormResponse:", error);
-      setError(
-        error instanceof Error ? error.message : "Error al cargar el formulario"
-      );
+      console.error("[loadFormResponse] Error:", error);
+      setError(error instanceof Error ? error.message : "Error loading the form");
       if (!refreshing) {
-        Alert.alert(
-          "Error",
-          "No se pudo cargar el formulario. Por favor, intenta de nuevo."
-        );
+        Alert.alert("Error", "Could not load the form. Please try again.");
       }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -704,13 +813,30 @@ export const FormsListScreen: React.FC = () => {
           </Text>
           <View style={styles.cardFooter}>
             <Text style={styles.cardMeta}>Respuestas guardadas</Text>
-            <TouchableOpacity
-              onPress={handleViewResults}
-              style={styles.viewResultsButton}
-            >
-              <Text style={styles.viewResultsText}>Ver resultados</Text>
-              <Ionicons name="arrow-forward" size={20} color="#9E7676" />
-            </TouchableOpacity>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowFeedback(true);
+                }}
+                style={styles.feedbackButton}
+              >
+                <Text style={styles.feedbackButtonText}>
+                  Valorar
+                </Text>
+                <Ionicons
+                  name="star"
+                  size={20}
+                  color="#9E7676"
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleViewResults}
+                style={styles.viewResultsButton}
+              >
+                <Text style={styles.viewResultsText}>Ver resultados</Text>
+                <Ionicons name="arrow-forward" size={20} color="#9E7676" />
+              </TouchableOpacity>
+            </View>
           </View>
         </>
       ) : (
@@ -749,24 +875,58 @@ export const FormsListScreen: React.FC = () => {
           </Text>
           <View style={styles.cardFooter}>
             <Text style={styles.cardMeta}>8 preguntas • ~5 minutos</Text>
-            <TouchableOpacity
-              onPress={handleStartForm}
-              style={styles.startButton}
-            >
-              <Text style={styles.startButtonText}>Comenzar</Text>
-              <Ionicons name="arrow-forward" size={20} color="white" />
-            </TouchableOpacity>
+            <View style={styles.buttonGroup}>
+              {user?.role === 'teacher' && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowFeedback(true);
+                  }}
+                  style={styles.feedbackButton}
+                >
+                  <Text style={styles.feedbackButtonText}>
+                    Valorar
+                  </Text>
+                  <Ionicons
+                    name="star"
+                    size={20}
+                    color="#9E7676"
+                  />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                onPress={handleStartForm}
+                style={styles.startButton}
+              >
+                <Text style={styles.startButtonText}>Comenzar</Text>
+                <Ionicons name="arrow-forward" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
           </View>
         </>
+      )}
+
+      {/* Modal de Feedback */}
+      {showFeedback && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }}>
+          <FormCompletionFeedback
+            formType={formType}
+            language={user?.language || "es"}
+            onFinish={() => {
+              setShowFeedback(false);
+            }}
+          />
+        </View>
       )}
     </View>
   );
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    loadFormResponse().finally(() => {
-      setRefreshing(false);
-    });
+    try {
+      await loadFormResponse();
+    } catch (error) {
+      console.error("Error during refresh:", error);
+    }
   }, []);
 
   const renderTabs = () => (
@@ -867,6 +1027,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
+  feedbackButtonModified: {
+    backgroundColor: "rgba(158, 118, 118, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(158, 118, 118, 0.3)",
+  },
   scrollButton: {
     position: 'absolute',
     zIndex: 1,
@@ -947,6 +1112,53 @@ const styles = StyleSheet.create({
   titleContainer: {
     flex: 1,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 20,
+    width: "90%",
+    maxWidth: 500,
+    maxHeight: "85%",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#594545",
+    flex: 1,
+  },
+  modalText: {
+    fontSize: 16,
+    color: "#594545",
+    marginBottom: 30,
+    textAlign: "center",
+  },
+  closeModalButton: {
+    backgroundColor: "#9E7676",
+    borderRadius: 10,
+    padding: 15,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  closeModalButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   ageRangeContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -981,16 +1193,31 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 12,
   },
+  // Nuevos estilos para añadir
+  buttonGroup: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    width: '100%',
+    marginTop: 8,
+  },
   cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: "column",
     marginTop: 8,
     paddingBottom: 5,
   },
   cardMeta: {
     fontSize: 12,
     color: "#B4AAAA",
+    marginBottom: 10,
+  },
+
+  buttonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end', // Para alinearlos a la derecha
+    gap: 10,
+    flexWrap: 'wrap', // Para evitar que se desborden
   },
   refreshButton: {
     position: "absolute",
@@ -1025,14 +1252,35 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontSize: 14,
   },
+  feedbackButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "rgba(158, 118, 118, 0.2)",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginBottom: 10,
+    width: '100%',
+    maxWidth: 220,
+  },
+  feedbackButtonText: {
+    color: "#9E7676",
+    fontWeight: "500",
+    fontSize: 14,
+  },
   viewResultsButton: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     backgroundColor: "rgba(158, 118, 118, 0.1)",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
+    width: '100%',
+    maxWidth: 220,
   },
   viewResultsText: {
     color: "#9E7676",

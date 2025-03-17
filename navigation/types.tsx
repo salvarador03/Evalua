@@ -29,6 +29,7 @@ export type MainTabParamList = {
   Students: undefined;
   Statistics: undefined;
   Profile: undefined;
+  Admin: undefined;
 };
 
 export type RootStackParamList = {
@@ -37,4 +38,5 @@ export type RootStackParamList = {
   Registro: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   ClassCodes: undefined;
+  Admin: undefined;
 };

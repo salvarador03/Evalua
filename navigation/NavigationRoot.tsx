@@ -7,6 +7,7 @@ import { MainScreen } from "../screens/MainScreen/MainScreen";
 import { LoginScreen } from "../screens/Login/Login";
 import { RegisterScreen } from "../screens/Registro/Registro";
 import { ClassCodeScreen } from "../screens/ClassCodeScreen/ClassCodeScreen";
+import AdminScreen from "../screens/AdminScreen/AdminScreen";
 import { RootStackParamList } from "./types";
 import { useAuth } from "../context/AuthContext";
 
@@ -35,6 +36,7 @@ export const NavigationRoot: React.FC = () => {
         <>
           <Stack.Screen name="MainTabs" component={MainScreen} />
           <Stack.Screen name="ClassCodes" component={ClassCodeScreen} />
+          <Stack.Screen name="Admin" component={AdminScreen} />
         </>
       )}
     </Stack.Navigator>

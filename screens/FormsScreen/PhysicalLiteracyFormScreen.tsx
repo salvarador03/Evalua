@@ -28,7 +28,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { translations } from "../../Components/LanguageSelection/translations";
 import { LanguageSelectionScreen } from "../../Components/LanguageSelection/LanguageSelection";
 import { useAuth } from "../../context/AuthContext";
-import FormContent from "./FormContent";
+import { FormContent } from "./FormContent";
 import { ResultsView } from "./ResultsView";
 import { questions } from "./data/questions";
 import { teenQuestions, isTeenager } from "./data/teenQuestions";
