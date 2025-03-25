@@ -10,7 +10,8 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-  Platform
+  Platform,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import db from "@react-native-firebase/database";
@@ -19,6 +20,8 @@ import auth from "@react-native-firebase/auth";
 // Importar traducciones
 import { translations, Language } from "../LanguageSelection/translations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import TeacherFeedbackForm from "../TeacherFeedbackForm/TeacherFeedbackForm";
+import { useAuth } from "../../context/AuthContext";
 
 const COLORS = {
   primary: "#9E7676",
@@ -53,7 +56,12 @@ const feedbackTranslations = {
     errorSubmitting: "Error al enviar la valoración",
     pleaseTryAgain: "Por favor, inténtalo de nuevo más tarde.",
     feedbackRequired: "Por favor, valora tu experiencia antes de enviar.",
-    resetFeedback: "Restablecer"
+    resetFeedback: "Restablecer",
+    studentName: "Tu nombre",
+    anonymous: "Prefiero mantenerme anónimo",
+    identitySection: "Identificación",
+    identityExplanation: "¿Cómo quieres que aparezca tu valoración?",
+    languageSelector: "Selecciona el idioma",
   },
   "es-PA": {
     feedbackTitle: "¡Tu opinión es importante!",
@@ -73,7 +81,12 @@ const feedbackTranslations = {
     errorSubmitting: "Error al enviar la valoración",
     pleaseTryAgain: "Por favor, inténtalo de nuevo más tarde.",
     feedbackRequired: "Por favor, valora tu experiencia antes de enviar.",
-    resetFeedback: "Restablecer"
+    resetFeedback: "Restablecer",
+    studentName: "Tu nombre",
+    anonymous: "Prefiero mantenerme anónimo",
+    identitySection: "Identificación",
+    identityExplanation: "¿Cómo quieres que aparezca tu valoración?",
+    languageSelector: "Selecciona el idioma",
   },
   en: {
     feedbackTitle: "Your feedback matters!",
@@ -93,7 +106,12 @@ const feedbackTranslations = {
     errorSubmitting: "Error submitting feedback",
     pleaseTryAgain: "Please try again later.",
     feedbackRequired: "Please rate your experience before submitting.",
-    resetFeedback: "Reset"
+    resetFeedback: "Reset",
+    studentName: "Your name",
+    anonymous: "I prefer to remain anonymous",
+    identitySection: "Identity",
+    identityExplanation: "How do you want your feedback to appear?",
+    languageSelector: "Select language",
   },
   "pt-PT": {
     feedbackTitle: "A sua opinião é importante!",
@@ -113,7 +131,12 @@ const feedbackTranslations = {
     errorSubmitting: "Erro ao enviar a avaliação",
     pleaseTryAgain: "Por favor, tente novamente mais tarde.",
     feedbackRequired: "Por favor, avalie a sua experiência antes de enviar.",
-    resetFeedback: "Restabelecer"
+    resetFeedback: "Restabelecer",
+    studentName: "Seu nome",
+    anonymous: "Prefiro manter-me anônimo",
+    identitySection: "Identificação",
+    identityExplanation: "Como você quer que sua avaliação apareça?",
+    languageSelector: "Selecione o idioma",
   },
   "pt-BR": {
     feedbackTitle: "Sua opinião é importante!",
@@ -133,7 +156,12 @@ const feedbackTranslations = {
     errorSubmitting: "Erro ao enviar a avaliação",
     pleaseTryAgain: "Por favor, tente novamente mais tarde.",
     feedbackRequired: "Por favor, avalie sua experiência antes de enviar.",
-    resetFeedback: "Restabelecer"
+    resetFeedback: "Restabelecer",
+    studentName: "Seu nome",
+    anonymous: "Prefiro manter-me anônimo",
+    identitySection: "Identificação",
+    identityExplanation: "Como você quer que sua avaliação apareça?",
+    languageSelector: "Selecione o idioma",
   },
 };
 
@@ -169,7 +197,7 @@ interface FeedbackData {
 const ImprovedFeedbackModal: React.FC<ImprovedFeedbackModalProps> = ({
   visible,
   onClose,
-  language,
+  language: initialLanguage,
   userId,
   formType,
   isEditing = false,
@@ -188,6 +216,9 @@ const ImprovedFeedbackModal: React.FC<ImprovedFeedbackModalProps> = ({
   // Estado para manejo de la interfaz
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [studentName, setStudentName] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [language, setLanguage] = useState<Language>(initialLanguage);
 
   // Obtener traducciones
   const t = translations[language];
@@ -426,13 +457,14 @@ const ImprovedFeedbackModal: React.FC<ImprovedFeedbackModalProps> = ({
     setLoading(true);
 
     try {
-      // Generar un ID único para cada feedback usando timestamp
       const timestamp = Date.now();
       const feedbackId = `${userId}_${formType}_${timestamp}`;
 
       const feedbackData = {
         userId,
         formType,
+        studentName: isAnonymous ? null : studentName.trim(),
+        isAnonymous,
         ratings: {
           overall: overallRating,
           usability: usabilityRating,
@@ -448,9 +480,7 @@ const ImprovedFeedbackModal: React.FC<ImprovedFeedbackModalProps> = ({
         lastModified: timestamp,
       };
 
-      // Guardar como nueva entrada
       await db().ref(`/feedback/${feedbackId}`).set(feedbackData);
-
       setSubmitted(true);
     } catch (error) {
       console.error("[handleSubmit] Error:", error);
@@ -460,6 +490,24 @@ const ImprovedFeedbackModal: React.FC<ImprovedFeedbackModalProps> = ({
     }
   };
 
+  const getFlagSource = (lang: Language) => {
+    switch (lang) {
+      case "es":
+        return require("../../assets/flags/spain.webp");
+      case "en":
+        return require("../../assets/flags/usa.webp");
+      case "pt-PT":
+        return require("../../assets/flags/portugal.webp");
+      case "pt-BR":
+        return require("../../assets/flags/brazil.webp");
+      default:
+        return require("../../assets/flags/spain.webp");
+    }
+  };
+
+  const handleLanguageChange = (newLanguage: Language) => {
+    setLanguage(newLanguage);
+  };
 
   // Renderizar pantalla de agradecimiento después de enviar
   if (submitted) {
@@ -499,16 +547,117 @@ const ImprovedFeedbackModal: React.FC<ImprovedFeedbackModalProps> = ({
       <View style={styles.modalOverlay}>
         <View style={styles.filterModalContainer}>
           <View style={styles.filterModalHeader}>
-            <Text style={styles.filterModalTitle}>
-              {isEditing ? ft.editFeedbackTitle : ft.feedbackTitle}
-            </Text>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color={COLORS.text} />
-            </TouchableOpacity>
+            <View style={styles.modalHeader}>
+              <View style={styles.headerContent}>
+                <View style={styles.titleContainer}>
+                  <Text style={styles.modalTitle}>{ft.feedbackTitle}</Text>
+                  <Text style={styles.languageSelectorText}>{ft.languageSelector}</Text>
+                </View>
+                <View style={styles.languageSelector}>
+                  <TouchableOpacity
+                    style={[styles.flagButton, language === "es" && styles.flagButtonActive]}
+                    onPress={() => handleLanguageChange("es")}
+                  >
+                    <Image
+                      source={getFlagSource("es")}
+                      style={styles.flagImage}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.flagButton, language === "en" && styles.flagButtonActive]}
+                    onPress={() => handleLanguageChange("en")}
+                  >
+                    <Image
+                      source={getFlagSource("en")}
+                      style={styles.flagImage}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.flagButton, language === "pt-PT" && styles.flagButtonActive]}
+                    onPress={() => handleLanguageChange("pt-PT")}
+                  >
+                    <Image
+                      source={getFlagSource("pt-PT")}
+                      style={styles.flagImage}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.flagButton, language === "pt-BR" && styles.flagButtonActive]}
+                    onPress={() => handleLanguageChange("pt-BR")}
+                  >
+                    <Image
+                      source={getFlagSource("pt-BR")}
+                      style={styles.flagImage}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="close" size={24} color={COLORS.text} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView style={styles.filterScrollView} showsVerticalScrollIndicator={true}>
             <Text style={styles.subtitle}>{ft.rateExperience}</Text>
+
+            {/* Sección de identificación */}
+            <View style={styles.filterSection}>
+              <Text style={styles.filterSectionTitle}>{ft.identitySection}</Text>
+              <Text style={styles.explanationText}>{ft.identityExplanation}</Text>
+              
+              <View style={styles.identityOptions}>
+                <TouchableOpacity 
+                  style={[styles.identityOption, !isAnonymous && styles.identityOptionSelected]}
+                  onPress={() => setIsAnonymous(false)}
+                >
+                  <View style={styles.optionHeader}>
+                    <Ionicons
+                      name={!isAnonymous ? "radio-button-on" : "radio-button-off"}
+                      size={24}
+                      color={!isAnonymous ? COLORS.primary : COLORS.inactive}
+                    />
+                    <Text style={[
+                      styles.optionTitle,
+                      !isAnonymous && styles.optionTitleSelected
+                    ]}>
+                      {ft.studentName}
+                    </Text>
+                  </View>
+                  {!isAnonymous && (
+                    <TextInput
+                      style={styles.nameInput}
+                      value={studentName}
+                      onChangeText={setStudentName}
+                      placeholder={ft.studentName}
+                      placeholderTextColor={COLORS.inactive}
+                    />
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.identityOption, isAnonymous && styles.identityOptionSelected]}
+                  onPress={() => {
+                    setIsAnonymous(true);
+                    setStudentName("");
+                  }}
+                >
+                  <View style={styles.optionHeader}>
+                    <Ionicons
+                      name={isAnonymous ? "radio-button-on" : "radio-button-off"}
+                      size={24}
+                      color={isAnonymous ? COLORS.primary : COLORS.inactive}
+                    />
+                    <Text style={[
+                      styles.optionTitle,
+                      isAnonymous && styles.optionTitleSelected
+                    ]}>
+                      {ft.anonymous}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {/* Valoración general */}
             <View style={styles.filterSection}>
@@ -605,6 +754,7 @@ export const FormCompletionFeedback = ({
   const [showFeedback, setShowFeedback] = useState(true);
   const [userId, setUserId] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   // Obtener el ID del usuario
   useEffect(() => {
@@ -643,6 +793,20 @@ export const FormCompletionFeedback = ({
     return null;
   }
 
+  // Si el usuario es profesor, mostrar el formulario de profesor
+  if (user?.role === "teacher") {
+    return (
+      <TeacherFeedbackForm
+        visible={showFeedback}
+        onClose={handleClose}
+        language={language}
+        userId={userId}
+        formType={formType}
+      />
+    );
+  }
+
+  // Para estudiantes e invitados, mostrar el formulario normal
   return (
     <ImprovedFeedbackModal
       visible={showFeedback}
@@ -792,6 +956,104 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "600",
+  },
+  explanationText: {
+    fontSize: 14,
+    color: COLORS.text,
+    marginBottom: 16,
+    opacity: 0.8,
+  },
+  identityOptions: {
+    gap: 12,
+  },
+  identityOption: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  identityOptionSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: '#fff',
+  },
+  optionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  optionTitle: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontWeight: '500',
+  },
+  optionTitleSelected: {
+    color: COLORS.primary,
+  },
+  nameInput: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+    marginTop: 12,
+    fontSize: 15,
+    color: COLORS.text,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  languageSelector: {
+    flexDirection: 'row',
+    marginLeft: 10,
+    gap: 8,
+  },
+  flagButton: {
+    width: 32,
+    height: 24,
+    borderRadius: 4,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.inactive,
+    backgroundColor: '#f5f5f5',
+  },
+  flagButtonActive: {
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    backgroundColor: '#fff',
+    shadowColor: COLORS.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  flagImage: {
+    width: '100%',
+    height: '100%',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  titleContainer: {
+    flex: 1,
+  },
+  languageSelectorText: {
+    fontSize: 12,
+    color: COLORS.inactive,
+    marginBottom: 4,
   },
 });
 

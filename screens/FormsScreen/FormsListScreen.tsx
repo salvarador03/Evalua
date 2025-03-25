@@ -43,6 +43,7 @@ interface Creator {
   email: string;
   orcid: string;
   imageUrl: any;
+  country: string;
   socialLinks?: {
     linkedin?: string;
     researchGate?: string;
@@ -77,6 +78,7 @@ const CREATORS: Creator[] = [
     email: "jadssal@unex.es",
     orcid: "https://orcid.org/0000-0001-7203-3168",
     imageUrl: require("../../assets/images/foto_Adsuar_app-José-Adsuar.webp"),
+    country: "España",
     socialLinks: {
       linkedin: "https://www.linkedin.com/feed/?trk=public_post_google-one-tap-submit",
       researchGate: "",
@@ -90,6 +92,7 @@ const CREATORS: Creator[] = [
     email: "jorgecv@unex.es",
     orcid: "https://orcid.org/0000-0002-6377-9950",
     imageUrl: require("../../assets/images/8efeec09-5e60-4481-9e41-262f20d7297c-Jorge-Carlos-Vivas.webp"),
+    country: "España",
     socialLinks: {
       googleScholar: "https://scholar.google.es/citations?user=y98TYCoAAAAJ&hl=es&oi=ao",
       researchGate: "https://www.researchgate.net/profile/Jorge-Carlos-Vivas"
@@ -102,6 +105,7 @@ const CREATORS: Creator[] = [
     email: "mamendozam@unex.es",
     orcid: "https://orcid.org/0000-0001-9502-5486",
     imageUrl: require("../../assets/images/maria.webp"),
+    country: "España",
     socialLinks: {
       linkedin: "https://es.linkedin.com/in/mar%C3%ADa-mendoza-mu%C3%B1oz-536995161",
       researchGate: "https://www.researchgate.net/profile/Maria-Mendoza-Munoz"
@@ -114,6 +118,7 @@ const CREATORS: Creator[] = [
     email: "ricardo.gonzalez@ufc.br",
     orcid: "https://orcid.org/0000-0002-8447-4224",
     imageUrl: require("../../assets/images/Foto-Ricardo-Gonzalez.webp"),
+    country: "Brasil",
     socialLinks: {
       researchGate: "https://www.researchgate.net/profile/Ricardo-Gonzalez-25"
     }
@@ -125,6 +130,7 @@ const CREATORS: Creator[] = [
     email: "raquelpc@unex.es",
     orcid: "https://orcid.org/0000-0001-7305-6783",
     imageUrl: require("../../assets/images/IMG_2487-Raquel-Pastor-Cisneros.webp"),
+    country: "España",
     socialLinks: {
       researchGate: "https://www.researchgate.net/profile/Raquel-Pastor-Cisneros",
       linkedin: "https://www.linkedin.com/in/raquel-pastor-cisneros-ab4454185"
@@ -137,6 +143,7 @@ const CREATORS: Creator[] = [
     email: "amarques@fmh.ulisboa.pt",
     orcid: "https://orcid.org/0000-0001-9850-7771",
     imageUrl: require("../../assets/images/adilson2-José-Adsuar.webp"),
+    country: "Portugal",
     socialLinks: {
       googleScholar: "https://scholar.google.com/citations?user=0MPdDS0AAAAJ&hl=en",
       other: "https://www.cienciavitae.pt/portal/5F18-F9C3-11CB",
@@ -150,9 +157,24 @@ const CREATORS: Creator[] = [
     email: "tiagoribeiro@fmh.ulisboa.pt",
     orcid: "https://orcid.org/0000-0001-5602-048X",
     imageUrl: require("../../assets/images/tiago.webp"),
+    country: "Portugal",
     socialLinks: {
       researchGate: "https://www.researchgate.net/profile/Tiago-Ribeiro-41",
 
+    }
+  },
+  {
+    name: "Daniel Collado-Mateo",
+    role: "PhD. Lecturer",
+    institution: "Rey Juan Carlos University",
+    email: "",
+    orcid: "https://orcid.org/0000-0002-5140-465X",
+    imageUrl: require("../../assets/images/daniel.webp"),
+    country: "España",
+    socialLinks: {
+      linkedin: "https://www.linkedin.com/in/daniel-collado-mateo-597340111/",
+      googleScholar: "https://scholar.google.com/citations?user=2dBAGt4AAAAJ&hl=en",
+      researchGate: "https://www.researchgate.net/profile/Daniel-Collado-Mateo/3"
     }
   },
   {
@@ -162,6 +184,7 @@ const CREATORS: Creator[] = [
     email: "sislaa@unmsm.edu.pe",
     orcid: "https://orcid.org/0000-0003-1330-3716",
     imageUrl: require("../../assets/images/sandy.webp"),
+    country: "Perú",
     socialLinks: {
       linkedin: "https://pe.linkedin.com/in/sandy-dorian-isla-alcoser-8515b9248",
       googleScholar: "https://scholar.google.com/citations?user=QKKUfcIAAAAJ&hl=es"
@@ -174,6 +197,7 @@ const CREATORS: Creator[] = [
     email: "jaromerom01@unex.es",
     orcid: "https://orcid.org/0009-0006-3206-9928",
     imageUrl: require("../../assets/images/foto personal - José Antonio Romero Macarrilla.webp"),
+    country: "España",
     socialLinks: {
       linkedin: "https://www.linkedin.com/"
     }
@@ -185,6 +209,7 @@ const CREATORS: Creator[] = [
     email: "jeanrosales@mail.uniatlantico.edu.co",
     orcid: "https://orcid.org/0000-0003-0204-2127",
     imageUrl: require("../../assets/images/Yo-JEAN-CARLOS-ROSALES-GARCIA.webp"),
+    country: "Colombia",
     socialLinks: {
       googleScholar: "https://scholar.google.com/citations?hl=es&user=zmW5JSUAAAAJ",
       researchGate: "https://www.researchgate.net/profile/Jean-Rosales-Garcia",
@@ -198,6 +223,7 @@ const CREATORS: Creator[] = [
     email: "jorgecoll@uccfd.cu",
     orcid: "https://orcid.org/0000-0001-8712-2948",
     imageUrl: require("../../assets/images/jorge.webp"),
+    country: "Cuba",
     socialLinks: {
       researchGate: "https://www.researchgate.net/profile/Jorge-Coll-Costa"
     }
@@ -209,6 +235,7 @@ const CREATORS: Creator[] = [
     email: "cristianperez@santotomas.cl",
     orcid: "https://orcid.org/0000-0002-9633-6064",
     imageUrl: require("../../assets/images/cristian.webp"),
+    country: "Chile",
     socialLinks: {
       googleScholar: "https://scholar.google.com/citations?user=g-ZhVhMAAAAJ",
       linkedin: "https://cl.linkedin.com/in/cristian-p%C3%A9rez-tapia-33401467"
@@ -221,6 +248,7 @@ const CREATORS: Creator[] = [
     email: "natalia.trivino@universidadeuropea.es",
     orcid: "",
     imageUrl: require("../../assets/images/natalia.webp"),
+    country: "España",
     socialLinks: {
       linkedin: "https://es.linkedin.com/in/natalia-trivi%C3%B1o-amigo-899718162",
       researchGate: "https://www.researchgate.net/profile/Natalia-Trivino-Amigo"
@@ -234,6 +262,7 @@ const CREATORS: Creator[] = [
     email: "",
     orcid: "https://orcid.org/0000-0002-1180-9804",
     imageUrl: require("../../assets/images/eddy.webp"),
+    country: "Nicaragua",
     socialLinks: {}
   },
   {
@@ -243,6 +272,7 @@ const CREATORS: Creator[] = [
     email: "",
     orcid: "https://orcid.org/0009-0005-1252-6995",
     imageUrl: require("../../assets/images/investigadoralima.webp"),
+    country: "Panamá",
     socialLinks: {}
   },
   {
@@ -252,6 +282,7 @@ const CREATORS: Creator[] = [
     email: "",
     orcid: "https://orcid.org/0000-0002-5702-3524",
     imageUrl: require("../../assets/images/investigadorecuador.webp"),
+    country: "Ecuador",
     socialLinks: {}
   }
 ];
@@ -341,6 +372,9 @@ export const FormsListScreen: React.FC = () => {
   const [showRightArrow, setShowRightArrow] = useState(true);
   const [showFeedback, setShowFeedback] = useState(false);
   const [formType, setFormType] = useState("physical_literacy");
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [filteredCreators, setFilteredCreators] = useState<Creator[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if (!showFeedback && !loading) {
@@ -490,6 +524,14 @@ export const FormsListScreen: React.FC = () => {
     }
   };
 
+    // Función para filtrar creadores por país
+    const navigateToCreatorsByCountry = (country: string) => {
+      // Filtra los creadores según el país seleccionado
+      const filtered = CREATORS.filter(creator => creator.country === country);
+      setSelectedCountry(country);
+      setFilteredCreators(filtered);
+    };
+
   const handleViewResults = () => {
     if (formResponse) {
       try {
@@ -563,100 +605,249 @@ export const FormsListScreen: React.FC = () => {
   const renderAboutContent = () => (
     <>
       {renderInstitutions()}
-      {renderCreators()}
+      {selectedCountry ? renderFilteredCreators() : renderCreators()}
     </>
   );
 
-  const renderLogoContainer = () => {
-    if (activeTab === "form") {
-      return (
-        <View style={styles.logoContainer}>
-          <View style={styles.logoCard}>
-            <View style={styles.scrollContainer}>
-              {showLeftArrow && (
+  const renderCountryFlags = () => (
+    <View style={styles.flagsSectionContainer}>
+      <Text style={styles.flagsSectionTitle}>Países de nuestros investigadores</Text>
+      
+      <View style={styles.gridContainer}>
+        {/* Fila 1: España y Portugal */}
+        <View style={styles.rowTwo}>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("España")}
+          >
+            <Image
+              source={require("../../assets/flags/spain.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>España</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Portugal")}
+          >
+            <Image
+              source={require("../../assets/flags/portugal.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Portugal</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Fila 2: Brasil y Perú */}
+        <View style={styles.rowTwo}>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Brasil")}
+          >
+            <Image
+              source={require("../../assets/flags/brazil.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Brasil</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Perú")}
+          >
+            <Image
+              source={require("../../assets/flags/peru.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Perú</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Fila 3: Colombia y Cuba */}
+        <View style={styles.rowTwo}>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Colombia")}
+          >
+            <Image
+              source={require("../../assets/flags/colombia.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Colombia</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Cuba")}
+          >
+            <Image
+              source={require("../../assets/flags/cuba.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Cuba</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Fila 4: Chile y Nicaragua */}
+        <View style={styles.rowTwo}>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Chile")}
+          >
+            <Image
+              source={require("../../assets/flags/chile.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Chile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Nicaragua")}
+          >
+            <Image
+              source={require("../../assets/flags/nicaragua.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Nicaragua</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Fila 5: Panamá y Ecuador */}
+        <View style={styles.rowTwo}>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Panamá")}
+          >
+            <Image
+              source={require("../../assets/flags/panama.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Panamá</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Ecuador")}
+          >
+            <Image
+              source={require("../../assets/flags/ecuador.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Ecuador</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderFilteredCreators = () => (
+    <View style={styles.sectionContainer}>
+      <View style={styles.filteredHeader}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => setSelectedCountry(null)}
+        >
+          <Ionicons name="arrow-back" size={24} color="#9E7676" />
+        </TouchableOpacity>
+        <View style={styles.filteredHeaderContent}>
+          <Text style={styles.sectionTitle}>Investigadores de {selectedCountry}</Text>
+          <Image 
+            source={getCountryFlag(selectedCountry)} 
+            style={styles.headerFlag}
+          />
+        </View>
+      </View>
+      
+      {filteredCreators.length > 0 ? (
+        filteredCreators.map((creator, index) => (
+          <View key={index} style={styles.filteredCreatorCard}>
+            <Image
+              source={creator.imageUrl}
+              style={styles.filteredCreatorImage}
+              resizeMode="cover"
+            />
+            <View style={styles.filteredCreatorInfo}>
+              <Text style={styles.creatorName}>{creator.name}</Text>
+              <Text style={styles.creatorRole}>{creator.role}</Text>
+              <Text style={styles.creatorInstitution}>
+                {creator.institution}
+              </Text>
+              <View style={styles.creatorActions}>
                 <TouchableOpacity
-                  style={[styles.scrollButton, styles.scrollButtonLeft]}
-                  onPress={() => scrollTo('left')}
+                  onPress={() => handleOpenLink(creator.orcid)}
+                  style={styles.orcidButton}
                 >
-                  <Ionicons name="chevron-back" size={24} color="#9E7676" />
+                  <Text style={styles.orcidText}>ORCID</Text>
                 </TouchableOpacity>
-              )}
-              <ScrollView
-                ref={scrollViewRef}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.logosScrollContent}
-                onScroll={handleScroll}
-                scrollEventThrottle={16}
-              >
-                <Image
-                  source={require("../../assets/images/logo-uex.webp")}
-                  style={[styles.logo, { width: 60, height: 60 }]}
-                  resizeMode="contain"
-                />
-                <View style={styles.logoDivider} />
-                <Image
-                  source={require("../../assets/images/ulisboa.webp")}
-                  style={[styles.logo, { width: 60, height: 60 }]}
-                  resizeMode="contain"
-                />
-                <View style={styles.logoDivider} />
-                <Image
-                  source={require("../../assets/images/Brasao4_vertical_cor_300dpi.webp")}
-                  style={[styles.logo, { width: 60, height: 60 }]}
-                  resizeMode="contain"
-                />
-                <View style={styles.logoDivider} />
-                <Image
-                  source={require("../../assets/images/Logo_de_la_Universidad_del_Atlántico.svg.webp")}
-                  style={[styles.logo, { width: 60, height: 60 }]}
-                  resizeMode="contain"
-                />
-                <View style={styles.logoDivider} />
-                <Image
-                  source={require("../../assets/images/UCCFD.webp")}
-                  style={[styles.logo, { width: 60, height: 60 }]}
-                  resizeMode="contain"
-                />
-                <View style={styles.logoDivider} />
-                <Image
-                  source={require("../../assets/images/st.webp")}
-                  style={[styles.logo, { width: 60, height: 60 }]}
-                  resizeMode="contain"
-                />
-                <View style={styles.logoDivider} />
-                <Image
-                  source={require("../../assets/images/europea.webp")}
-                  style={[styles.logo, { width: 60, height: 60 }]}
-                  resizeMode="contain"
-                />
-                <View style={styles.logoDivider} />
-                <Image
-                  source={require("../../assets/images/san_marcos.webp")}
-                  style={[styles.logo, { width: 60, height: 60 }]}
-                  resizeMode="contain"
-                />
-                <View style={styles.logoDivider} />
-                <Image
-                  source={require("../../assets/images/managua.webp")}
-                  style={[styles.logo, { width: 60, height: 60 }]}
-                  resizeMode="contain"
-                />
-              </ScrollView>
-              {showRightArrow && (
-                <TouchableOpacity
-                  style={[styles.scrollButton, styles.scrollButtonRight]}
-                  onPress={() => scrollTo('right')}
-                >
-                  <Ionicons name="chevron-forward" size={24} color="#9E7676" />
-                </TouchableOpacity>
-              )}
+                <View style={styles.socialLinks}>
+                  {creator.socialLinks?.linkedin && (
+                    <TouchableOpacity
+                      onPress={() => handleOpenLink(creator.socialLinks!.linkedin!)}
+                      style={styles.socialButton}
+                    >
+                      <Ionicons name="logo-linkedin" size={20} color="#0077B5" />
+                    </TouchableOpacity>
+                  )}
+                  {creator.socialLinks?.researchGate && (
+                    <TouchableOpacity
+                      onPress={() => handleOpenLink(creator.socialLinks!.researchGate!)}
+                      style={styles.socialButton}
+                    >
+                      <Ionicons name="book" size={20} color="#00CCBB" />
+                    </TouchableOpacity>
+                  )}
+                  {creator.socialLinks?.googleScholar && (
+                    <TouchableOpacity
+                      onPress={() => handleOpenLink(creator.socialLinks!.googleScholar!)}
+                      style={styles.socialButton}
+                    >
+                      <Ionicons name="school" size={20} color="#4285F4" />
+                    </TouchableOpacity>
+                  )}
+                  {creator.email && (
+                    <TouchableOpacity
+                      onPress={() => handleOpenLink(`mailto:${creator.email}`)}
+                      style={styles.socialButton}
+                    >
+                      <Ionicons name="mail" size={20} color="#9E7676" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
             </View>
           </View>
+        ))
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No se encontraron investigadores para {selectedCountry}</Text>
         </View>
-      );
+      )}
+    </View>
+  );
+
+  // Función auxiliar para obtener la bandera del país seleccionado
+  const getCountryFlag = (country: string | null) => {
+    switch(country) {
+      case 'España':
+        return require('../../assets/flags/spain.webp');
+      case 'Portugal':
+        return require('../../assets/flags/portugal.webp');
+      case 'Brasil':
+        return require('../../assets/flags/brazil.webp');
+      case 'Perú':
+        return require('../../assets/flags/peru.webp');
+      case 'Colombia':
+        return require('../../assets/flags/colombia.webp');
+      case 'Cuba':
+        return require('../../assets/flags/cuba.webp');
+      case 'Chile':
+        return require('../../assets/flags/chile.webp');
+      case 'Nicaragua':
+        return require('../../assets/flags/nicaragua.webp');
+      case 'Panamá':
+        return require('../../assets/flags/panama.webp');
+      case 'Ecuador':
+        return require('../../assets/flags/ecuador.webp');
+      default:
+        return null;
     }
-    return null;
   };
 
   const renderInstitutions = () => (
@@ -690,62 +881,120 @@ export const FormsListScreen: React.FC = () => {
   // Update the renderCreators method to include ORCID and email
   const renderCreators = () => (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>Equipo de Investigación</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Equipo de Investigación</Text>
+        <TouchableOpacity 
+          style={styles.filterToggleButton}
+          onPress={() => setShowFilters(!showFilters)}
+        >
+          <Ionicons 
+            name={showFilters ? "filter" : "filter-outline"} 
+            size={20} 
+            color="#9E7676" 
+          />
+          <Text style={styles.filterToggleText}>Filtrar</Text>
+        </TouchableOpacity>
+      </View>
+
+      {showFilters && (
+        <View style={styles.filterContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScrollContent}
+          >
+            <TouchableOpacity
+              style={[styles.filterChip, !selectedCountry && styles.filterChipActive]}
+              onPress={() => setSelectedCountry(null)}
+            >
+              <Text style={[styles.filterChipText, !selectedCountry && styles.filterChipTextActive]}>
+                Todos
+              </Text>
+            </TouchableOpacity>
+            {Array.from(new Set(CREATORS.map(c => c.country))).map((country) => (
+              <TouchableOpacity
+                key={country}
+                style={[styles.filterChip, selectedCountry === country && styles.filterChipActive]}
+                onPress={() => navigateToCreatorsByCountry(country)}
+              >
+                <Image
+                  source={getCountryFlag(country)}
+                  style={styles.filterFlag}
+                />
+                <Text style={[styles.filterChipText, selectedCountry === country && styles.filterChipTextActive]}>
+                  {country}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.creatorsScroll}
       >
-        {CREATORS.map((creator, index) => (
+        {(selectedCountry ? filteredCreators : CREATORS).map((creator, index) => (
           <View key={index} style={styles.creatorCard}>
-            <Image
-              source={creator.imageUrl}
-              style={styles.creatorImage}
-              resizeMode="cover"
-            />
+            <View style={styles.creatorHeader}>
+              <Image
+                source={creator.imageUrl}
+                style={styles.creatorImage}
+                resizeMode="cover"
+              />
+              <Image
+                source={getCountryFlag(creator.country)}
+                style={styles.creatorFlag}
+              />
+            </View>
             <View style={styles.creatorInfo}>
               <Text style={styles.creatorName}>{creator.name}</Text>
               <Text style={styles.creatorRole}>{creator.role}</Text>
-              <Text style={styles.creatorInstitution}>
+              <Text style={styles.creatorInstitution} numberOfLines={2}>
                 {creator.institution}
               </Text>
-              <TouchableOpacity
-                onPress={() => handleOpenLink(creator.orcid)}
-                style={styles.orcidButton}
-              >
-                <Text style={styles.orcidText}>ORCID</Text>
-              </TouchableOpacity>
-              <View style={styles.socialLinks}>
-                {creator.socialLinks?.linkedin && (
-                  <TouchableOpacity
-                    onPress={() => handleOpenLink(creator.socialLinks!.linkedin!)}
-                    style={styles.socialButton}
-                  >
-                    <Ionicons name="logo-linkedin" size={20} color="#0077B5" />
-                  </TouchableOpacity>
-                )}
-                {creator.socialLinks?.researchGate && (
-                  <TouchableOpacity
-                    onPress={() => handleOpenLink(creator.socialLinks!.researchGate!)}
-                    style={styles.socialButton}
-                  >
-                    <Ionicons name="book" size={20} color="#00CCBB" />
-                  </TouchableOpacity>
-                )}
-                {creator.socialLinks?.googleScholar && (
-                  <TouchableOpacity
-                    onPress={() => handleOpenLink(creator.socialLinks!.googleScholar!)}
-                    style={styles.socialButton}
-                  >
-                    <Ionicons name="school" size={20} color="#4285F4" />
-                  </TouchableOpacity>
-                )}
+              <View style={styles.creatorActions}>
                 <TouchableOpacity
-                  onPress={() => handleOpenLink(`mailto:${creator.email}`)}
-                  style={styles.socialButton}
+                  onPress={() => handleOpenLink(creator.orcid)}
+                  style={styles.orcidButton}
                 >
-                  <Ionicons name="mail" size={20} color="#9E7676" />
+                  <Text style={styles.orcidText}>ORCID</Text>
                 </TouchableOpacity>
+                <View style={styles.socialLinks}>
+                  {creator.socialLinks?.linkedin && (
+                    <TouchableOpacity
+                      onPress={() => handleOpenLink(creator.socialLinks!.linkedin!)}
+                      style={styles.socialButton}
+                    >
+                      <Ionicons name="logo-linkedin" size={20} color="#0077B5" />
+                    </TouchableOpacity>
+                  )}
+                  {creator.socialLinks?.researchGate && (
+                    <TouchableOpacity
+                      onPress={() => handleOpenLink(creator.socialLinks!.researchGate!)}
+                      style={styles.socialButton}
+                    >
+                      <Ionicons name="book" size={20} color="#00CCBB" />
+                    </TouchableOpacity>
+                  )}
+                  {creator.socialLinks?.googleScholar && (
+                    <TouchableOpacity
+                      onPress={() => handleOpenLink(creator.socialLinks!.googleScholar!)}
+                      style={styles.socialButton}
+                    >
+                      <Ionicons name="school" size={20} color="#4285F4" />
+                    </TouchableOpacity>
+                  )}
+                  {creator.email && (
+                    <TouchableOpacity
+                      onPress={() => handleOpenLink(`mailto:${creator.email}`)}
+                      style={styles.socialButton}
+                    >
+                      <Ionicons name="mail" size={20} color="#9E7676" />
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </View>
           </View>
@@ -966,6 +1215,98 @@ export const FormsListScreen: React.FC = () => {
       </TouchableOpacity>
     </View>
   );
+
+  const renderLogoContainer = () => {
+    if (activeTab === "form") {
+      return (
+        <View style={styles.logoContainer}>
+          <View style={styles.logoCard}>
+            <View style={styles.scrollContainer}>
+              {showLeftArrow && (
+                <TouchableOpacity
+                  style={[styles.scrollButton, styles.scrollButtonLeft]}
+                  onPress={() => scrollTo('left')}
+                >
+                  <Ionicons name="chevron-back" size={24} color="#9E7676" />
+                </TouchableOpacity>
+              )}
+              <ScrollView
+                ref={scrollViewRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.logosScrollContent}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+              >
+                <Image
+                  source={require("../../assets/images/logo-uex.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/ulisboa.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/Brasao4_vertical_cor_300dpi.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/Logo_de_la_Universidad_del_Atlántico.svg.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/UCCFD.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/st.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/europea.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/san_marcos.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/managua.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+              </ScrollView>
+              {showRightArrow && (
+                <TouchableOpacity
+                  style={[styles.scrollButton, styles.scrollButtonRight]}
+                  onPress={() => scrollTo('right')}
+                >
+                  <Ionicons name="chevron-forward" size={24} color="#9E7676" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+      );
+    }
+    return null;
+  };
 
   return (
     <BackgroundContainer source={require("../../assets/images/p_fondo.webp")}>
@@ -1411,9 +1752,9 @@ const styles = StyleSheet.create({
   creatorCard: {
     backgroundColor: "white",
     borderRadius: 12,
-    padding: 15,
-    marginRight: 15,
-    width: 270,
+    padding: 12,
+    marginRight: 12,
+    width: 280,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -1423,62 +1764,156 @@ const styles = StyleSheet.create({
     borderColor: "rgba(158, 118, 118, 0.1)",
   },
   creatorImage: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     alignSelf: "center",
-    marginBottom: 12,
+    marginBottom: 8,
     backgroundColor: "#F5F5F5",
   },
   creatorInfo: {
     alignItems: "center",
-    gap: 6,
+    gap: 4,
   },
   creatorName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     color: "#594545",
     textAlign: "center",
   },
   creatorRole: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#9E7676",
     fontWeight: "600",
     textAlign: "center",
   },
   creatorInstitution: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#666",
     textAlign: "center",
-    marginTop: 4,
+    marginTop: 2,
   },
-  creatorDepartment: {
-    fontSize: 12,
-    color: "#888",
-    textAlign: "center",
-    fontStyle: "italic",
-    marginBottom: 6,
+  creatorActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8,
+    width: '100%',
   },
   socialLinks: {
     flexDirection: "row",
-    gap: 15,
-    marginTop: 12,
-    justifyContent: "center",
+    gap: 8,
   },
   socialButton: {
-    padding: 8,
+    padding: 6,
     backgroundColor: "rgba(158, 118, 118, 0.1)",
-    borderRadius: 25,
-    width: 36,
-    height: 36,
+    borderRadius: 20,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
   },
-  publicationCard: {
-    backgroundColor: "white",
-    borderRadius: 12,
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  filterToggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(158, 118, 118, 0.1)',
+  },
+  filterToggleText: {
+    fontSize: 12,
+    color: '#9E7676',
+    fontWeight: '500',
+  },
+  filterContainer: {
+    marginBottom: 15,
+  },
+  filterScrollContent: {
+    paddingHorizontal: 5,
+    gap: 8,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(158, 118, 118, 0.2)',
+    gap: 6,
+  },
+  filterChipActive: {
+    backgroundColor: 'rgba(158, 118, 118, 0.1)',
+    borderColor: '#9E7676',
+  },
+  filterChipText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  filterChipTextActive: {
+    color: '#9E7676',
+  },
+  filterFlag: {
+    width: 16,
+    height: 10,
+    borderRadius: 2,
+  },
+  creatorHeader: {
+    position: 'relative',
+    alignItems: 'center',
+  },
+  creatorFlag: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 30,
+    height: 18,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: 'white',
+  },
+  // Estilos para la sección de banderas
+  flagsSectionContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 15,
     padding: 15,
     marginBottom: 15,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  flagsSectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#594545",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  gridContainer: {
+    gap: 10,
+  },
+  rowTwo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  flagButton: {
+    flex: 1,
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 10,
+    alignItems: "center",
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -1487,31 +1922,75 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(158, 118, 118, 0.1)",
   },
-  publicationTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#594545",
+  flagImage: {
+    width: 40,
+    height: 25,
+    borderRadius: 4,
     marginBottom: 8,
-    lineHeight: 22,
   },
-  publicationAuthors: {
+  flagLabel: {
     fontSize: 14,
-    color: "#9E7676",
-    marginBottom: 5,
+    color: "#594545",
     fontWeight: "500",
   },
-  publicationMeta: {
-    fontSize: 13,
-    color: "#666",
-    fontStyle: "italic",
-    marginBottom: 6,
+
+  // Estilos para la vista filtrada
+  filteredHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+    gap: 10,
   },
-  publicationDOI: {
-    fontSize: 13,
-    color: "#9E7676",
-    marginTop: 6,
-    textDecorationLine: "underline",
-    fontWeight: "500",
+  backButton: {
+    padding: 8,
+    backgroundColor: "rgba(158, 118, 118, 0.1)",
+    borderRadius: 20,
+  },
+  filteredHeaderContent: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 8,
+  },
+  headerFlag: {
+    width: 40,
+    height: 25,
+    borderRadius: 3,
+  },
+  filteredCreatorCard: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: "row",
+    gap: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: "rgba(158, 118, 118, 0.1)",
+  },
+  filteredCreatorImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  filteredCreatorInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+    backgroundColor: "rgba(158, 118, 118, 0.1)",
+    borderRadius: 12,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#594545",
+    textAlign: "center",
   },
 });
 

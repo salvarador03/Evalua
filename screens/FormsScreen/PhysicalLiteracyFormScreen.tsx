@@ -32,7 +32,6 @@ import { FormContent } from "./FormContent";
 import { ResultsView } from "./ResultsView";
 import { questions } from "./data/questions";
 import { teenQuestions, isTeenager } from "./data/teenQuestions";
-import { FormStats } from "../../types/formstats";
 
 type PhysicalLiteracyFormNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<FormsStackParamList, "PhysicalLiteracyForm">,
@@ -48,6 +47,22 @@ interface FormResponseData {
   language: Language;
 }
 
+type LocalFormStats = {
+  median: number;
+  mean: number;
+  belowMedian: number;
+  aboveMedian: number;
+  totalUsers: number;
+  min: number;
+  max: number;
+  distanceFromMedian: number;
+  percentageFromMedian: number;
+  classMedians: number[];
+  globalMedians: number[];
+  countryMedians: number[];
+  ageMedians: number[];
+};
+
 export const PhysicalLiteracyFormScreen: React.FC = () => {
   const navigation = useNavigation<PhysicalLiteracyFormNavigationProp>();
   const scrollViewRef = useRef<ScrollView>(null);
@@ -60,7 +75,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
   const [answers, setAnswers] = useState<(number | null)[]>(Array(6).fill(null));
   const [loading, setLoading] = useState(true);
   const [formResponse, setFormResponse] = useState<FormResponse | null>(null);
-  const [stats, setStats] = useState<FormStats[]>([]);
+  const [stats, setStats] = useState<LocalFormStats[]>([]);
   const [userId, setUserId] = useState<string>("");
   const [userAge, setUserAge] = useState<number | null>(null);
   const [isFormReady, setIsFormReady] = useState(false);
@@ -155,7 +170,10 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
         throw new Error("No userId available");
       }
 
-      const countryInfo = countryCodeMap[selectedLanguageCode];
+      // Asegurarnos de que el código de país sea válido
+      const validCountryCode = selectedLanguageCode as keyof typeof countryCodeMap;
+      const countryInfo = countryCodeMap[validCountryCode];
+      
       if (!countryInfo) {
         throw new Error(`Invalid country code: ${selectedLanguageCode}`);
       }
@@ -235,7 +253,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
     }
   };
 
-  const calculateStats = async (): Promise<FormStats[]> => {
+  const calculateStats = async (): Promise<LocalFormStats[]> => {
     if (!language) return [];
 
     try {
@@ -264,13 +282,18 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
         if (values.length === 0) {
           return {
             median: 0,
+            mean: 0,
             belowMedian: 0,
             aboveMedian: 0,
             totalUsers: 0,
             min: 0,
             max: 0,
             distanceFromMedian: 0,
-            percentageFromMedian: 0
+            percentageFromMedian: 0,
+            classMedians: Array(8).fill(0),
+            globalMedians: Array(8).fill(0),
+            countryMedians: Array(8).fill(0),
+            ageMedians: Array(8).fill(0)
           };
         }
 
@@ -281,6 +304,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
         const median = totalUsers % 2 === 0
           ? (values[medianIndex - 1] + values[medianIndex]) / 2
           : values[medianIndex];
+        const mean = values.reduce((a, b) => a + b, 0) / totalUsers;
 
         // Get user's current answer for this question
         const userAnswer = answers[questionIndex];
@@ -293,13 +317,18 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
 
         return {
           median,
+          mean,
           belowMedian: values.filter(v => v < median).length,
           aboveMedian: values.filter(v => v > median).length,
           totalUsers,
           min,
           max,
           distanceFromMedian,
-          percentageFromMedian
+          percentageFromMedian,
+          classMedians: values,
+          globalMedians: values,
+          countryMedians: values,
+          ageMedians: values
         };
       });
 
@@ -427,7 +456,7 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
               language={language!}
               formResponse={formResponse}
               answers={answers}
-              stats={stats}
+              stats={stats as LocalFormStats[]}
             />
           </ScrollView>
         </View>

@@ -268,6 +268,16 @@ export const GuestProfileScreen: React.FC = () => {
     }
   };
 
+  const validateAge = (birthDate: Date): boolean => {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 6 && age <= 24;
+  };
+
   const handleEdit = (field: string, currentValue: string) => {
     setIsEditing(field);
     if (field === 'dateOfBirth') {
@@ -283,10 +293,15 @@ export const GuestProfileScreen: React.FC = () => {
   const handleDateChange = (event: any, date?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
     if (date) {
+      if (!validateAge(date)) {
+        Alert.alert(
+          "Edad no válida",
+          "Debes tener entre 6 y 24 años para poder realizar los cuestionarios."
+        );
+        return;
+      }
       setSelectedDate(date);
       handleSaveDate(date);
-    } else {
-      setIsEditing('');
     }
   };
 
@@ -386,8 +401,19 @@ export const GuestProfileScreen: React.FC = () => {
           <View style={styles.editContainer}>
             <DateButton
               date={selectedDate}
-              onPress={() => setShowDatePicker(true)}
+              onDateChange={(date) => {
+                if (!validateAge(date)) {
+                  Alert.alert(
+                    "Edad no válida",
+                    "Debes tener entre 6 y 24 años para poder realizar los cuestionarios."
+                  );
+                  return;
+                }
+                setSelectedDate(date);
+                handleSaveDate(date);
+              }}
               label={label}
+              isValidAge={validateAge(selectedDate)}
             />
             <TouchableOpacity 
               onPress={() => {
@@ -526,9 +552,10 @@ export const GuestProfileScreen: React.FC = () => {
           <DateTimePicker
             value={selectedDate}
             mode="date"
-            display="default"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={handleDateChange}
-            maximumDate={new Date()}
+            minimumDate={new Date(new Date().setFullYear(new Date().getFullYear() - 24))}
+            maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() - 6))}
           />
         )}
 

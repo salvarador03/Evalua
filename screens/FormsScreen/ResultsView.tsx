@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Animated,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Language } from "../../types/language";
@@ -17,9 +18,11 @@ import { useRoute } from "@react-navigation/native";
 import ComparisonChart from "./ComparisonChart";
 import db from "@react-native-firebase/database";
 import { translations } from "../../Components/LanguageSelection/translations";
+import SpiderChart from './SpiderChart';
 
-interface FormStats {
+type LocalFormStats = {
   median: number;
+  mean: number;
   belowMedian: number;
   aboveMedian: number;
   totalUsers: number;
@@ -27,13 +30,17 @@ interface FormStats {
   max: number;
   distanceFromMedian: number;
   percentageFromMedian: number;
-}
+  classMedians: number[];
+  globalMedians: number[];
+  countryMedians: number[];
+  ageMedians: number[];
+};
 
 interface ResultsViewProps {
   language: Language;
   formResponse: FormResponse;
   answers: (number | null)[];
-  stats: FormStats[];
+  stats: LocalFormStats[];
 }
 
 interface RouteParams {
@@ -135,6 +142,8 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const [studentClassCode, setStudentClassCode] = useState<string>("");
   const [studentAge, setStudentAge] = useState<number | undefined>();
   const [localAnswers, setLocalAnswers] = useState<(number | null)[]>(answers);
+  const [expandedQuestions, setExpandedQuestions] = useState<number[]>([]);
+  const scrollViewRef = React.useRef<ScrollView>(null);
   const { user } = useAuth();
 
   const loadStudentData = async () => {
@@ -142,26 +151,31 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
       try {
         const guestRef = await db().ref(`/guests/${studentData.uid}`).once("value");
         const guestData = guestRef.val();
+        const userRef = await db().ref(`/users/${studentData.uid}`).once("value");
+        const userData = userRef.val();
 
-        if (guestData?.classCode) {
-          setStudentClassCode(guestData.classCode);
-        }
-        if (guestData?.age) {
-          setStudentAge(guestData.age);
+        const age = guestData?.age || userData?.age;
+        if (age) {
+          setStudentAge(age);
+          console.log('Edad del estudiante cargada:', age);
         }
 
-        // Agregar logs para verificar los datos cargados
+        if (guestData?.classCode || userData?.classCode) {
+          setStudentClassCode(guestData?.classCode || userData?.classCode);
+        }
       } catch (error) {
         console.error("Error loading student data:", error);
       }
     }
   };
 
-  // 1. Primero, asegurarse de que las respuestas se cargan correctamente
+  useEffect(() => {
+    loadStudentData();
+  }, [isTeacherView, studentData?.uid]);
+
   useEffect(() => {
     const loadAnswers = async () => {
       try {
-        // Si es vista de profesor, cargar las respuestas del estudiante
         if (isTeacherView && studentData?.uid) {
           const formResponseRef = await db()
             .ref(`/form_responses/${studentData.uid}/physical_literacy`)
@@ -173,7 +187,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             setLocalAnswers(formResponseData.answers);
           }
         } else {
-          // Si no es vista de profesor, usar las respuestas proporcionadas como prop
           setLocalAnswers(answers);
         }
       } catch (error) {
@@ -184,53 +197,27 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     loadAnswers();
   }, [isTeacherView, studentData?.uid, answers]);
 
-
-  // 2. Modificar getAgeAppropriateQuestions para asegurar que siempre devuelve todas las preguntas
   const getAgeAppropriateQuestions = (language: Language) => {
     const targetAge = isTeacherView ? studentAge : user?.age;
 
-    let questionSet;
-    if (targetAge) {
-      if (targetAge >= 18 && targetAge <= 24) {
-        questionSet = teenQuestions[language];
-      } else if (targetAge >= 12 && targetAge <= 17) {
-        questionSet = teenQuestions[language];
-      } else {
-        questionSet = questions[language];
-      }
-    } else {
-      questionSet = questions[language];
+    if (!targetAge) {
+      console.log('No age found, defaulting to kids questions');
+      return questions[language].slice();
     }
 
-    return questionSet.slice();
+    if (targetAge >= 18 && targetAge <= 24) {
+      console.log('Using university questions');
+      return teenQuestions[language].slice();
+    } else if (targetAge >= 12 && targetAge <= 17) {
+      console.log('Using teen questions');
+      return teenQuestions[language].slice();
+    } else {
+      console.log('Using kids questions');
+      return questions[language].slice();
+    }
   };
 
-
-  // Eliminar el segundo useEffect y modificar el primero
-  useEffect(() => {
-    const loadStudentClassCode = async () => {
-      if (isTeacherView && studentData?.uid) {
-        try {
-          const guestRef = await db()
-            .ref(`/guests/${studentData.uid}`)
-            .once("value");
-          const guestData = guestRef.val();
-
-
-          if (guestData?.classCode) {
-            setStudentClassCode(guestData.classCode);
-          }
-        } catch (error) {
-          console.error("Error loading student class code:", error);
-        }
-      }
-    };
-
-    loadStudentClassCode();
-  }, [isTeacherView, studentData?.uid]);
-
   const getCorrectClassCode = async (): Promise<string> => {
-    // Si es guest, obtener el código de Firebase
     if (formResponse.isGuest && formResponse.userId) {
       try {
         const guestRef = await db()
@@ -246,7 +233,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
       }
     }
 
-    // Si no se pudo obtener el código de Firebase o no es guest
     return formResponse?.classCode || "";
   };
 
@@ -352,10 +338,152 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     return targetAge ? targetAge >= 18 && targetAge <= 24 : false;
   }, [studentAge, user?.age, isTeacherView]);
 
+  const getKeywords = (text: string, questionIndex: number): string[] => {
+    const defaultKeywords: { [key in Language]: string[] } = {
+      'es': ['Sin', 'palabras', 'clave'],
+      'es-PA': ['Sin', 'palabras', 'clave'],
+      'en': ['No', 'keywords', 'available'],
+      'pt-PT': ['Sem', 'palavras-chave', 'disponíveis'],
+      'pt-BR': ['Sem', 'palavras-chave', 'disponíveis']
+    };
+
+    const questionKeywords: { [key: number]: { [key in Language]: string[] } } = {
+      0: {
+        'es': ['Condición', 'Física', 'Global'],
+        'es-PA': ['Condición', 'Física', 'Global'],
+        'en': ['Physical', 'Fitness', 'Overall'],
+        'pt-PT': ['Condição', 'Física', 'Global'],
+        'pt-BR': ['Condição', 'Física', 'Global']
+      },
+      1: {
+        'es': ['Actividad', 'Semanal', 'Cantidad'],
+        'es-PA': ['Actividad', 'Semanal', 'Cantidad'],
+        'en': ['Weekly', 'Activity', 'Amount'],
+        'pt-PT': ['Atividade', 'Semanal', 'Quantidade'],
+        'pt-BR': ['Atividade', 'Semanal', 'Quantidade']
+      },
+      2: {
+        'es': ['Conocimiento', 'Educación', 'Contenidos'],
+        'es-PA': ['Conocimiento', 'Educación', 'Contenidos'],
+        'en': ['Knowledge', 'Education', 'Content'],
+        'pt-PT': ['Conhecimento', 'Educação', 'Conteúdos'],
+        'pt-BR': ['Conhecimento', 'Educação', 'Conteúdos']
+      },
+      3: {
+        'es': ['Motivación', 'Interés', 'Ganas'],
+        'es-PA': ['Motivación', 'Interés', 'Ganas'],
+        'en': ['Motivation', 'Interest', 'Desire'],
+        'pt-PT': ['Motivação', 'Interesse', 'Vontade'],
+        'pt-BR': ['Motivação', 'Interesse', 'Vontade']
+      },
+      4: {
+        'es': ['Amigos', 'Social', 'Relaciones'],
+        'es-PA': ['Amigos', 'Social', 'Relaciones'],
+        'en': ['Friends', 'Social', 'Relationships'],
+        'pt-PT': ['Amigos', 'Social', 'Relações'],
+        'pt-BR': ['Amigos', 'Social', 'Relações']
+      },
+      5: {
+        'es': ['Seguridad', 'Confianza', 'Actividad'],
+        'es-PA': ['Seguridad', 'Confianza', 'Actividad'],
+        'en': ['Confidence', 'Security', 'Activity'],
+        'pt-PT': ['Confiança', 'Segurança', 'Atividade'],
+        'pt-BR': ['Confiança', 'Segurança', 'Atividade']
+      },
+      6: {
+        'es': ['Competencia', 'Habilidad', 'Destreza'],
+        'es-PA': ['Competencia', 'Habilidad', 'Destreza'],
+        'en': ['Competence', 'Skill', 'Ability'],
+        'pt-PT': ['Competência', 'Habilidade', 'Destreza'],
+        'pt-BR': ['Competência', 'Habilidade', 'Destreza']
+      },
+      7: {
+        'es': ['Alfabetización', 'Física', 'Global'],
+        'es-PA': ['Alfabetización', 'Física', 'Global'],
+        'en': ['Physical', 'Literacy', 'Overall'],
+        'pt-PT': ['Literacia', 'Física', 'Global'],
+        'pt-BR': ['Letramento', 'Físico', 'Global']
+      }
+    };
+
+    return questionKeywords[questionIndex]?.[language] || defaultKeywords[language] || ['No', 'keywords', 'available'];
+  };
+
+  const getQuestionDomain = (index: number): string => {
+    const domains: { [key: number]: { [key in Language]: string } } = {
+      0: {
+        'es': 'Condición Física',
+        'es-PA': 'Condición Física',
+        'en': 'Physical Fitness',
+        'pt-PT': 'Condição Física',
+        'pt-BR': 'Condição Física'
+      },
+      1: {
+        'es': 'Actividad Física',
+        'es-PA': 'Actividad Física',
+        'en': 'Physical Activity',
+        'pt-PT': 'Atividade Física',
+        'pt-BR': 'Atividade Física'
+      },
+      2: {
+        'es': 'Conocimiento',
+        'es-PA': 'Conocimiento',
+        'en': 'Knowledge',
+        'pt-PT': 'Conhecimento',
+        'pt-BR': 'Conhecimento'
+      },
+      3: {
+        'es': 'Motivación',
+        'es-PA': 'Motivación',
+        'en': 'Motivation',
+        'pt-PT': 'Motivação',
+        'pt-BR': 'Motivação'
+      },
+      4: {
+        'es': 'Socialización',
+        'es-PA': 'Socialización',
+        'en': 'Socialization',
+        'pt-PT': 'Socialização',
+        'pt-BR': 'Socialização'
+      },
+      5: {
+        'es': 'Seguridad',
+        'es-PA': 'Seguridad',
+        'en': 'Confidence',
+        'pt-PT': 'Confiança',
+        'pt-BR': 'Confiança'
+      },
+      6: {
+        'es': 'Competencia',
+        'es-PA': 'Competencia',
+        'en': 'Competence',
+        'pt-PT': 'Competência',
+        'pt-BR': 'Competência'
+      },
+      7: {
+        'es': 'Alfabetización Física',
+        'es-PA': 'Alfabetización Física',
+        'en': 'Physical Literacy',
+        'pt-PT': 'Literacia Física',
+        'pt-BR': 'Letramento Físico'
+      }
+    };
+
+    // Asegurarse de que se use el idioma correcto y tener un valor por defecto en el idioma correspondiente
+    const defaultDomains: { [key in Language]: string } = {
+      'es': 'Pregunta',
+      'es-PA': 'Pregunta',
+      'en': 'Question',
+      'pt-PT': 'Pergunta',
+      'pt-BR': 'Pergunta'
+    };
+
+    const domainText = domains[index]?.[language];
+    return domainText || `${defaultDomains[language]} ${index + 1}`;
+  };
+
   const renderResponses = () => {
-    // Obtener preguntas y asegurarnos de que tenemos todas las respuestas
     const questions = getAgeAppropriateQuestions(language);
-    // Usar localAnswers en lugar de answers directamente
     const validAnswers = isTeacherView ? localAnswers : answers;
 
     return (
@@ -363,21 +491,16 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         {questions.map((question, index) => {
           const userAnswer = validAnswers?.[index];
 
-          // Determinar la edad y el tipo de usuario
           const targetAge = isTeacherView ? studentAge : user?.age;
           const isUniversityStudent = targetAge ? targetAge >= 18 && targetAge <= 24 : false;
           const isTeenStudent = targetAge ? targetAge >= 12 && targetAge <= 17 : false;
 
-          // Obtener el texto de la pregunta
           let questionText = question.text;
 
-          // Si es la última pregunta, manejar según el grupo de edad
           if (index === questions.length - 1) {
             if (isUniversityStudent || isTeenStudent) {
-              // Usar la última pregunta de teenQuestions para universitarios y adolescentes
               questionText = teenQuestions[language][teenQuestions[language].length - 1].text;
             } else {
-              // Para niños, usar el formato especial con las opciones
               const lastQuestion = {
                 'es': 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:',
                 'es-PA': 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:',
@@ -390,7 +513,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             }
           }
 
-          // Determinar el color y el icono basado en la puntuación
           const getScoreStyle = (score: number | null) => {
             if (score === null || score === undefined) return {
               color: '#666',
@@ -480,52 +602,155 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     );
   };
 
+  const handleQuestionExpand = (index: number) => {
+    const isExpanded = expandedQuestions.includes(index);
+    setExpandedQuestions(prev => 
+      isExpanded 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
   const renderComparison = () => {
-    return getAgeAppropriateQuestions(language).map((question, index) => {
-      const effectiveUserId = isTeacherView && studentData
-        ? studentData.uid
-        : formResponse?.userId;
-      if (!effectiveUserId) return null;
-      if (index >= answers.length) return null;
-
-      const userAge = isTeacherView ? studentAge : user?.age;
-
-      return (
-        <View key={index} style={styles.comparisonSection}>
-          <View style={styles.questionNumberBadge}>
-            <Text style={styles.questionNumberText}>
-              {`${translations[language].question} ${index + 1}`}
-            </Text>
-          </View>
-          <ComparisonChart
-            key={index}
-            userScore={answers[index] ?? 0}
-            userData={{
-              userId: effectiveUserId || "",
-              name: studentData?.name || "",
-              classCode: studentData?.classCode || "",
-              country: formResponse.country || "",
-              countryRole: formResponse.countryRole || {
-                country: formResponse.country || "",
-                language: formResponse.language || "es",
-                flag: ""
-              },
-              age: userAge || 0,
-            }}
-            formResponse={formResponse}
-            questionIndex={index}
-            language={language}
-          />
-        </View>
-      );
+    const questions = getAgeAppropriateQuestions(language);
+    
+    // Añadir logs para depuración
+    console.log('Stats data:', {
+      stats,
+      classMedians: stats?.[0]?.classMedians,
+      globalMedians: stats?.[0]?.globalMedians,
+      countryMedians: stats?.[0]?.countryMedians,
+      ageMedians: stats?.[0]?.ageMedians,
     });
+    
+    console.log('User answers:', answers);
+    
+    // Asegurarnos de que los datos de estadísticas estén disponibles
+    const classScores = stats?.[0]?.classMedians || [];
+    const globalScores = stats?.[0]?.globalMedians || [];
+    const countryScores = stats?.[0]?.countryMedians || [];
+    const ageScores = stats?.[0]?.ageMedians || [];
+    
+    return (
+      <View>
+        {/* Gráfico Araña con idioma correcto */}
+        <SpiderChart
+          userScores={answers.map(score => score ?? 0)}
+          classScores={classScores}
+          globalScores={globalScores}
+          countryScores={countryScores}
+          ageScores={ageScores}
+          language={language}
+        />
+        
+        {questions.map((question, index) => {
+          const effectiveUserId = isTeacherView && studentData
+            ? studentData.uid
+            : formResponse?.userId;
+          if (!effectiveUserId) return null;
+
+          const userAge = isTeacherView ? studentAge : user?.age;
+          const isExpanded = expandedQuestions.includes(index);
+
+          return (
+            <View key={index} style={styles.comparisonSection}>
+              <View style={styles.questionHeader}>
+                <View style={styles.questionTitleContainer}>
+                  <View style={styles.questionInfo}>
+                    <View style={styles.questionNumberBadge}>
+                      <Text style={styles.questionNumberText}>
+                        {getQuestionDomain(index)}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.infoButton}
+                    onPress={() => handleQuestionExpand(index)}
+                  >
+                    <Ionicons 
+                      name="document-text-outline"
+                      size={20} 
+                      color="#9E7676"
+                    />
+                    <Text style={styles.infoButtonText}>
+                      {translations[language].showQuestion}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <Modal
+                visible={isExpanded}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => handleQuestionExpand(index)}
+              >
+                <View style={styles.modalOverlay}>
+                  <TouchableOpacity 
+                    style={styles.modalOverlayTouchable}
+                    activeOpacity={1}
+                    onPress={() => handleQuestionExpand(index)}
+                  />
+                  <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                      <Text style={styles.modalTitle}>
+                        {getQuestionDomain(index)}
+                      </Text>
+                      <TouchableOpacity 
+                        style={styles.closeButton}
+                        onPress={() => handleQuestionExpand(index)}
+                      >
+                        <Ionicons name="close" size={24} color="#9E7676" />
+                      </TouchableOpacity>
+                    </View>
+                    <ScrollView 
+                      style={styles.modalScroll}
+                      showsVerticalScrollIndicator={true}
+                      bounces={false}
+                    >
+                      <Text style={styles.modalText}>{question.text}</Text>
+                    </ScrollView>
+                  </View>
+                </View>
+              </Modal>
+
+              <ComparisonChart
+                key={`chart-${index}`}
+                userScore={answers[index] ?? 0}
+                userData={{
+                  userId: effectiveUserId || "",
+                  name: studentData?.name || "",
+                  classCode: studentData?.classCode || "",
+                  country: formResponse.country || "",
+                  countryRole: formResponse.countryRole || {
+                    country: formResponse.country || "",
+                    language: language,
+                    flag: ""
+                  },
+                  age: userAge || 0,
+                }}
+                formResponse={formResponse}
+                questionIndex={index}
+                language={language}
+              />
+            </View>
+          );
+        })}
+      </View>
+    );
   };
 
   return (
     <View style={styles.container}>
       {studentData && renderStudentHeader()}
       {renderNavigationButtons()}
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        keyboardShouldPersistTaps="handled"
+      >
         <Animated.View style={{ opacity: fadeAnim }}>
           {activeSection === "responses"
             ? renderResponses()
@@ -725,6 +950,93 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '500',
+  },
+  questionHeader: {
+    marginBottom: 8,
+  },
+  questionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  questionInfo: {
+    flex: 1,
+    flexDirection: 'column',
+    gap: 8,
+  },
+  infoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(158, 118, 118, 0.1)',
+  },
+  infoButtonText: {
+    color: '#9E7676',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalOverlayTouchable: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '90%',
+    maxHeight: '80%',
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 1,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(158, 118, 118, 0.2)',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#594545',
+  },
+  modalScroll: {
+    maxHeight: 400,
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#594545',
+    lineHeight: 24,
+  },
+  closeButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(158, 118, 118, 0.1)',
   },
 });
 

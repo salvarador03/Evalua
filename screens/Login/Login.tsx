@@ -159,6 +159,20 @@ export const LoginScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  const validateAge = (birthDate: Date): boolean => {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 6 && age <= 24;
+  };
+
+  const handleDateChange = (selectedDate: Date) => {
+    setDateOfBirth(selectedDate);
+  };
+
   const handleGuestAccess = async () => {
     if (isSubmitting) {
       return;
@@ -171,6 +185,14 @@ export const LoginScreen: React.FC = () => {
 
     if (!classCode.trim()) {
       Alert.alert("Error", "Por favor selecciona una institución o clase");
+      return;
+    }
+
+    if (!validateAge(dateOfBirth)) {
+      Alert.alert(
+        "Edad no válida",
+        "Debes tener entre 6 y 24 años para poder realizar los cuestionarios."
+      );
       return;
     }
 
@@ -293,13 +315,6 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
-  const handleDateChange = (event: any, selectedDate: Date | undefined) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDateOfBirth(selectedDate);
-    }
-  };
-
   const isLoading = loading || isSubmitting || isResettingPassword || loadingClassCodes;
 
   return (
@@ -330,19 +345,11 @@ export const LoginScreen: React.FC = () => {
 
                   <DateButton
                     date={dateOfBirth}
-                    onPress={() => setShowDatePicker(true)}
+                    onDateChange={handleDateChange}
                     disabled={isLoading}
+                    isValidAge={validateAge(dateOfBirth)}
+                    label="Fecha de nacimiento"
                   />
-
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={dateOfBirth}
-                      mode="date"
-                      display="default"
-                      onChange={handleDateChange}
-                      maximumDate={new Date()}
-                    />
-                  )}
 
                   {/* Selector de clase */}
                   <TouchableOpacity

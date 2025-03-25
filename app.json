@@ -1,6 +1,7 @@
 {
   "expo": {
-    "name": "evalua",
+    "name": "Cuestionario de Autoevaluación de Alfabetización Física",
+    "displayName": "Cuestionario de Autoevaluación de Alfabetización Física",
     "slug": "evalua",
     "version": "1.0.0",
     "orientation": "portrait",

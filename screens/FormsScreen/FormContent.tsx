@@ -115,12 +115,6 @@ const formatQuestionText = (text: string): React.ReactNode[] => {
 
 // Traducciones para la última pregunta
 const lastQuestionTranslations = {
-  introText: {
-    'es': 'Sabiendo que la alfabetización física es la suma de las preguntas anteriores:',
-    'en': 'Knowing that physical literacy is the sum of the previous questions:',
-    'pt-PT': 'Sabendo que a literacia física é a soma das questões anteriores:',
-    'pt-BR': 'Sabendo que o letramento físico é a soma das questões anteriores:'
-  },
   finalText: {
     'es': 'En comparación con los/las niños/as de mi edad mi alfabetización física es:',
     'en': 'Compared to children my age, my physical literacy is:',
@@ -282,16 +276,19 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
   }, [canProceedToNext, language, onQuestionChange]);
 
   const handleSubmit = useCallback(() => {
-    if (!canProceedToNext()) {
+    // Verificar si hay alguna pregunta sin responder
+    const hasUnansweredQuestions = answers.some(answer => answer === null);
+    
+    if (hasUnansweredQuestions) {
       Alert.alert(
-        translations[language].requiredAnswer,
-        translations[language].pleaseSelectValue,
+        translations[language].incompleteAnswers,
+        translations[language].pleaseAnswerAll,
         [{ text: "OK", style: "default" }]
       );
       return;
     }
     confirmAnswer(() => { });
-  }, [canProceedToNext, language, confirmAnswer]);
+  }, [answers, language, confirmAnswer]);
 
   // Memoizar la función handleAnswerChange
   const handleAnswerChange = useCallback((value: number) => {
@@ -305,69 +302,178 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
     'es': {
       title: 'Tener una buena alfabetización física significa:',
       options: [
-        'A) Tener una buena condición física.',
-        'B) Saber mucho sobre la Educación Física.',
-        'C) Tener interés y ganas de hacer actividad física.',
-        'D) Hacer amigos/as gracias a la actividad física.',
-        'E) Ser más seguro/a cuando se hace actividad física.',
-        'F) Hacer bien actividad física.',
-        'G) Hacer actividad física varias veces a la semana.'
+        'Tener una buena condición física.',
+        'Saber mucho sobre la Educación Física.',
+        'Tener interés y ganas de hacer actividad física.',
+        'Hacer amigos/as gracias a la actividad física.',
+        'Ser más seguro/a cuando se hace actividad física.',
+        'Hacer bien actividad física.',
+        'Hacer actividad física varias veces a la semana.'
       ],
       finalQuestion: 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:'
     },
     'es-PA': {
       title: 'Tener una buena alfabetización física significa:',
       options: [
-        'A) Tener una buena condición física.',
-        'B) Saber mucho sobre la Educación Física.',
-        'C) Tener interés y ganas de hacer actividad física.',
-        'D) Hacer amigos/as gracias a la actividad física.',
-        'E) Ser más seguro/a cuando se hace actividad física.',
-        'F) Hacer bien actividad física.',
-        'G) Hacer actividad física varias veces a la semana.'
+        'Tener una buena condición física.',
+        'Saber mucho sobre la Educación Física.',
+        'Tener interés y ganas de hacer actividad física.',
+        'Hacer amigos/as gracias a la actividad física.',
+        'Ser más seguro/a cuando se hace actividad física.',
+        'Hacer bien actividad física.',
+        'Hacer actividad física varias veces a la semana.'
       ],
       finalQuestion: 'Una vez que sabes qué es la alfabetización física. En comparación con los/las niños/as de mi edad, mi alfabetización física es:'
     },
     'en': {
       title: 'Having good physical literacy means:',
       options: [
-        'A) Having good physical fitness.',
-        'B) Knowing a lot about Physical Education.',
-        'C) Having interest and desire to do physical activity.',
-        'D) Making friends through physical activity.',
-        'E) Being more confident when doing physical activity.',
-        'F) Doing physical activity well.',
-        'G) Doing physical activity several times a week.'
+        'Having good physical fitness.',
+        'Knowing a lot about Physical Education.',
+        'Having interest and desire to do physical activity.',
+        'Making friends through physical activity.',
+        'Being more confident when doing physical activity.',
+        'Doing physical activity well.',
+        'Doing physical activity several times a week.'
       ],
       finalQuestion: 'Now that you know what physical literacy is. Compared to children my age, my physical literacy is:'
     },
     'pt-PT': {
       title: 'Ter uma boa literacia física significa:',
       options: [
-        'A) Ter uma boa condição física.',
-        'B) Saber muito sobre Educação Física.',
-        'C) Ter interesse e vontade de fazer atividade física.',
-        'D) Fazer amigos através da atividade física.',
-        'E) Ser mais seguro ao fazer atividade física.',
-        'F) Fazer bem atividade física.',
-        'G) Fazer atividade física várias vezes por semana.'
+        'Ter uma boa condição física.',
+        'Saber muito sobre Educação Física.',
+        'Ter interesse e vontade de fazer atividade física.',
+        'Fazer amigos através da atividade física.',
+        'Ser mais seguro ao fazer atividade física.',
+        'Fazer bem atividade física.',
+        'Fazer atividade física várias vezes por semana.'
       ],
       finalQuestion: 'Agora que sabes o que é literacia física. Em comparação com as crianças da minha idade, a minha literacia física é:'
     },
     'pt-BR': {
       title: 'Ter um bom letramento físico significa:',
       options: [
-        'A) Ter uma boa condição física.',
-        'B) Saber muito sobre Educação Física.',
-        'C) Ter interesse e vontade de fazer atividade física.',
-        'D) Fazer amigos através da atividade física.',
-        'E) Ser mais seguro ao fazer atividade física.',
-        'F) Fazer bem atividade física.',
-        'G) Fazer atividade física várias vezes por semana.'
+        'Ter uma boa condição física.',
+        'Saber muito sobre Educação Física.',
+        'Ter interesse e vontade de fazer atividade física.',
+        'Fazer amigos através da atividade física.',
+        'Ser mais seguro ao fazer atividade física.',
+        'Fazer bem atividade física.',
+        'Fazer atividade física várias vezes por semana.'
       ],
       finalQuestion: 'Agora que você sabe o que é letramento físico. Em comparação com as crianças da minha idade, meu letramento físico é:'
     }
   };
+
+  const getImageGridForKids = (images: typeof childQuestionImages) => (
+    <View style={styles.multipleImagesContainer}>
+      <View style={styles.kidsHeaderContainer}>
+        <Text style={styles.kidsTitle}>
+          {lastKidsQuestionTranslations[language].title}
+        </Text>
+      </View>
+
+      <View style={styles.collageContainer}>
+        <View style={styles.collageRow}>
+          <View style={styles.collageItem}>
+            <View style={styles.imageContainer}>
+              <Image source={images[0]} style={styles.collageImage} resizeMode="cover" />
+              <View style={styles.letterBadge}>
+                <Text style={styles.letterText}>A</Text>
+              </View>
+            </View>
+            <View style={styles.collageLabel}>
+              <Text style={styles.collageText}>{lastKidsQuestionTranslations[language].options[0]}</Text>
+            </View>
+          </View>
+          <View style={styles.collageItem}>
+            <View style={styles.imageContainer}>
+              <Image source={images[2]} style={styles.collageImage} resizeMode="cover" />
+              <View style={styles.letterBadge}>
+                <Text style={styles.letterText}>B</Text>
+              </View>
+            </View>
+            <View style={styles.collageLabel}>
+              <Text style={styles.collageText}>{lastKidsQuestionTranslations[language].options[1]}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.collageRow}>
+          <View style={styles.collageItem}>
+            <View style={styles.imageContainer}>
+              <Image source={images[3]} style={styles.collageImage} resizeMode="cover" />
+              <View style={styles.letterBadge}>
+                <Text style={styles.letterText}>C</Text>
+              </View>
+            </View>
+            <View style={styles.collageLabel}>
+              <Text style={styles.collageText}>{lastKidsQuestionTranslations[language].options[2]}</Text>
+            </View>
+          </View>
+          <View style={styles.collageItem}>
+            <View style={styles.imageContainer}>
+              <Image source={images[4]} style={styles.collageImage} resizeMode="cover" />
+              <View style={styles.letterBadge}>
+                <Text style={styles.letterText}>D</Text>
+              </View>
+            </View>
+            <View style={styles.collageLabel}>
+              <Text style={styles.collageText}>{lastKidsQuestionTranslations[language].options[3]}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.collageRow}>
+          <View style={styles.collageItem}>
+            <View style={styles.imageContainer}>
+              <Image source={images[5]} style={styles.collageImage} resizeMode="cover" />
+              <View style={styles.letterBadge}>
+                <Text style={styles.letterText}>E</Text>
+              </View>
+            </View>
+            <View style={styles.collageLabel}>
+              <Text style={styles.collageText}>{lastKidsQuestionTranslations[language].options[4]}</Text>
+            </View>
+          </View>
+          <View style={styles.collageItem}>
+            <View style={styles.imageContainer}>
+              <Image source={images[6]} style={styles.collageImage} resizeMode="cover" />
+              <View style={styles.letterBadge}>
+                <Text style={styles.letterText}>F</Text>
+              </View>
+            </View>
+            <View style={styles.collageLabel}>
+              <Text style={styles.collageText}>{lastKidsQuestionTranslations[language].options[5]}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.collageRow}>
+          <View style={[styles.collageItem, styles.fullWidthItem]}>
+            <View style={styles.imageContainer}>
+              <Image source={images[1]} style={styles.collageImage} resizeMode="cover" />
+              <View style={styles.letterBadge}>
+                <Text style={styles.letterText}>G</Text>
+              </View>
+            </View>
+            <View style={styles.collageLabel}>
+              <Text style={styles.collageText}>{lastKidsQuestionTranslations[language].options[6]}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.finalQuestionContainer}>
+        <View style={styles.finalQuestionContent}>
+          <Text style={styles.finalQuestionText}>
+            {lastQuestionTranslations.finalText[language as keyof typeof lastQuestionTranslations.finalText]}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
 
   const renderQuestionImages = (questionIndex: number) => {
     const getImageGrid = (imageSource: typeof teenQuestionImages | typeof universityStudentQuestionImages) => (
@@ -416,33 +522,6 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
         </View>
       </View>
     );
-    const getImageGridForKids = (images: typeof childQuestionImages) => (
-      <View style={styles.multipleImagesContainer}>
-        <Text style={styles.mainQuestionText}>
-          {lastKidsQuestionTranslations[language].title}
-        </Text>
-
-        <View style={styles.questionsSection}>
-          {lastKidsQuestionTranslations[language].options.map((option, index) => (
-            <View key={index} style={styles.questionBlock}>
-              <Text style={styles.questionSubtext}>
-                {option}
-              </Text>
-              <View style={styles.imageWrapper}>
-                <View style={styles.numberBadge}>
-                  <Text style={styles.numberText}>{String.fromCharCode(65 + index)}</Text>
-                </View>
-                <Image source={images[index]} style={styles.summaryQuestionImage} resizeMode="contain" />
-              </View>
-            </View>
-          ))}
-        </View>
-
-        <Text style={styles.finalQuestionText}>
-          {lastKidsQuestionTranslations[language].finalQuestion}
-        </Text>
-      </View>
-    );
 
     const isUniversityUser = isUniversityStudent(userAge);
 
@@ -460,7 +539,6 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
     const images = isUniversityUser
       ? universityStudentQuestionImages
       : (isTeenUser ? teenQuestionImages : childQuestionImages);
-
 
     return (
       <Image
@@ -557,9 +635,9 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
             style={[
               styles.navButton,
               styles.submitButton,
-              !canProceedToNext() && styles.disabledButton,
+              answers[currentQuestions.length - 1] === null && styles.disabledButton,
             ]}
-            disabled={!canProceedToNext()}
+            disabled={answers[currentQuestions.length - 1] === null}
             onPress={handleSubmit}
           >
             <Text style={[styles.navButtonText, styles.submitButtonText]}>
@@ -864,5 +942,106 @@ const styles = StyleSheet.create({
     height: 150,
     resizeMode: 'cover',
     borderRadius: 12,
+  },
+  collageContainer: {
+    width: '100%',
+    padding: 10,
+    gap: 15,
+  },
+  collageRow: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  collageItem: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  fullWidthItem: {
+    flex: 2,
+  },
+  collageImage: {
+    width: '100%',
+    height: 120,
+  },
+  collageLabel: {
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  },
+  collageLetter: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4ade80',
+    marginBottom: 5,
+  },
+  collageText: {
+    fontSize: 14,
+    color: '#1f2937',
+    lineHeight: 20,
+  },
+  finalQuestionContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#f0fdf4',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4ade80',
+  },
+  kidsHeaderContainer: {
+    backgroundColor: '#f0fdf4',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#4ade80',
+  },
+  kidsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  kidsSubtitle: {
+    fontSize: 16,
+    color: '#4b5563',
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+  },
+  letterBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    backgroundColor: '#4ade80',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  letterText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  finalQuestionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
 });

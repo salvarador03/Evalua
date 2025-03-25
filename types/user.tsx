@@ -17,6 +17,7 @@ interface BaseUser {
   lastLogin: number;
   countryRole?: CountryRole;
   language?: Language;
+  isTeacher?: boolean;
 }
 
 interface StudentUser extends BaseUser {
