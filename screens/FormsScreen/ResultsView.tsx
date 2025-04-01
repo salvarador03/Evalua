@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Animated,
   Modal,
+  PanResponder,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Language } from "../../types/language";
@@ -19,6 +21,10 @@ import ComparisonChart from "./ComparisonChart";
 import db from "@react-native-firebase/database";
 import { translations } from "../../Components/LanguageSelection/translations";
 import SpiderChart from './SpiderChart';
+import { createAvatar } from '@dicebear/core';
+import * as avataaarsStyle from '@dicebear/avataaars';
+import { useTranslation } from 'react-i18next';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type LocalFormStats = {
   median: number;
@@ -54,6 +60,30 @@ interface RouteParams {
   formResponse: FormResponse;
   language: Language;
   answers: (number | null)[];
+}
+
+type Priority = 'high' | 'medium' | 'low';
+
+interface Tip {
+  id: string;
+  domain: string;
+  score: number;
+  priority: Priority;
+  title: string;
+  text: string;
+}
+
+interface AvatarConfig {
+  topType: string;
+  accessoriesType: string;
+  hairColor: string;
+  facialHairType: string;
+  clotheType: string;
+  clotheColor: string;
+  eyeType: string;
+  eyebrowType: string;
+  mouthType: string;
+  skinColor: string;
 }
 
 // Primero, definimos las traducciones para la pregunta última dentro de ResultsView
@@ -125,6 +155,25 @@ const lastKidsQuestionTranslations = {
   }
 };
 
+const getRandomAvatar = async (seed: number): Promise<string> => {
+  const avatar = createAvatar(avataaarsStyle, {
+    seed: seed.toString(),
+    backgroundColor: ['b6e3f4','c0aede','d1d4f9'],
+    accessories: ['kurt', 'prescription01', 'prescription02', 'round', 'sunglasses', 'wayfarers'],
+    clothesColor: ['blue', 'black', 'gray', 'heather', 'pastelBlue', 'pastelGreen', 'pastelOrange', 'pastelRed', 'pastelYellow', 'pink', 'red', 'white'],
+    clothing: ['graphicShirt', 'hoodie', 'overall', 'blazerAndShirt', 'blazerAndSweater', 'collarAndSweater'],
+    eyebrows: ['default', 'defaultNatural', 'flatNatural', 'raisedExcited', 'unibrowNatural', 'upDown'],
+    eyes: ['default', 'closed', 'cry', 'happy', 'hearts', 'side', 'squint', 'surprised', 'wink', 'winkWacky'],
+    facialHair: ['beardMedium', 'beardLight', 'beardMajestic', 'moustacheFancy', 'moustacheMagnum'],
+    hairColor: ['auburn', 'black', 'blonde', 'blondeGolden', 'brown', 'brownDark'],
+    mouth: ['default', 'concerned', 'disbelief', 'eating', 'grimace', 'sad', 'screamOpen', 'serious', 'smile', 'tongue', 'twinkle'],
+    skinColor: ['tanned', 'yellow', 'pale', 'light', 'brown', 'darkBrown', 'black'],
+    top: ['hat', 'hijab', 'turban', 'winterHat1', 'bob', 'bun', 'curly', 'dreads', 'frida', 'fro', 'bigHair']
+  });
+
+  return await avatar.toDataUri();
+};
+
 export const ResultsView: React.FC<ResultsViewProps> = ({
   language,
   formResponse,
@@ -136,7 +185,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const studentData = routeParams?.studentData;
   const isTeacherView = routeParams?.isTeacherView ?? false;
   const [activeSection, setActiveSection] = useState<
-    "responses" | "comparison"
+    "responses" | "comparison" | "tips"
   >("responses");
   const [fadeAnim] = useState(new Animated.Value(1));
   const [studentClassCode, setStudentClassCode] = useState<string>("");
@@ -145,6 +194,13 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const [expandedQuestions, setExpandedQuestions] = useState<number[]>([]);
   const scrollViewRef = React.useRef<ScrollView>(null);
   const { user } = useAuth();
+  const [favoriteTips, setFavoriteTips] = useState<string[]>([]);
+  const [completedTips, setCompletedTips] = useState<string[]>([]);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  const [swipeAnim] = useState(new Animated.ValueXY());
+  const [avatarUris, setAvatarUris] = useState<{[key: string]: string}>({});
+  const [validTips, setValidTips] = useState<Tip[]>([]);
+  const { t, i18n } = useTranslation();
 
   const loadStudentData = async () => {
     if (isTeacherView && studentData?.uid) {
@@ -166,44 +222,204 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
       } catch (error) {
         console.error("Error loading student data:", error);
       }
+    } else {
+      // Para usuarios normales, obtener el classCode
+      try {
+        const effectiveUserId = formResponse?.userId;
+        if (!effectiveUserId) {
+          console.warn('No user ID available for class code');
+          return;
+        }
+
+        const userPath = formResponse.isGuest ? 'guests' : 'users';
+        console.log('Loading class code for:', {
+          effectiveUserId,
+          userPath,
+          isGuest: formResponse.isGuest
+        });
+
+        const userRef = await db().ref(`/${userPath}/${effectiveUserId}`).once("value");
+        const userData = userRef.val();
+
+        if (userData?.classCode) {
+          console.log('Class code loaded:', userData.classCode);
+          setStudentClassCode(userData.classCode);
+        } else {
+          console.warn('No class code found for user');
+        }
+      } catch (error) {
+        console.error("Error loading class code:", error);
+      }
     }
   };
 
   useEffect(() => {
     loadStudentData();
-  }, [isTeacherView, studentData?.uid]);
+  }, [isTeacherView, studentData?.uid, formResponse?.userId]);
 
   useEffect(() => {
     const loadAnswers = async () => {
       try {
-        if (isTeacherView && studentData?.uid) {
-          const formResponseRef = await db()
-            .ref(`/form_responses/${studentData.uid}/physical_literacy`)
-            .once('value');
+        const effectiveUserId = isTeacherView && studentData
+          ? studentData.uid
+          : formResponse?.userId;
 
-          const formResponseData = formResponseRef.val();
+        if (!effectiveUserId) {
+          console.warn('No user ID available, using provided answers');
+          setLocalAnswers(answers);
+          return;
+        }
 
-          if (formResponseData?.answers) {
+        const userPath = formResponse.isGuest ? 'guests' : 'users';
+        console.log('Loading answers for:', {
+          effectiveUserId,
+          userPath,
+          isGuest: formResponse.isGuest
+        });
+
+        const formResponseRef = await db()
+          .ref(`/form_responses/${effectiveUserId}/physical_literacy`)
+          .once('value');
+
+        const formResponseData = formResponseRef.val();
+
+        if (formResponseData?.answers) {
+          console.log('Loaded answers:', {
+            length: formResponseData.answers.length,
+            answers: formResponseData.answers
+          });
+
+          if (formResponseData.answers.length === 8) {
             setLocalAnswers(formResponseData.answers);
+          } else {
+            console.warn('⚠️ Respuestas incompletas encontradas:', formResponseData.answers);
+            // Fallback: completar con ceros si faltan respuestas
+            const completeAnswers = [
+              ...formResponseData.answers,
+              ...Array(8 - formResponseData.answers.length).fill(0)
+            ];
+            setLocalAnswers(completeAnswers);
           }
         } else {
+          console.warn('No answers found in formResponseData, using provided answers');
           setLocalAnswers(answers);
         }
       } catch (error) {
         console.error("Error loading answers:", error);
+        setLocalAnswers(answers);
       }
     };
 
     loadAnswers();
-  }, [isTeacherView, studentData?.uid, answers]);
+  }, [isTeacherView, studentData?.uid, answers, formResponse]);
+
+  // Calcular los consejos válidos basados en las respuestas
+  useEffect(() => {
+    const calculateValidTips = () => {
+      const validAnswers = answers.filter((answer): answer is number => answer !== null);
+      const averageScore = validAnswers.reduce((acc: number, curr) => acc + curr, 0) / validAnswers.length;
+      
+      const tips: Tip[] = [];
+      let tipId = 1;
+
+      // Añadir consejos basados en el promedio
+      if (averageScore < 3) {
+        tips.push({
+          id: `tip-${tipId++}`,
+          domain: 'general',
+          score: averageScore,
+          priority: 'high',
+          title: 'Consejo General',
+          text: 'Tu puntaje es bajo. Considera aumentar tu actividad física regularmente.'
+        });
+      } else if (averageScore < 4) {
+        tips.push({
+          id: `tip-${tipId++}`,
+          domain: 'general',
+          score: averageScore,
+          priority: 'medium',
+          title: 'Consejo General',
+          text: 'Tu puntaje es medio. Mantén tu actividad física para mejorar tu salud.'
+        });
+      } else {
+        tips.push({
+          id: `tip-${tipId++}`,
+          domain: 'general',
+          score: averageScore,
+          priority: 'low',
+          title: 'Consejo General',
+          text: 'Tu puntaje es alto. Mantén tu actividad física para mantener tu salud.'
+        });
+      }
+
+      // Añadir consejos específicos por dominio
+      answers.forEach((answer, index) => {
+        if (answer !== null && answer < 3) {
+          tips.push({
+            id: `tip-${tipId++}`,
+            domain: `domain${index + 1}`,
+            score: answer,
+            priority: 'high',
+            title: `Consejo para ${getQuestionDomain(index)}`,
+            text: `Tu puntaje en ${getQuestionDomain(index)} es bajo. Considera aumentar tu actividad física.`
+          });
+        } else if (answer !== null && answer < 4) {
+          tips.push({
+            id: `tip-${tipId++}`,
+            domain: `domain${index + 1}`,
+            score: answer,
+            priority: 'medium',
+            title: `Consejo para ${getQuestionDomain(index)}`,
+            text: `Tu puntaje en ${getQuestionDomain(index)} es medio. Mantén tu actividad física para mejorar tu salud.`
+          });
+        }
+      });
+
+      setValidTips(tips);
+    };
+
+    calculateValidTips();
+  }, [answers]);
+
+  // Cargar avatares cuando validTips cambie
+  useEffect(() => {
+    const loadAvatars = async () => {
+      const newAvatarUris: {[key: string]: string} = {};
+      
+      // Cargar avatares para consejos válidos
+      for (const tip of validTips) {
+        newAvatarUris[`tip-${tip.id}`] = await getRandomAvatar(Math.floor(Math.random() * 100));
+      }
+      
+      // Cargar avatares para consejos generales
+      const generalTipsCount = Object.entries(translations[language].tips)
+        .filter(([key]) => !['title', 'needsSupport', 'needsReinforcement', 'goodLevel'].includes(key))
+        .length;
+      
+      for (let i = 0; i < generalTipsCount; i++) {
+        newAvatarUris[`general-${i}`] = await getRandomAvatar(i + 100);
+      }
+      
+      setAvatarUris(newAvatarUris);
+    };
+    
+    loadAvatars();
+  }, [validTips, language]);
 
   const getAgeAppropriateQuestions = (language: Language) => {
-    const targetAge = isTeacherView ? studentAge : user?.age;
+    const targetAge = isTeacherView ? studentAge : formResponse.age;
 
     if (!targetAge) {
       console.log('No age found, defaulting to kids questions');
       return questions[language].slice();
     }
+
+    console.log('Age check:', {
+      targetAge,
+      isUniversity: targetAge >= 18 && targetAge <= 24,
+      isTeen: targetAge >= 12 && targetAge <= 17,
+      isKid: targetAge < 12
+    });
 
     if (targetAge >= 18 && targetAge <= 24) {
       console.log('Using university questions');
@@ -236,7 +452,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     return formResponse?.classCode || "";
   };
 
-  const switchSection = (section: "responses" | "comparison") => {
+  const switchSection = (section: "responses" | "comparison" | "tips") => {
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -253,24 +469,26 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   };
 
   const renderStudentHeader = () => {
-    if (!isTeacherView || !studentData) return null;
+    if (!studentData) return null;
 
     return (
       <View style={styles.studentHeader}>
-        <View style={styles.studentInfo}>
-          <Text style={styles.studentName}>{studentData.name}</Text>
-          <Text style={styles.studentEmail}>{studentData.email}</Text>
-          {studentData.classCode && (
-            <Text style={styles.studentClassCode}>
-              {translations[language].classCode}: {studentData.classCode}
+        <View style={styles.studentHeaderContent}>
+          <View style={styles.studentInfo}>
+            <Text style={styles.studentName} numberOfLines={1} ellipsizeMode="tail">
+              {studentData.name}
             </Text>
+            <Text style={styles.studentEmail}>{studentData.email}</Text>
+            {studentData.classCode && (
+              <Text style={styles.studentClassCode}>Clase: {studentData.classCode}</Text>
+            )}
+          </View>
+          {isTeacherView && (
+            <View style={styles.teacherBadge}>
+              <Ionicons name="school" size={16} color="#fff" />
+              <Text style={styles.teacherBadgeText}>Modo Profesor</Text>
+            </View>
           )}
-        </View>
-        <View style={styles.teacherBadge}>
-          <Ionicons name="school" size={20} color="#fff" />
-          <Text style={styles.teacherBadgeText}>
-            {translations[language].teacherView}
-          </Text>
         </View>
       </View>
     );
@@ -280,46 +498,80 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     <View style={styles.navContainer}>
       <TouchableOpacity
         style={[
-          styles.navButton,
+          styles.navigationButton,
           activeSection === "responses" && styles.navButtonActive,
         ]}
         onPress={() => switchSection("responses")}
       >
-        <Ionicons
-          name="star"
-          size={32}
-          color={activeSection === "responses" ? "#FFF" : "#9E7676"}
-        />
-        <Text
-          style={[
-            styles.navButtonText,
-            activeSection === "responses" && styles.navButtonTextActive,
-          ]}
-        >
-          {isTeacherView ? translations[language].studentResponses : translations[language].myResponses}
-        </Text>
+        <View style={styles.navButtonContent}>
+          <Ionicons
+            name="star"
+            size={24}
+            color={activeSection === "responses" ? "#FFF" : "#9E7676"}
+          />
+          <Text
+            style={[
+              styles.navButtonText,
+              activeSection === "responses" && styles.navButtonTextActive,
+            ]}
+            numberOfLines={2}
+            textBreakStrategy="balanced"
+          >
+            {isTeacherView ? translations[language].studentResponses : translations[language].myResponses}
+          </Text>
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[
-          styles.navButton,
+          styles.navigationButton,
           activeSection === "comparison" && styles.navButtonActive,
         ]}
         onPress={() => switchSection("comparison")}
       >
-        <Ionicons
-          name="people"
-          size={32}
-          color={activeSection === "comparison" ? "#FFF" : "#9E7676"}
-        />
-        <Text
-          style={[
-            styles.navButtonText,
-            activeSection === "comparison" && styles.navButtonTextActive,
-          ]}
-        >
-          {translations[language].compareWithOthers}
-        </Text>
+        <View style={styles.navButtonContent}>
+          <Ionicons
+            name="people"
+            size={24}
+            color={activeSection === "comparison" ? "#FFF" : "#9E7676"}
+          />
+          <Text
+            style={[
+              styles.navButtonText,
+              activeSection === "comparison" && styles.navButtonTextActive,
+            ]}
+            numberOfLines={2}
+            textBreakStrategy="balanced"
+          >
+            {translations[language].compareWithOthers}
+          </Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.navigationButton,
+          activeSection === "tips" && styles.navButtonActive,
+        ]}
+        onPress={() => switchSection("tips")}
+      >
+        <View style={styles.navButtonContent}>
+          <Ionicons
+            name="bulb"
+            size={24}
+            color={activeSection === "tips" ? "#FFF" : "#9E7676"}
+          />
+          <Text
+            style={[
+              styles.navButtonText,
+              activeSection === "tips" && styles.navButtonTextActive,
+            ]}
+            numberOfLines={2}
+            textBreakStrategy="balanced"
+          >
+            {translations[language].personalizedTips}
+          </Text>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -583,16 +835,18 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
 
               {isTeacherView && userAnswer !== null && userAnswer !== undefined && (
                 <View style={[styles.teacherNote, { backgroundColor: `${scoreStyle.color}20` }]}>
-                  <Ionicons
-                    name="information-circle"
-                    size={20}
-                    color={scoreStyle.color}
-                  />
-                  <Text style={[styles.teacherNoteText, { color: scoreStyle.color }]}>
-                    {userAnswer >= 8 ? translations[language].excellentGlobalUnderstanding :
-                      userAnswer >= 6 ? translations[language].goodComponentsUnderstanding :
+                  <View style={styles.teacherNoteContent}>
+                    <Ionicons 
+                      name={scoreStyle.icon as any} 
+                      size={18} 
+                      color={scoreStyle.color} 
+                    />
+                    <Text style={[styles.teacherNoteText, { color: scoreStyle.color }]}>
+                      {userAnswer >= 8 ? translations[language].excellentGlobalUnderstanding :
+                        userAnswer >= 6 ? translations[language].goodComponentsUnderstanding :
                         translations[language].needsImprovement}
-                  </Text>
+                    </Text>
+                  </View>
                 </View>
               )}
             </View>
@@ -614,16 +868,12 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const renderComparison = () => {
     const questions = getAgeAppropriateQuestions(language);
     
-    // Añadir logs para depuración
-    console.log('Stats data:', {
-      stats,
-      classMedians: stats?.[0]?.classMedians,
-      globalMedians: stats?.[0]?.globalMedians,
-      countryMedians: stats?.[0]?.countryMedians,
-      ageMedians: stats?.[0]?.ageMedians,
-    });
-    
-    console.log('User answers:', answers);
+    // Logs detallados para depuración
+    console.log('Stats completos:', stats);
+    console.log('Stats[0]:', stats[0]);
+    console.log('Class medians:', stats[0]?.classMedians);
+    console.log('User answers:', localAnswers);
+    console.log('Current class code:', studentClassCode);
     
     // Asegurarnos de que los datos de estadísticas estén disponibles
     const classScores = stats?.[0]?.classMedians || [];
@@ -631,117 +881,399 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     const countryScores = stats?.[0]?.countryMedians || [];
     const ageScores = stats?.[0]?.ageMedians || [];
     
+    // Verificar si hay datos de comparación disponibles
+    const hasComparisonData = classScores.length === 8 || 
+                            globalScores.length === 8 || 
+                            countryScores.length === 8 || 
+                            ageScores.length === 8;
+
+    // Obtener las etiquetas de dominio traducidas
+    const domainLabels = [
+      getQuestionDomain(0),
+      getQuestionDomain(1),
+      getQuestionDomain(2),
+      getQuestionDomain(3),
+      getQuestionDomain(4),
+      getQuestionDomain(5),
+      getQuestionDomain(6),
+      getQuestionDomain(7),
+    ];
+    
     return (
       <View>
-        {/* Gráfico Araña con idioma correcto */}
-        <SpiderChart
-          userScores={answers.map(score => score ?? 0)}
-          classScores={classScores}
-          globalScores={globalScores}
-          countryScores={countryScores}
-          ageScores={ageScores}
-          language={language}
-        />
-        
-        {questions.map((question, index) => {
-          const effectiveUserId = isTeacherView && studentData
-            ? studentData.uid
-            : formResponse?.userId;
-          if (!effectiveUserId) return null;
+        {!hasComparisonData ? (
+          <View style={styles.noDataContainer}>
+            <Ionicons name="information-circle-outline" size={48} color="#9E7676" />
+            <Text style={styles.noDataText}>
+              {translations[language].noComparisonData}
+            </Text>
+          </View>
+        ) : (
+          <>
+            {/* Gráfico Araña con idioma correcto */}
+            <SpiderChart
+              userScores={localAnswers.map(score => score ?? 0)}
+              classScores={classScores}
+              globalScores={globalScores}
+              countryScores={countryScores}
+              ageScores={ageScores}
+              language={language}
+              domainLabels={domainLabels}
+            />
+            
+            {questions.map((question, index) => {
+              const effectiveUserId = isTeacherView && studentData
+                ? studentData.uid
+                : formResponse?.userId;
+              if (!effectiveUserId) return null;
 
-          const userAge = isTeacherView ? studentAge : user?.age;
-          const isExpanded = expandedQuestions.includes(index);
+              const userAge = isTeacherView ? studentAge : user?.age;
+              const isExpanded = expandedQuestions.includes(index);
 
-          return (
-            <View key={index} style={styles.comparisonSection}>
-              <View style={styles.questionHeader}>
-                <View style={styles.questionTitleContainer}>
-                  <View style={styles.questionInfo}>
-                    <View style={styles.questionNumberBadge}>
-                      <Text style={styles.questionNumberText}>
-                        {getQuestionDomain(index)}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.infoButton}
-                    onPress={() => handleQuestionExpand(index)}
-                  >
-                    <Ionicons 
-                      name="document-text-outline"
-                      size={20} 
-                      color="#9E7676"
-                    />
-                    <Text style={styles.infoButtonText}>
-                      {translations[language].showQuestion}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <Modal
-                visible={isExpanded}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => handleQuestionExpand(index)}
-              >
-                <View style={styles.modalOverlay}>
-                  <TouchableOpacity 
-                    style={styles.modalOverlayTouchable}
-                    activeOpacity={1}
-                    onPress={() => handleQuestionExpand(index)}
-                  />
-                  <View style={styles.modalContent}>
-                    <View style={styles.modalHeader}>
-                      <Text style={styles.modalTitle}>
-                        {getQuestionDomain(index)}
-                      </Text>
+              return (
+                <View key={index} style={styles.comparisonSection}>
+                  <View style={styles.questionHeader}>
+                    <View style={styles.questionTitleContainer}>
+                      <View style={styles.questionInfo}>
+                        <View style={styles.questionNumberBadge}>
+                          <Text style={styles.questionNumberText}>
+                            {getQuestionDomain(index)}
+                          </Text>
+                        </View>
+                      </View>
                       <TouchableOpacity 
-                        style={styles.closeButton}
+                        style={styles.infoButton}
                         onPress={() => handleQuestionExpand(index)}
                       >
-                        <Ionicons name="close" size={24} color="#9E7676" />
+                        <Ionicons 
+                          name="document-text-outline"
+                          size={20} 
+                          color="#9E7676"
+                        />
+                        <Text style={styles.infoButtonText}>
+                          {translations[language].showQuestion}
+                        </Text>
                       </TouchableOpacity>
                     </View>
-                    <ScrollView 
-                      style={styles.modalScroll}
-                      showsVerticalScrollIndicator={true}
-                      bounces={false}
-                    >
-                      <Text style={styles.modalText}>{question.text}</Text>
-                    </ScrollView>
                   </View>
-                </View>
-              </Modal>
 
-              <ComparisonChart
-                key={`chart-${index}`}
-                userScore={answers[index] ?? 0}
-                userData={{
-                  userId: effectiveUserId || "",
-                  name: studentData?.name || "",
-                  classCode: studentData?.classCode || "",
-                  country: formResponse.country || "",
-                  countryRole: formResponse.countryRole || {
-                    country: formResponse.country || "",
-                    language: language,
-                    flag: ""
-                  },
-                  age: userAge || 0,
-                }}
-                formResponse={formResponse}
-                questionIndex={index}
-                language={language}
-              />
-            </View>
-          );
-        })}
+                  <Modal
+                    visible={isExpanded}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => handleQuestionExpand(index)}
+                  >
+                    <View style={styles.modalOverlay}>
+                      <TouchableOpacity 
+                        style={styles.modalOverlayTouchable}
+                        activeOpacity={1}
+                        onPress={() => handleQuestionExpand(index)}
+                      />
+                      <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                          <Text style={styles.modalTitle}>
+                            {getQuestionDomain(index)}
+                          </Text>
+                          <TouchableOpacity 
+                            style={styles.closeButton}
+                            onPress={() => handleQuestionExpand(index)}
+                          >
+                            <Ionicons name="close" size={24} color="#9E7676" />
+                          </TouchableOpacity>
+                        </View>
+                        <ScrollView 
+                          style={styles.modalScroll}
+                          showsVerticalScrollIndicator={true}
+                          bounces={false}
+                        >
+                          <Text style={styles.modalText}>{question.text}</Text>
+                        </ScrollView>
+                      </View>
+                    </View>
+                  </Modal>
+
+                  <ComparisonChart
+                    key={`chart-${index}`}
+                    userScore={localAnswers[index] ?? 0}
+                    userData={{
+                      userId: effectiveUserId || "",
+                      name: studentData?.name || "",
+                      classCode: studentData?.classCode || "",
+                      country: formResponse.country || "",
+                      countryRole: formResponse.countryRole || {
+                        country: formResponse.country || "",
+                        language: language,
+                        flag: ""
+                      },
+                      age: userAge || 0,
+                    }}
+                    formResponse={formResponse}
+                    questionIndex={index}
+                    language={language}
+                  />
+                </View>
+              );
+            })}
+          </>
+        )}
       </View>
     );
   };
 
+  const getGeneralLevel = (tips: Tip[]) => {
+    const highPriorityCount = tips.filter(tip => tip.priority === 'high').length;
+    const mediumPriorityCount = tips.filter(tip => tip.priority === 'medium').length;
+    
+    if (highPriorityCount > tips.length / 3) return 'needsSupport';
+    if (mediumPriorityCount > tips.length / 2) return 'needsReinforcement';
+    return 'goodLevel';
+  };
+
+  const getAvatarUri = (tipId: string) => {
+    const avatar = createAvatar(avataaarsStyle, {
+      seed: tipId,
+      backgroundColor: ['#FFDFBA', '#BAFFC9', '#BAE1FF'],
+    });
+
+    return `data:image/svg+xml;utf8,${encodeURIComponent(avatar.toString())}`;
+  };
+
+  const renderTips = () => {
+    if (!validTips || validTips.length === 0) return null;
+
+    const currentTip = validTips[currentTipIndex];
+    const priorityColor = getPriorityColor(currentTip.priority);
+    const generalLevel = getGeneralLevel(validTips);
+
+    return (
+      <ScrollView style={styles.tipsContainer}>
+        <View style={styles.tipsHeader}>
+          <View style={styles.tipsHeaderTop}>
+            <Ionicons name="bulb" size={32} color="#9E7676" />
+            <Text style={styles.tipsTitle}>{translations[language].personalizedTips}</Text>
+          </View>
+          <View style={[styles.levelBadge, { backgroundColor: getLevelColor(generalLevel) }]}>
+            <Text style={styles.levelBadgeText}>
+              {translations[language].tips[generalLevel]}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.tipCard}>
+          <View style={[styles.tipHeader, { backgroundColor: `${priorityColor}15` }]}>
+            <View style={[styles.priorityBadge, { backgroundColor: priorityColor }]}>
+              <Ionicons 
+                name={getPriorityIcon(currentTip.priority)} 
+                size={16} 
+                color="#FFF" 
+              />
+              <Text style={styles.priorityText}>
+                {currentTip.priority}
+              </Text>
+            </View>
+            <View style={styles.domainBadge}>
+              <Ionicons 
+                name={getTipIcon(currentTip.domain)} 
+                size={20} 
+                color="#666"
+              />
+              <Text style={styles.domainText}>
+                {currentTip.domain === 'general' 
+                  ? translations[language].tips.title
+                  : getQuestionDomain(parseInt(currentTip.domain.replace('domain', '')) - 1)}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.tipContent}>
+            <View style={styles.avatarContainer}>
+              {avatarUris[`tip-${currentTip.id}`] && (
+                <Image 
+                  source={{ uri: avatarUris[`tip-${currentTip.id}`] }}
+                  style={styles.avatarImage}
+                />
+              )}
+            </View>
+            <Text style={styles.tipText}>{currentTip.text}</Text>
+          </View>
+
+          <View style={styles.tipActions}>
+            <TouchableOpacity 
+              style={[styles.actionButton, favoriteTips.includes(currentTip.id) && styles.actionButtonActive]}
+              onPress={() => handleTipAction(currentTip.id, 'favorite')}
+            >
+              <Ionicons 
+                name={favoriteTips.includes(currentTip.id) ? "heart" : "heart-outline"} 
+                size={24} 
+                color={favoriteTips.includes(currentTip.id) ? "#FF6B6B" : "#666"}
+              />
+              <Text style={[
+                styles.actionButtonText,
+                favoriteTips.includes(currentTip.id) && styles.actionButtonTextActive
+              ]}>
+                {translations[language].like}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.actionButton, completedTips.includes(currentTip.id) && styles.actionButtonActive]}
+              onPress={() => handleTipAction(currentTip.id, 'complete')}
+            >
+              <Ionicons 
+                name={completedTips.includes(currentTip.id) ? "checkmark-circle" : "checkmark-circle-outline"} 
+                size={24} 
+                color={completedTips.includes(currentTip.id) ? "#4CAF50" : "#666"}
+              />
+              <Text style={[
+                styles.actionButtonText,
+                completedTips.includes(currentTip.id) && styles.actionButtonTextActive
+              ]}>
+                {translations[language].complete}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.navigationContainer}>
+            <TouchableOpacity
+              style={[styles.navArrowButton, currentTipIndex === 0 && styles.navButtonDisabled]}
+              onPress={() => setCurrentTipIndex(prev => Math.max(0, prev - 1))}
+              disabled={currentTipIndex === 0}
+            >
+              <Ionicons 
+                name="chevron-back" 
+                size={24} 
+                color={currentTipIndex === 0 ? "#ccc" : "#666"} 
+              />
+            </TouchableOpacity>
+
+            <View style={styles.navigationDots}>
+              {validTips.map((_, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => setCurrentTipIndex(index)}
+                  style={[
+                    styles.navigationDot,
+                    currentTipIndex === index && styles.activeDot,
+                  ]}
+                />
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.navArrowButton, currentTipIndex === validTips.length - 1 && styles.navButtonDisabled]}
+              onPress={() => setCurrentTipIndex(prev => Math.min(validTips.length - 1, prev + 1))}
+              disabled={currentTipIndex === validTips.length - 1}
+            >
+              <Ionicons 
+                name="chevron-forward" 
+                size={24} 
+                color={currentTipIndex === validTips.length - 1 ? "#ccc" : "#666"} 
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${getProgressPercentage()}%` }
+                ]} 
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {completedTips.length} / {validTips.length} {translations[language].completed}
+            </Text>
+          </View>
+          <View style={styles.progressStats}>
+            <View style={styles.progressStat}>
+              <Ionicons name="heart" size={20} color="#FF6B6B" />
+              <Text style={styles.progressStatText}>
+                {favoriteTips.length} {translations[language].favorites}
+              </Text>
+            </View>
+            <View style={styles.progressStat}>
+              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+              <Text style={styles.progressStatText}>
+                {completedTips.length} {translations[language].completed}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    );
+  };
+
+  const getPriorityIcon = (priority: Priority) => {
+    switch (priority) {
+      case 'high': return 'alert-circle';
+      case 'medium': return 'warning';
+      case 'low': return 'checkmark-circle';
+      default: return 'information-circle';
+    }
+  };
+
+  const getLevelColor = (level: string) => {
+    switch (level) {
+      case 'needsSupport': return '#FF6B6B';
+      case 'needsReinforcement': return '#FFD93D';
+      case 'goodLevel': return '#4CAF50';
+      default: return '#4CAF50';
+    }
+  };
+
+  const handleTipAction = (tipId: string, action: 'favorite' | 'complete') => {
+    if (action === 'favorite') {
+      setFavoriteTips(prev => 
+        prev.includes(tipId) 
+          ? prev.filter(id => id !== tipId)
+          : [...prev, tipId]
+      );
+    } else {
+      setCompletedTips(prev => 
+        prev.includes(tipId) 
+          ? prev.filter(id => id !== tipId)
+          : [...prev, tipId]
+      );
+    }
+  };
+
+  const getProgressPercentage = () => {
+    return (completedTips.length / validTips.length) * 100;
+  };
+
+  const getPriorityColor = (priority: Priority) => {
+    switch (priority) {
+      case 'high': return '#FF6B6B';
+      case 'medium': return '#FFD93D';
+      case 'low': return '#6BCB77';
+      default: return '#6BCB77';
+    }
+  };
+
+  const getTipIcon = (domain: string) => {
+    switch (domain) {
+      case 'general':
+        return 'fitness';
+      case 'domain1':
+        return 'walk';
+      case 'domain2':
+        return 'bicycle';
+      case 'domain3':
+        return 'basketball';
+      case 'domain4':
+        return 'football';
+      case 'domain5':
+        return 'tennisball';
+      default:
+        return 'fitness';
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeContainer}>
       {studentData && renderStudentHeader()}
       {renderNavigationButtons()}
       <ScrollView 
@@ -754,202 +1286,88 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         <Animated.View style={{ opacity: fadeAnim }}>
           {activeSection === "responses"
             ? renderResponses()
-            : renderComparison()}
+            : activeSection === "comparison"
+              ? renderComparison()
+              : renderTips()}
         </Animated.View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeContainer: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  studentHeader: {
-    backgroundColor: "rgba(158, 118, 118, 0.9)",
-    padding: 18,
-    paddingTop: 50,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  studentInfo: {
-    flex: 1,
-  },
-  studentName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#fff",
-  },
-  studentEmail: {
-    fontSize: 14,
-    color: "#fff",
-    opacity: 0.9,
-  },
-  comparisonSection: {
-    marginBottom: 20,
-  },
-  studentClassCode: {
-    fontSize: 14,
-    color: "#fff",
-    opacity: 0.9,
-    marginTop: 4,
-  },
-  scoreContainer: {
-    alignItems: 'center',
-    marginVertical: 16,
-  },
-  trafficLight: {
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    width: '100%',
-  },
-  scoreCircle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 8,
-    padding: 16,
-    borderRadius: 50,
-    borderWidth: 2,
-    backgroundColor: 'white',
-  },
-  scoreValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  scoreLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    marginTop: 8,
-  },
-  teacherBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#fff",
-  },
-  questionNumberBadge: {
-    backgroundColor: 'rgba(158, 118, 118, 0.15)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: 'rgba(158, 118, 118, 0.2)',
-    marginBottom: 8
-  },
-  questionNumberText: {
-    color: '#594545',
-    fontWeight: '600',
-    fontSize: 14
-  },
-  teacherBadgeText: {
-    color: "#fff",
-    marginLeft: 6,
-    fontWeight: "600",
-    fontSize: 12,
+    backgroundColor: '#fff',
   },
   navContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    padding: 16,
+    padding: 12,
     backgroundColor: "#fff",
     elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-  },
-  navButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginHorizontal: 4,
-  },
-  navButtonActive: {
-    backgroundColor: "#9E7676",
-  },
-  navButtonText: {
-    marginLeft: 8,
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#9E7676",
-  },
-  navButtonTextActive: {
-    color: "#fff",
-  },
-  content: {
-    flex: 1,
-    padding: 16,
+    gap: 8,
   },
   responsesContainer: {
     gap: 16,
   },
-  responseCard: {
+  studentHeader: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  questionContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 12,
-  },
-  questionText: {
-    flex: 1,
-    fontSize: 16,
-    color: "#594545",
-  },
-  answerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    backgroundColor: "rgba(158, 118, 118, 0.1)",
-    padding: 16,
-    borderRadius: 12,
-  },
-  answerValue: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#9E7676",
-  },
-  pointsText: {
-    fontSize: 16,
-    color: "#666",
-  },
-  teacherNote: {
+  studentHeaderContent: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 12,
-    gap: 8,
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
   },
-  teacherNoteText: {
+  studentInfo: {
     flex: 1,
+    marginRight: 12,
+  },
+  studentName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#594545',
+  },
+  studentEmail: {
     fontSize: 14,
-    fontWeight: '500',
+    color: '#888',
+    marginTop: 2
+  },
+  studentClassCode: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 2
+  },
+  teacherBadge: {
+    flexDirection: "row",
+    backgroundColor: "#9E7676",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  teacherBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  comparisonSection: {
+    marginBottom: 20,
   },
   questionHeader: {
     marginBottom: 8,
@@ -1037,6 +1455,328 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(158, 118, 118, 0.1)',
+  },
+  navigationButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(158, 118, 118, 0.05)',
+    minHeight: 80,
+    transform: [{ scale: 1 }],
+  },
+  navButtonActive: {
+    backgroundColor: "#9E7676",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  navButtonDisabled: {
+    opacity: 0.5,
+  },
+  navButtonContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  navButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#9E7676",
+    textAlign: 'center',
+  },
+  navButtonTextActive: {
+    color: "#fff",
+  },
+  noDataContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noDataText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
+    marginTop: 16,
+  },
+  tipsContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  tipsHeader: {
+    marginBottom: 24,
+    gap: 12,
+  },
+  tipsHeaderTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  tipsTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#594545',
+  },
+  levelBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  levelBadgeText: {
+    color: '#FFF',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  tipCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginVertical: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  tipHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  priorityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  priorityText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  domainBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  domainText: {
+    color: '#666',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  tipContent: {
+    padding: 20,
+    gap: 16,
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  avatarImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  tipText: {
+    fontSize: 16,
+    color: '#594545',
+    lineHeight: 24,
+  },
+  tipActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#f5f5f5',
+  },
+  actionButtonActive: {
+    backgroundColor: '#594545',
+  },
+  actionButtonText: {
+    color: '#666',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  actionButtonTextActive: {
+    color: '#FFF',
+  },
+  navigationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#f5f5f5',
+    padding: 16,
+  },
+  navigationDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  navigationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ddd',
+  },
+  activeDot: {
+    backgroundColor: '#594545',
+    width: 24,
+  },
+  navArrowButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  progressContainer: {
+    gap: 16,
+  },
+  progressBarContainer: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 4,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#4CAF50',
+    borderRadius: 4,
+  },
+  progressText: {
+    color: '#666',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  progressStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  progressStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  progressStatText: {
+    color: '#666',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  responseCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  questionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
+  questionNumberBadge: {
+    backgroundColor: '#9E7676',
+    borderRadius: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 12,
+  },
+  questionNumberText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  questionText: {
+    flex: 1,
+    color: '#594545',
+    fontSize: 16,
+  },
+  scoreContainer: {
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  trafficLight: {
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    width: '100%',
+  },
+  scoreCircle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 8,
+    padding: 16,
+    borderRadius: 50,
+    borderWidth: 2,
+    backgroundColor: 'white',
+  },
+  scoreValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  scoreLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginTop: 8,
+  },
+  teacherNote: {
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFE5E5', // fallback
+  },
+  teacherNoteContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+  },
+  teacherNoteText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#D32F2F',
+    flexShrink: 1,
+  },
+  content: {
+    flex: 1,
   },
 });
 

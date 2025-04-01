@@ -20,6 +20,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   CompositeNavigationProp,
   useNavigation,
+  useFocusEffect,
 } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -386,6 +387,13 @@ export const FormsListScreen: React.FC = () => {
   useEffect(() => {
     loadFormResponse();
   }, [user]);
+
+  // Añadir useFocusEffect para recargar datos cuando se vuelve a la pantalla
+  useFocusEffect(
+    React.useCallback(() => {
+      loadFormResponse();
+    }, [])
+  );
 
   const generateAndSaveGuestId = async () => {
     const guestId = `guest_${Date.now()}_${Math.random()
@@ -1311,7 +1319,10 @@ export const FormsListScreen: React.FC = () => {
   return (
     <BackgroundContainer source={require("../../assets/images/p_fondo.webp")}>
       <SafeAreaView style={styles.safeArea}>
-        <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+        <TouchableOpacity 
+          style={styles.refreshButton} 
+          onPress={loadFormResponse}
+        >
           <Ionicons name="refresh" size={24} color="#9E7676" />
         </TouchableOpacity>
 
@@ -1561,12 +1572,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap', // Para evitar que se desborden
   },
   refreshButton: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 5 : (StatusBar.currentHeight || 0) + 5,
-    right: 20,
-    backgroundColor: "white",
-    padding: 8,
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 20 : (StatusBar.currentHeight || 0) + 20,
+    right: 16,
+    backgroundColor: '#f5f5f5',
     borderRadius: 20,
+    padding: 8,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

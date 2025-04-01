@@ -346,7 +346,12 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
       return;
     }
 
-    if (answers.some(answer => answer === null)) {
+    // Obtener el set de preguntas actual según edad
+    const currentQuestions = userAge && isTeenager(userAge)
+      ? teenQuestions[language]
+      : questions[language];
+
+    if (answers.length !== currentQuestions.length || answers.some((a) => a === null || a === undefined)) {
       Alert.alert(
         translations[language].incompleteAnswers,
         translations[language].pleaseAnswerAll,
@@ -398,6 +403,19 @@ export const PhysicalLiteracyFormScreen: React.FC = () => {
         translations[language].success,
         translations[language].answersSubmitted
       );
+
+      // Redirigir a la pantalla de resultados
+      navigation.replace("PhysicalLiteracyResults", {
+        formResponse: response,
+        language: language,
+        answers: answers,
+        studentData: {
+          name: user?.name || "Usuario",
+          email: user?.email || "",
+          uid: userId,
+        },
+        isTeacherView: false,
+      });
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       Alert.alert(

@@ -52,6 +52,7 @@ export const LoginScreen: React.FC = () => {
   const [guestName, setGuestName] = useState("");
   const [classCode, setClassCode] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState(new Date());
+  const [dobValidationStatus, setDobValidationStatus] = useState<"empty" | "valid" | "invalid">("empty");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(false);
   const [email, setEmail] = useState("");
@@ -104,6 +105,11 @@ export const LoginScreen: React.FC = () => {
       fetchClassCodes();
     }
   }, [isLoginMode]);
+
+  useEffect(() => {
+    const isValid = validateAge(dateOfBirth);
+    setDobValidationStatus(isValid ? "valid" : "invalid");
+  }, [dateOfBirth]);
 
   // Filtrar códigos basados en la búsqueda
   const filteredClassCodes = classCodes.filter(classCode => {
@@ -349,6 +355,7 @@ export const LoginScreen: React.FC = () => {
                     disabled={isLoading}
                     isValidAge={validateAge(dateOfBirth)}
                     label="Fecha de nacimiento"
+                    highlightStatus={dobValidationStatus}
                   />
 
                   {/* Selector de clase */}

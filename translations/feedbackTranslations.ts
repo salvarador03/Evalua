@@ -40,6 +40,11 @@ export const feedbackTranslations: Record<Language, {
     stimulation: string[];
     novelty: string[];
   };
+  personalizedTips: string;
+  tips: {
+    title: string;
+    completed: string;
+  };
 }> = {
   es: {
     feedbackTitle: "Tu Opinión",
@@ -122,6 +127,11 @@ export const feedbackTranslations: Record<Language, {
         "Tradicional - Moderno",
         "Estable - Avanzado"
       ]
+    },
+    personalizedTips: "Consejos Personalizados",
+    tips: {
+      title: "Consejos Generales",
+      completed: "consejos completados"
     }
   },
   en: {
@@ -205,6 +215,11 @@ export const feedbackTranslations: Record<Language, {
         "Usual - Leading edge",
         "Conservative - Innovative"
       ]
+    },
+    personalizedTips: "Personalized Tips",
+    tips: {
+      title: "General Tips",
+      completed: "tips completed"
     }
   },
   "es-PA": {
@@ -288,6 +303,11 @@ export const feedbackTranslations: Record<Language, {
         "Tradicional - Moderno",
         "Estable - Avanzado"
       ]
+    },
+    personalizedTips: "Consejos Personalizados",
+    tips: {
+      title: "Consejos Generales",
+      completed: "consejos completados"
     }
   },
   "pt-PT": {
@@ -371,6 +391,11 @@ export const feedbackTranslations: Record<Language, {
         "Usual - Líder",
         "Estável - Avançado"
       ]
+    },
+    personalizedTips: "Dicas Personalizadas",
+    tips: {
+      title: "Dicas Gerais",
+      completed: "dicas completadas"
     }
   },
   "pt-BR": {
@@ -454,6 +479,11 @@ export const feedbackTranslations: Record<Language, {
         "Usual - Líder",
         "Estável - Avançado"
       ]
+    },
+    personalizedTips: "Dicas Personalizadas",
+    tips: {
+      title: "Dicas Gerais",
+      completed: "dicas completadas"
     }
   }
 }; 

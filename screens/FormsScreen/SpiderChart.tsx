@@ -12,6 +12,7 @@ interface SpiderChartProps {
   countryScores?: number[];
   ageScores?: number[];
   language: Language;
+  domainLabels: string[];
 }
 
 interface ComparisonFilter {
@@ -30,15 +31,52 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
   countryScores,
   ageScores,
   language,
+  domainLabels,
 }) => {
-  // Añadir logs para depuración
-  console.log('SpiderChart Props:', {
-    userScores,
-    classScores,
-    globalScores,
-    countryScores,
-    ageScores,
-  });
+  // Validación de datos
+  useEffect(() => {
+    console.log('Datos recibidos en SpiderChart:', {
+      userScores: {
+        length: userScores.length,
+        values: userScores
+      },
+      classScores: {
+        length: classScores?.length,
+        values: classScores
+      },
+      globalScores: {
+        length: globalScores?.length,
+        values: globalScores
+      },
+      countryScores: {
+        length: countryScores?.length,
+        values: countryScores
+      },
+      ageScores: {
+        length: ageScores?.length,
+        values: ageScores
+      }
+    });
+
+    // Verificar que todos los arrays tengan la longitud correcta
+    const expectedLength = 8;
+    const arrays = [
+      { name: 'userScores', data: userScores },
+      { name: 'classScores', data: classScores },
+      { name: 'globalScores', data: globalScores },
+      { name: 'countryScores', data: countryScores },
+      { name: 'ageScores', data: ageScores },
+    ];
+
+    arrays.forEach(({ name, data }) => {
+      if (data && data.length !== expectedLength) {
+        console.warn(`⚠️ ${name} tiene longitud ${data.length}, se esperaba ${expectedLength}`);
+      }
+      if (data && data.some(score => score === 0)) {
+        console.warn(`⚠️ ${name} contiene valores en cero:`, data);
+      }
+    });
+  }, [userScores, classScores, globalScores, countryScores, ageScores]);
 
   const [filters, setFilters] = useState<ComparisonFilter[]>([
     {
@@ -77,27 +115,16 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
 
   // Actualizar los filtros cuando cambien las props
   useEffect(() => {
-    console.log('Updating filters with new scores. Age scores:', ageScores);
     setFilters(prev => {
-      const newFilters = prev.map(filter => {
-        const newFilter = {
-          ...filter,
-          scores: 
-            filter.id === 'class' ? classScores :
-            filter.id === 'global' ? globalScores :
-            filter.id === 'country' ? countryScores :
-            filter.id === 'age' ? ageScores :
-            undefined
-        };
-        if (filter.id === 'age') {
-          console.log('Age filter update:', {
-            hasScores: !!newFilter.scores,
-            scoresLength: newFilter.scores?.length,
-            scores: newFilter.scores
-          });
-        }
-        return newFilter;
-      });
+      const newFilters = prev.map(filter => ({
+        ...filter,
+        scores: 
+          filter.id === 'class' ? classScores :
+          filter.id === 'global' ? globalScores :
+          filter.id === 'country' ? countryScores :
+          filter.id === 'age' ? ageScores :
+          undefined
+      }));
       return newFilters;
     });
   }, [classScores, globalScores, countryScores, ageScores]);
@@ -123,6 +150,10 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
   };
 
   const getPoints = (scores: number[]) => {
+    if (!scores || scores.length !== 8) {
+      console.warn('Scores inválidos para getPoints:', scores);
+      return '';
+    }
     return scores.map((score, index) => {
       const angle = (Math.PI * 2 * index) / scores.length;
       const normalizedScore = score / 10;
@@ -140,16 +171,13 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
   };
 
   const toggleFilter = (filterId: ComparisonFilter['id']) => {
-    console.log('Toggling filter:', filterId);
     setFilters(prev => prev.map(filter => {
       if (filter.id === filterId) {
         const newActive = !filter.active;
-        console.log('Changing active state for:', filterId, 'from:', filter.active, 'to:', newActive);
-        if (filterId === 'age') {
-          console.log('Age filter data:', {
-            hasScores: !!filter.scores,
-            scoresLength: filter.scores?.length,
-            scores: filter.scores
+        if (newActive && (!filter.scores || filter.scores.length !== 8)) {
+          console.warn(`⚠️ Activando filtro ${filterId} con datos incompletos:`, {
+            scores: filter.scores,
+            length: filter.scores?.length
           });
         }
         return { ...filter, active: newActive };
@@ -165,8 +193,8 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
       {/* Filtros */}
       <View style={styles.filters}>
         {filters.map(filter => {
-          const hasScores = filter.scores && filter.scores.length > 0;
-          console.log(`Filter ${filter.id}:`, { hasScores, scores: filter.scores });
+          const hasScores = filter.scores && filter.scores.length === 8;
+          const hasIncompleteData = filter.scores && filter.scores.length !== 8;
           
           return (
             <TouchableOpacity
@@ -180,7 +208,6 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
                 }
               ]}
               onPress={() => {
-                console.log('Button pressed:', filter.id);
                 if (hasScores) {
                   toggleFilter(filter.id);
                 } else {
@@ -202,10 +229,25 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
               ]}>
                 {translations[language][filter.id]}
               </Text>
+              {hasIncompleteData && (
+                <View style={styles.warningBadge}>
+                  <Ionicons name="warning" size={12} color="#FF6B6B" />
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}
       </View>
+
+      {/* Mensaje cuando no hay datos de comparación */}
+      {!filters.some(f => f.scores && f.scores.length === 8) && (
+        <View style={styles.noDataMessage}>
+          <Ionicons name="information-circle-outline" size={24} color="#9E7676" />
+          <Text style={styles.noDataText}>
+            {translations[language].noComparisonData}
+          </Text>
+        </View>
+      )}
 
       <Svg width={width} height={height}>
         {/* Líneas de referencia */}
@@ -224,7 +266,7 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
           />
         ))}
 
-        {/* Ejes */}
+        {/* Ejes con etiquetas de dominio */}
         {userScores.map((_, index) => {
           const { x, y } = getAxisPoints(index);
           return (
@@ -248,7 +290,7 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
                 dx={x > centerX ? 35 : x < centerX ? -35 : 0}
                 dy={y > centerY ? 35 : y < centerY ? -35 : 0}
               >
-                {getKeywords(index)[0]}
+                {domainLabels[index]}
               </SvgText>
             </React.Fragment>
           );
@@ -256,7 +298,7 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
 
         {/* Polígonos de comparación */}
         {filters.map(filter => {
-          if (filter.active && filter.scores && filter.scores.length > 0) {
+          if (filter.active && filter.scores && filter.scores.length === 8) {
             return (
               <Polygon
                 key={`comparison-${filter.id}`}
@@ -300,7 +342,7 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
           <Text style={styles.userLegendText}>{translations[language].yourScore}</Text>
         </View>
         {filters.map(filter => {
-          if (filter.active && filter.scores && filter.scores.length > 0) {
+          if (filter.active && filter.scores && filter.scores.length === 8) {
             return (
               <View key={`legend-${filter.id}`} style={styles.legendItem}>
                 <View style={[styles.legendColor, { backgroundColor: filter.color }]} />
@@ -407,7 +449,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#4ADE80',
     fontWeight: '600',
-  }
+  },
+  warningBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    padding: 2,
+  },
+  noDataMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#9E7676',
+    borderRadius: 6,
+    marginBottom: 16,
+  },
+  noDataText: {
+    fontSize: 13,
+    color: '#9E7676',
+    fontWeight: '500',
+    marginLeft: 8,
+  },
 });
 
 export default SpiderChart; 

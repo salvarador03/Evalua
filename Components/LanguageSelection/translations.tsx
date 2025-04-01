@@ -167,6 +167,7 @@ export interface TranslationText {
   excellentWork: string;
   goodPhysicalActivity: string;
   tips: {
+    title: string;
     physicalActivity: string;
     posture: string;
     variety: string;
@@ -175,9 +176,19 @@ export interface TranslationText {
     rest: string;
     enjoyment: string;
     consistency: string;
+    needsSupport: string;
+    needsReinforcement: string;
+    goodLevel: string;
   };
 
   showQuestion: string;
+
+  like: string;
+  complete: string;
+  completed: string;
+  favorites: string;
+
+  noComparisonData: string;
 }
 
 export interface Translations {
@@ -289,10 +300,11 @@ export const translations: Record<Language, TranslationText> = {
     needsImprovement: "Necesita mejorar este componente",
     selectFiltersToCompare: "Selecciona filtros para comparar",
     years: "años",
-    personalizedTips: 'Consejos Personalizados',
+    personalizedTips: "Consejos Personalizados",
     excellentWork: '¡Excelente trabajo!',
     goodPhysicalActivity: 'Tus respuestas muestran un buen nivel de actividad física.',
     tips: {
+      title: "Consejos Generales",
       physicalActivity: "¡Intenta incorporar más actividad física en tu rutina diaria! Pequeños cambios como usar las escaleras o caminar más pueden hacer una gran diferencia.",
       posture: "Recuerda mantener una postura correcta durante tus actividades diarias. Una buena postura mejora tu rendimiento y previene lesiones.",
       variety: "Intenta variar tus actividades físicas. La diversidad en el ejercicio ayuda a desarrollar diferentes habilidades y mantiene la motivación.",
@@ -300,7 +312,10 @@ export const translations: Record<Language, TranslationText> = {
       hydration: "La hidratación es clave para un buen rendimiento físico. Asegúrate de beber agua antes, durante y después del ejercicio.",
       rest: "El descanso adecuado es tan importante como el ejercicio. Asegúrate de dormir lo suficiente y dar tiempo a tu cuerpo para recuperarse.",
       enjoyment: "Busca actividades que disfrutes. El ejercicio debe ser divertido y motivador, no una obligación.",
-      consistency: "La constancia es más importante que la intensidad. Es mejor hacer ejercicio moderado regularmente que sesiones intensas ocasionales."
+      consistency: "La constancia es más importante que la intensidad. Es mejor hacer ejercicio moderado regularmente que sesiones intensas ocasionales.",
+      needsSupport: "Necesitas apoyo y guía específica en este aspecto. Te recomendamos consultar con un profesional de la educación física.",
+      needsReinforcement: "Este aspecto necesita refuerzo. Dedica más tiempo y atención a mejorar en esta área.",
+      goodLevel: "Tienes un buen nivel, pero aún puedes mejorar. Sigue practicando y mantén la motivación."
     },
     noDataAvailable: "No hay datos disponibles",
     total: "total",
@@ -383,7 +398,12 @@ export const translations: Record<Language, TranslationText> = {
         "Estable - Avanzado"
       ]
     },
-    showQuestion: "Ver pregunta"
+    showQuestion: "Ver pregunta",
+    like: "Me gusta",
+    complete: "Completar",
+    completed: "Completados",
+    favorites: "Favoritos",
+    noComparisonData: "No hay datos de comparación disponibles en este momento"
   },
   "es-PA": {
     welcome: "¡Bienvenido!",
@@ -412,18 +432,22 @@ export const translations: Record<Language, TranslationText> = {
     selectLevel: "Selecciona tu nivel",
     required: "Requerido",
     loading: "Cargando...",
-    personalizedTips: 'Personalized Tips',
+    personalizedTips: "Consejos Personalizados",
     excellentWork: 'Excellent work!',
     goodPhysicalActivity: 'Your answers show a good level of physical activity.',
     tips: {
-      physicalActivity: "Try to incorporate more physical activity into your daily routine! Small changes like taking the stairs or walking more can make a big difference.",
-      posture: "Remember to maintain proper posture during your daily activities. Good posture improves your performance and prevents injuries.",
-      variety: "Try to vary your physical activities. Diversity in exercise helps develop different skills and maintains motivation.",
-      goals: "Set realistic and achievable goals. Celebrate your small achievements and keep track of your progress.",
-      hydration: "Hydration is key for good physical performance. Make sure to drink water before, during, and after exercise.",
-      rest: "Proper rest is as important as exercise. Make sure to get enough sleep and give your body time to recover.",
-      enjoyment: "Look for activities you enjoy. Exercise should be fun and motivating, not an obligation.",
-      consistency: "Consistency is more important than intensity. It's better to do moderate exercise regularly than occasional intense sessions."
+      title: "Consejos Generales",
+      physicalActivity: "¡Intenta incorporar más actividad física en tu rutina diaria! Pequeños cambios como usar las escaleras o caminar más pueden hacer una gran diferencia.",
+      posture: "Recuerda mantener una postura correcta durante tus actividades diarias. Una buena postura mejora tu rendimiento y previene lesiones.",
+      variety: "Intenta variar tus actividades físicas. La diversidad en el ejercicio ayuda a desarrollar diferentes habilidades y mantiene la motivación.",
+      goals: "Establece metas realistas y alcanzables. Celebra tus pequeños logros y mantén un registro de tu progreso.",
+      hydration: "La hidratación es clave para un buen rendimiento físico. Asegúrate de beber agua antes, durante y después del ejercicio.",
+      rest: "El descanso adecuado es tan importante como el ejercicio. Asegúrate de dormir lo suficiente y dar tiempo a tu cuerpo para recuperarse.",
+      enjoyment: "Busca actividades que disfrutes. El ejercicio debe ser divertido y motivador, no una obligación.",
+      consistency: "La constancia es más importante que la intensidad. Es mejor hacer ejercicio moderado regularmente que sesiones intensas ocasionales.",
+      needsSupport: "Necesitas apoyo y guía específica en este aspecto. Te recomendamos consultar con un profesional de la educación física.",
+      needsReinforcement: "Este aspecto necesita refuerzo. Dedica más tiempo y atención a mejorar en esta área.",
+      goodLevel: "Tienes un buen nivel, pero aún puedes mejorar. Sigue practicando y mantén la motivación."
     },
     // New notification translations
     welcomeTitle: "¡Bienvenido a la aplicación!",
@@ -525,17 +549,17 @@ export const translations: Record<Language, TranslationText> = {
     susQuestions: [
       "Creo que me gustaría usar esta aplicación frecuentemente",
       "Encontré la aplicación innecesariamente compleja",
-      "Pensé que la aplicación era fácil de usar",
+      "Pensei que la aplicación era fácil de usar",
       "Creo que necesitaría el apoyo de un técnico para poder usar la aplicación",
       "Encontré las funciones de la aplicación bien integradas",
-      "Pensé que había demasiada inconsistencia en la aplicación",
+      "Pensei que había demasiada inconsistencia en la aplicación",
       "Imagino que la mayoría de la gente aprendería a usar la aplicación muy rápidamente",
-      "Encontré la aplicación muy engorrosa de usar",
-      "Me sentí muy confiado usando la aplicación",
-      "Necesité aprender muchas cosas antes de poder usar la aplicación"
+      "Encontré la aplicación muito trabalhosa de usar",
+      "Me sentí muito confiante usando a aplicação",
+      "Precisei aprender muitas coisas antes de poder usar a aplicação"
     ],
     ueqTitle: "Cuestionario de Experiencia de Usuario (UEQ)",
-    ueqDescription: "Por favor, evalúa la aplicación en las siguientes dimensiones:",
+    ueqDescription: "Por favor, avalúa la aplicación en las siguientes dimensiones:",
     ueqDimensions: {
       attractive: "Atractivo",
       perspicuity: "Perspicuidad",
@@ -583,7 +607,12 @@ export const translations: Record<Language, TranslationText> = {
         "Estable - Avanzado"
       ]
     },
-    showQuestion: "Ver pregunta"
+    showQuestion: "Ver pregunta",
+    like: "Me gusta",
+    complete: "Completar",
+    completed: "Completados",
+    favorites: "Favoritos",
+    noComparisonData: "No hay datos de comparación disponibles en este momento"
   },
   en: {
     welcome: "Welcome!",
@@ -612,18 +641,22 @@ export const translations: Record<Language, TranslationText> = {
     loading: "Loading...",
     languageName: "English",
     countryName: "United States",
-    personalizedTips: 'Dicas Personalizadas',
+    personalizedTips: "Personalized Tips",
     excellentWork: 'Excelente trabalho!',
     goodPhysicalActivity: 'Suas respostas mostram um bom nível de atividade física.',
     tips: {
-      physicalActivity: "Tente incorporar mais atividade física na sua rotina diária! Pequenas mudanças como usar as escadas ou caminhar mais podem fazer uma grande diferença.",
-      posture: "Lembre-se de manter uma postura correta durante suas atividades diárias. Uma boa postura melhora seu desempenho e previne lesões.",
-      variety: "Tente variar suas atividades físicas. A diversidade no exercício ajuda a desenvolver diferentes habilidades e mantém a motivação.",
-      goals: "Estabeleça metas realistas e alcançáveis. Celebre suas pequenas conquistas e mantenha um registro do seu progresso.",
-      hydration: "A hidratação é fundamental para um bom desempenho físico. Certifique-se de beber água antes, durante e depois do exercício.",
-      rest: "O descanso adequado é tão importante quanto o exercício. Certifique-se de dormir o suficiente e dar tempo ao seu corpo para se recuperar.",
-      enjoyment: "Procure atividades que você goste. O exercício deve ser divertido e motivador, não uma obrigação.",
-      consistency: "A consistência é mais importante que a intensidade. É melhor fazer exercício moderado regularmente do que sessões intensas ocasionais."
+      title: "General Tips",
+      physicalActivity: "Try to incorporate more physical activity into your daily routine! Small changes like taking the stairs or walking more can make a big difference.",
+      posture: "Remember to maintain proper posture during your daily activities. Good posture improves your performance and prevents injuries.",
+      variety: "Try to vary your physical activities. Diversity in exercise helps develop different skills and maintains motivation.",
+      goals: "Set realistic and achievable goals. Celebrate your small achievements and keep track of your progress.",
+      hydration: "Hydration is key for good physical performance. Make sure to drink water before, during, and after exercise.",
+      rest: "Proper rest is as important as exercise. Make sure to get enough sleep and give your body time to recover.",
+      enjoyment: "Look for activities you enjoy. Exercise should be fun and motivating, not an obligation.",
+      consistency: "Consistency is more important than intensity. It's better to do moderate exercise regularly than occasional intense sessions.",
+      needsSupport: "You need specific support and guidance in this aspect. We recommend consulting with a physical education professional.",
+      needsReinforcement: "This aspect needs reinforcement. Dedicate more time and attention to improving in this area.",
+      goodLevel: "You have a good level, but you can still improve. Keep practicing and maintain motivation."
     },
     // New notification translations
     welcomeTitle: "Welcome to the app!",
@@ -783,7 +816,12 @@ export const translations: Record<Language, TranslationText> = {
         "Conservative - Innovative"
       ]
     },
-    showQuestion: "Show question"
+    showQuestion: "Show question",
+    like: "Like",
+    complete: "Complete",
+    completed: "Completed",
+    favorites: "Favorites",
+    noComparisonData: "No comparison data available at this time"
   },
   "pt-PT": {
     welcome: "Bem-vindo!",
@@ -795,6 +833,9 @@ export const translations: Record<Language, TranslationText> = {
     confirmAnswer: "Confirmar resposta",
     selectedScore: "Selecionou",
     confirmScoreQuestion: "Tem certeza desta pontuação?",
+    personalizedTips: "Dicas Personalizadas",
+    excellentWork: "Excelente trabalho!",
+    goodPhysicalActivity: "Suas respostas mostram um bom nível de atividade física.",
     // Nuevas traducciones
     confirmation: "Confirmação",
     deleteNotificationConfirm:
@@ -916,7 +957,7 @@ export const translations: Record<Language, TranslationText> = {
       "Encontrei as funções da aplicação bem integradas",
       "Pensei que havia demasiada inconsistência na aplicação",
       "Imagino que a maioria das pessoas aprenderia a usar a aplicação muito rapidamente",
-      "Encontrei a aplicação muito trabalhosa de usar",
+      "Encontré a aplicação muito trabalhosa de usar",
       "Senti-me muito confiante usando a aplicação",
       "Precisei aprender muitas coisas antes de poder usar a aplicação"
     ],
@@ -969,7 +1010,26 @@ export const translations: Record<Language, TranslationText> = {
         "Conservador - Inovador"
       ]
     },
-    showQuestion: "Ver pergunta"
+    showQuestion: "Ver pergunta",
+    tips: {
+      title: "Dicas Gerais",
+      physicalActivity: "Tente incorporar mais atividade física na sua rotina diária! Pequenas mudanças como usar as escadas ou caminhar mais podem fazer uma grande diferença.",
+      posture: "Lembre-se de manter uma postura correta durante suas atividades diárias. Uma boa postura melhora seu desempenho e previne lesões.",
+      variety: "Tente variar suas atividades físicas. A diversidade no exercício ajuda a desenvolver diferentes habilidades e mantém a motivação.",
+      goals: "Estabeleça metas realistas e alcançáveis. Celebre suas pequenas conquistas e mantenha um registro do seu progresso.",
+      hydration: "A hidratação é fundamental para um bom desempenho físico. Certifique-se de beber água antes, durante e depois do exercício.",
+      rest: "O descanso adequado é tão importante quanto o exercício. Certifique-se de dormir o suficiente e dar tempo ao seu corpo para se recuperar.",
+      enjoyment: "Procure atividades que você goste. O exercício deve ser divertido e motivador, não uma obrigação.",
+      consistency: "A consistência é mais importante que a intensidade. É melhor fazer exercício moderado regularmente do que sessões intensas ocasionais.",
+      needsSupport: "Você precisa de apoio e orientação específica neste aspecto. Recomendamos consultar um profissional de educação física.",
+      needsReinforcement: "Este aspecto precisa de reforço. Dedique mais tempo e atenção para melhorar nesta área.",
+      goodLevel: "Você tem um bom nível, mas ainda pode melhorar. Continue praticando e mantenha a motivação."
+    },
+    like: "Gosto",
+    complete: "Completar",
+    completed: "Completados",
+    favorites: "Favoritos",
+    noComparisonData: "Não há dados de comparação disponíveis neste momento"
   },
   "pt-BR": {
     welcome: "Bem-vindo!",
@@ -980,6 +1040,9 @@ export const translations: Record<Language, TranslationText> = {
     languageSelectionError: "Não foi possível salvar a seleção do idioma",
     formAlreadyCompleted: "Já completou este formulário anteriormente.",
     startButton: "Começar",
+    personalizedTips: "Dicas Personalizadas",
+    excellentWork: "Excelente trabalho!",
+    goodPhysicalActivity: "Suas respostas mostram um bom nível de atividade física.",
     // Nuevas traducciones
     confirmation: "Confirmação",
     deleteNotificationConfirm:
@@ -1105,7 +1168,7 @@ export const translations: Record<Language, TranslationText> = {
       "Encontrei as funções do aplicativo bem integradas",
       "Pensei que havia muita inconsistência no aplicativo",
       "Imagino que a maioria das pessoas aprenderia a usar o aplicativo muito rapidamente",
-      "Encontrei o aplicativo muito trabalhoso de usar",
+      "Encontré o aplicativo muito trabalhoso de usar",
       "Senti-me muito confiante usando o aplicativo",
       "Precisei aprender muitas coisas antes de poder usar o aplicativo"
     ],
@@ -1158,6 +1221,25 @@ export const translations: Record<Language, TranslationText> = {
         "Conservador - Inovador"
       ]
     },
-    showQuestion: "Ver pergunta"
+    showQuestion: "Ver pergunta",
+    tips: {
+      title: "Dicas Gerais",
+      physicalActivity: "Tente incorporar mais atividade física na sua rotina diária! Pequenas mudanças como usar as escadas ou caminhar mais podem fazer uma grande diferença.",
+      posture: "Lembre-se de manter uma postura correta durante suas atividades diárias. Uma boa postura melhora seu desempenho e previne lesões.",
+      variety: "Tente variar suas atividades físicas. A diversidade no exercício ajuda a desenvolver diferentes habilidades e mantém a motivação.",
+      goals: "Estabeleça metas realistas e alcançáveis. Celebre suas pequenas conquistas e mantenha um registro do seu progresso.",
+      hydration: "A hidratação é fundamental para um bom desempenho físico. Certifique-se de beber água antes, durante e depois do exercício.",
+      rest: "O descanso adequado é tão importante quanto o exercício. Certifique-se de dormir o suficiente e dar tempo ao seu corpo para se recuperar.",
+      enjoyment: "Procure atividades que você goste. O exercício deve ser divertido e motivador, não uma obrigação.",
+      consistency: "A consistência é mais importante que a intensidade. É melhor fazer exercício moderado regularmente do que sessões intensas ocasionais.",
+      needsSupport: "Você precisa de apoio e orientação específica neste aspecto. Recomendamos consultar um profissional de educação física.",
+      needsReinforcement: "Este aspecto precisa de reforço. Dedique mais tempo e atenção para melhorar nesta área.",
+      goodLevel: "Você tem um bom nível, mas ainda pode melhorar. Continue praticando e mantenha a motivação."
+    },
+    like: "Gosto",
+    complete: "Completar",
+    completed: "Completados",
+    favorites: "Favoritos",
+    noComparisonData: "Não há dados de comparação disponíveis neste momento"
   },
 };

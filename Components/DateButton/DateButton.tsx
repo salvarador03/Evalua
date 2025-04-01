@@ -17,6 +17,7 @@ interface DateButtonProps {
   isValidAge: boolean;
   disabled?: boolean;
   showAgeRequirement?: boolean;
+  highlightStatus: "empty" | "valid" | "invalid";
 }
 
 export const DateButton: React.FC<DateButtonProps> = ({
@@ -26,6 +27,7 @@ export const DateButton: React.FC<DateButtonProps> = ({
   isValidAge = true,
   disabled = false,
   showAgeRequirement = true,
+  highlightStatus = "empty",
 }) => {
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [day, setDay] = useState(date.getDate().toString());
@@ -78,7 +80,8 @@ export const DateButton: React.FC<DateButtonProps> = ({
       <View style={[
         styles.container,
         disabled && styles.disabled,
-        !isValidAge && styles.invalidAge
+        highlightStatus === "valid" && styles.validAge,
+        highlightStatus === "invalid" && styles.invalidAge
       ]}>
         <View style={styles.content}>
           <View style={styles.labelContainer}>
@@ -183,6 +186,10 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+  },
+  validAge: {
+    borderColor: '#4CAF50',
+    borderWidth: 2,
   },
   invalidAge: {
     borderColor: '#ff6b6b',
