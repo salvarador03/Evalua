@@ -44,6 +44,21 @@ export const feedbackTranslations: Record<Language, {
   tips: {
     title: string;
     completed: string;
+    needsSupport: string;
+    needsReinforcement: string;
+    goodLevel: string;
+    like: string;
+    complete: string;
+    favorites: string;
+    showQuestion: string;
+    low: string;
+    medium: string;
+    high: string;
+    highScore: string;
+    mediumScore: string;
+    lowScore: string;
+    allCompleted: string;
+    starCount: string;
   };
 }> = {
   es: {
@@ -131,7 +146,22 @@ export const feedbackTranslations: Record<Language, {
     personalizedTips: "Consejos Personalizados",
     tips: {
       title: "Consejos Generales",
-      completed: "consejos completados"
+      completed: "consejos completados",
+      needsSupport: "Necesita apoyo",
+      needsReinforcement: "Necesita refuerzo",
+      goodLevel: "Buen nivel",
+      like: "Me gusta",
+      complete: "Completar",
+      favorites: "favoritos",
+      showQuestion: "Ver pregunta",
+      low: "Bajo",
+      medium: "Medio",
+      high: "Alto",
+      highScore: "Tu puntaje es alto. Mantén tu actividad física para mantener tu salud.",
+      mediumScore: "Tu puntaje es medio. Mantén tu actividad física para mejorar tu salud.",
+      lowScore: "Tu puntaje es bajo. Considera aumentar tu actividad física regularmente.",
+      allCompleted: "¡Has completado todos los consejos! 🎉",
+      starCount: "Estrellas ganadas:"
     }
   },
   en: {
@@ -219,7 +249,22 @@ export const feedbackTranslations: Record<Language, {
     personalizedTips: "Personalized Tips",
     tips: {
       title: "General Tips",
-      completed: "tips completed"
+      completed: "tips completed",
+      needsSupport: "Needs support",
+      needsReinforcement: "Needs reinforcement",
+      goodLevel: "Good level",
+      like: "Like",
+      complete: "Complete",
+      favorites: "favorites",
+      showQuestion: "Show question",
+      low: "Low",
+      medium: "Medium",
+      high: "High",
+      highScore: "Your score is high. Keep up your physical activity to maintain your health.",
+      mediumScore: "Your score is medium. Keep up your physical activity to improve your health.",
+      lowScore: "Your score is low. Consider increasing your physical activity regularly.",
+      allCompleted: "You've completed all tips! 🎉",
+      starCount: "Stars earned:"
     }
   },
   "es-PA": {
@@ -307,7 +352,22 @@ export const feedbackTranslations: Record<Language, {
     personalizedTips: "Consejos Personalizados",
     tips: {
       title: "Consejos Generales",
-      completed: "consejos completados"
+      completed: "consejos completados",
+      needsSupport: "Necesita apoyo",
+      needsReinforcement: "Necesita refuerzo",
+      goodLevel: "Buen nivel",
+      like: "Me gusta",
+      complete: "Completar",
+      favorites: "favoritos",
+      showQuestion: "Ver pregunta",
+      low: "Bajo",
+      medium: "Medio",
+      high: "Alto",
+      highScore: "Tu puntaje es alto. Mantén tu actividad física para mantener tu salud.",
+      mediumScore: "Tu puntaje es medio. Mantén tu actividad física para mejorar tu salud.",
+      lowScore: "Tu puntaje es bajo. Considera aumentar tu actividad física regularmente.",
+      allCompleted: "¡Has completado todos los consejos! 🎉",
+      starCount: "Estrellas ganadas:"
     }
   },
   "pt-PT": {
@@ -395,7 +455,22 @@ export const feedbackTranslations: Record<Language, {
     personalizedTips: "Dicas Personalizadas",
     tips: {
       title: "Dicas Gerais",
-      completed: "dicas completadas"
+      completed: "dicas completadas",
+      needsSupport: "Precisa de apoio",
+      needsReinforcement: "Precisa de reforço",
+      goodLevel: "Bom nível",
+      like: "Gosto",
+      complete: "Completar",
+      favorites: "favoritos",
+      showQuestion: "Ver pergunta",
+      low: "Baixo",
+      medium: "Médio",
+      high: "Alto",
+      highScore: "Sua pontuação é alta. Mantenha sua atividade física para manter sua saúde.",
+      mediumScore: "Sua pontuação é média. Mantenha sua atividade física para melhorar sua saúde.",
+      lowScore: "Sua pontuação é baixa. Considere aumentar sua atividade física regularmente.",
+      allCompleted: "Você completou todas as dicas! 🎉",
+      starCount: "Estrelas ganhas:"
     }
   },
   "pt-BR": {
@@ -483,7 +558,22 @@ export const feedbackTranslations: Record<Language, {
     personalizedTips: "Dicas Personalizadas",
     tips: {
       title: "Dicas Gerais",
-      completed: "dicas completadas"
+      completed: "dicas completadas",
+      needsSupport: "Precisa de apoio",
+      needsReinforcement: "Precisa de reforço",
+      goodLevel: "Bom nível",
+      like: "Gosto",
+      complete: "Completar",
+      favorites: "favoritos",
+      showQuestion: "Ver pergunta",
+      low: "Baixo",
+      medium: "Médio",
+      high: "Alto",
+      highScore: "Sua pontuação é alta. Mantenha sua atividade física para manter sua saúde.",
+      mediumScore: "Sua pontuação é média. Mantenha sua atividade física para melhorar sua saúde.",
+      lowScore: "Sua pontuação é baixa. Considere aumentar sua atividade física regularmente.",
+      allCompleted: "Você completou todas as dicas! 🎉",
+      starCount: "Estrelas ganhas:"
     }
   }
 }; 

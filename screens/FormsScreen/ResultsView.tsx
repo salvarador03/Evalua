@@ -9,6 +9,10 @@ import {
   Modal,
   PanResponder,
   Image,
+  FlatList,
+  Dimensions,
+  Easing,
+  useColorScheme,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Language } from "../../types/language";
@@ -25,6 +29,8 @@ import { createAvatar } from '@dicebear/core';
 import * as avataaarsStyle from '@dicebear/avataaars';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { feedbackTranslations } from '../../translations/feedbackTranslations';
+import { PersonalizedTips } from './PersonalizedTips';
 
 type LocalFormStats = {
   median: number;
@@ -158,21 +164,14 @@ const lastKidsQuestionTranslations = {
 const getRandomAvatar = async (seed: number): Promise<string> => {
   const avatar = createAvatar(avataaarsStyle, {
     seed: seed.toString(),
-    backgroundColor: ['b6e3f4','c0aede','d1d4f9'],
-    accessories: ['kurt', 'prescription01', 'prescription02', 'round', 'sunglasses', 'wayfarers'],
-    clothesColor: ['blue', 'black', 'gray', 'heather', 'pastelBlue', 'pastelGreen', 'pastelOrange', 'pastelRed', 'pastelYellow', 'pink', 'red', 'white'],
-    clothing: ['graphicShirt', 'hoodie', 'overall', 'blazerAndShirt', 'blazerAndSweater', 'collarAndSweater'],
-    eyebrows: ['default', 'defaultNatural', 'flatNatural', 'raisedExcited', 'unibrowNatural', 'upDown'],
-    eyes: ['default', 'closed', 'cry', 'happy', 'hearts', 'side', 'squint', 'surprised', 'wink', 'winkWacky'],
-    facialHair: ['beardMedium', 'beardLight', 'beardMajestic', 'moustacheFancy', 'moustacheMagnum'],
-    hairColor: ['auburn', 'black', 'blonde', 'blondeGolden', 'brown', 'brownDark'],
-    mouth: ['default', 'concerned', 'disbelief', 'eating', 'grimace', 'sad', 'screamOpen', 'serious', 'smile', 'tongue', 'twinkle'],
-    skinColor: ['tanned', 'yellow', 'pale', 'light', 'brown', 'darkBrown', 'black'],
-    top: ['hat', 'hijab', 'turban', 'winterHat1', 'bob', 'bun', 'curly', 'dreads', 'frida', 'fro', 'bigHair']
+    backgroundColor: ['#FFDFBA', '#BAFFC9', '#BAE1FF'],
   });
 
-  return await avatar.toDataUri();
+  return `data:image/svg+xml;utf8,${encodeURIComponent(avatar.toString())}`;
 };
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const TIP_CARD_WIDTH = SCREEN_WIDTH - 32;
 
 export const ResultsView: React.FC<ResultsViewProps> = ({
   language,
@@ -192,15 +191,23 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const [studentAge, setStudentAge] = useState<number | undefined>();
   const [localAnswers, setLocalAnswers] = useState<(number | null)[]>(answers);
   const [expandedQuestions, setExpandedQuestions] = useState<number[]>([]);
-  const scrollViewRef = React.useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
   const { user } = useAuth();
+  const { t, i18n } = useTranslation();
+  const [scaleAnim] = useState(new Animated.Value(1));
+  const [validTips, setValidTips] = useState<Tip[]>([]);
+  const [avatarUris, setAvatarUris] = useState<{[key: string]: string}>({});
+  const [imageError, setImageError] = useState(false);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const [favoriteTips, setFavoriteTips] = useState<string[]>([]);
   const [completedTips, setCompletedTips] = useState<string[]>([]);
-  const [currentTipIndex, setCurrentTipIndex] = useState(0);
-  const [swipeAnim] = useState(new Animated.ValueXY());
-  const [avatarUris, setAvatarUris] = useState<{[key: string]: string}>({});
-  const [validTips, setValidTips] = useState<Tip[]>([]);
-  const { t, i18n } = useTranslation();
+
+  // Modificar el efecto para el cambio de idioma
+  useEffect(() => {
+    if (i18n && typeof i18n.changeLanguage === 'function') {
+      i18n.changeLanguage(language);
+    }
+  }, [language, i18n]);
 
   const loadStudentData = async () => {
     if (isTeacherView && studentData?.uid) {
@@ -329,8 +336,8 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           domain: 'general',
           score: averageScore,
           priority: 'high',
-          title: 'Consejo General',
-          text: 'Tu puntaje es bajo. Considera aumentar tu actividad física regularmente.'
+          title: feedbackTranslations[language].tips.title,
+          text: feedbackTranslations[language].tips.lowScore
         });
       } else if (averageScore < 4) {
         tips.push({
@@ -338,8 +345,8 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           domain: 'general',
           score: averageScore,
           priority: 'medium',
-          title: 'Consejo General',
-          text: 'Tu puntaje es medio. Mantén tu actividad física para mejorar tu salud.'
+          title: feedbackTranslations[language].tips.title,
+          text: feedbackTranslations[language].tips.mediumScore
         });
       } else {
         tips.push({
@@ -347,21 +354,22 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           domain: 'general',
           score: averageScore,
           priority: 'low',
-          title: 'Consejo General',
-          text: 'Tu puntaje es alto. Mantén tu actividad física para mantener tu salud.'
+          title: feedbackTranslations[language].tips.title,
+          text: feedbackTranslations[language].tips.highScore
         });
       }
 
       // Añadir consejos específicos por dominio
       answers.forEach((answer, index) => {
+        const domainName = getQuestionDomain(index);
         if (answer !== null && answer < 3) {
           tips.push({
             id: `tip-${tipId++}`,
             domain: `domain${index + 1}`,
             score: answer,
             priority: 'high',
-            title: `Consejo para ${getQuestionDomain(index)}`,
-            text: `Tu puntaje en ${getQuestionDomain(index)} es bajo. Considera aumentar tu actividad física.`
+            title: `${feedbackTranslations[language].tips.title} - ${domainName}`,
+            text: `${feedbackTranslations[language].tips.lowScore} ${domainName}`
           });
         } else if (answer !== null && answer < 4) {
           tips.push({
@@ -369,8 +377,8 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             domain: `domain${index + 1}`,
             score: answer,
             priority: 'medium',
-            title: `Consejo para ${getQuestionDomain(index)}`,
-            text: `Tu puntaje en ${getQuestionDomain(index)} es medio. Mantén tu actividad física para mejorar tu salud.`
+            title: `${feedbackTranslations[language].tips.title} - ${domainName}`,
+            text: `${feedbackTranslations[language].tips.mediumScore} ${domainName}`
           });
         }
       });
@@ -379,7 +387,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     };
 
     calculateValidTips();
-  }, [answers]);
+  }, [answers, language]);
 
   // Cargar avatares cuando validTips cambie
   useEffect(() => {
@@ -405,6 +413,11 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     
     loadAvatars();
   }, [validTips, language]);
+
+  // Efecto para resetear el error de imagen cuando cambia el tip
+  useEffect(() => {
+    setImageError(false);
+  }, [currentTipIndex]);
 
   const getAgeAppropriateQuestions = (language: Language) => {
     const targetAge = isTeacherView ? studentAge : formResponse.age;
@@ -721,7 +734,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
       }
     };
 
-    // Asegurarse de que se use el idioma correcto y tener un valor por defecto en el idioma correspondiente
     const defaultDomains: { [key in Language]: string } = {
       'es': 'Pregunta',
       'es-PA': 'Pregunta',
@@ -868,26 +880,22 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const renderComparison = () => {
     const questions = getAgeAppropriateQuestions(language);
     
-    // Logs detallados para depuración
     console.log('Stats completos:', stats);
     console.log('Stats[0]:', stats[0]);
     console.log('Class medians:', stats[0]?.classMedians);
     console.log('User answers:', localAnswers);
     console.log('Current class code:', studentClassCode);
     
-    // Asegurarnos de que los datos de estadísticas estén disponibles
     const classScores = stats?.[0]?.classMedians || [];
     const globalScores = stats?.[0]?.globalMedians || [];
     const countryScores = stats?.[0]?.countryMedians || [];
     const ageScores = stats?.[0]?.ageMedians || [];
     
-    // Verificar si hay datos de comparación disponibles
     const hasComparisonData = classScores.length === 8 || 
                             globalScores.length === 8 || 
                             countryScores.length === 8 || 
                             ageScores.length === 8;
 
-    // Obtener las etiquetas de dominio traducidas
     const domainLabels = [
       getQuestionDomain(0),
       getQuestionDomain(1),
@@ -910,7 +918,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           </View>
         ) : (
           <>
-            {/* Gráfico Araña con idioma correcto */}
             <SpiderChart
               userScores={localAnswers.map(score => score ?? 0)}
               classScores={classScores}
@@ -1029,180 +1036,52 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     return 'goodLevel';
   };
 
-  const getAvatarUri = (tipId: string) => {
-    const avatar = createAvatar(avataaarsStyle, {
-      seed: tipId,
-      backgroundColor: ['#FFDFBA', '#BAFFC9', '#BAE1FF'],
-    });
+  const animateButton = (scale: number) => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: scale,
+        duration: 100,
+        easing: Easing.ease,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        easing: Easing.ease,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
-    return `data:image/svg+xml;utf8,${encodeURIComponent(avatar.toString())}`;
+  const getAvatarUri = (tipId: string) => {
+    const mood = validTips.find(tip => tip.id === tipId)?.priority === 'high' ? 'sad' : 'happy';
+    return `https://api.dicebear.com/9.x/fun-emoji/svg?seed=tip-${tipId}&radius=30&scale=90&mood=${mood}`;
+  };
+
+  const getPriorityColor = (priority: Priority) => {
+    switch (priority) {
+      case 'high': return '#FF6B6B'; // Rojo suave
+      case 'medium': return '#FFB347'; // Ámbar
+      case 'low': return '#4CAF50'; // Verde brillante
+      default: return '#4CAF50';
+    }
+  };
+
+  const getBackgroundColor = (priority: Priority) => {
+    switch (priority) {
+      case 'high': return '#FFF5F5'; // Rosa muy suave
+      case 'medium': return '#FFF8E7'; // Amarillo muy suave
+      case 'low': return '#F0FFF4'; // Verde muy suave
+      default: return '#F0FFF4';
+    }
   };
 
   const renderTips = () => {
-    if (!validTips || validTips.length === 0) return null;
-
-    const currentTip = validTips[currentTipIndex];
-    const priorityColor = getPriorityColor(currentTip.priority);
-    const generalLevel = getGeneralLevel(validTips);
-
     return (
-      <ScrollView style={styles.tipsContainer}>
-        <View style={styles.tipsHeader}>
-          <View style={styles.tipsHeaderTop}>
-            <Ionicons name="bulb" size={32} color="#9E7676" />
-            <Text style={styles.tipsTitle}>{translations[language].personalizedTips}</Text>
-          </View>
-          <View style={[styles.levelBadge, { backgroundColor: getLevelColor(generalLevel) }]}>
-            <Text style={styles.levelBadgeText}>
-              {translations[language].tips[generalLevel]}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.tipCard}>
-          <View style={[styles.tipHeader, { backgroundColor: `${priorityColor}15` }]}>
-            <View style={[styles.priorityBadge, { backgroundColor: priorityColor }]}>
-              <Ionicons 
-                name={getPriorityIcon(currentTip.priority)} 
-                size={16} 
-                color="#FFF" 
-              />
-              <Text style={styles.priorityText}>
-                {currentTip.priority}
-              </Text>
-            </View>
-            <View style={styles.domainBadge}>
-              <Ionicons 
-                name={getTipIcon(currentTip.domain)} 
-                size={20} 
-                color="#666"
-              />
-              <Text style={styles.domainText}>
-                {currentTip.domain === 'general' 
-                  ? translations[language].tips.title
-                  : getQuestionDomain(parseInt(currentTip.domain.replace('domain', '')) - 1)}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.tipContent}>
-            <View style={styles.avatarContainer}>
-              {avatarUris[`tip-${currentTip.id}`] && (
-                <Image 
-                  source={{ uri: avatarUris[`tip-${currentTip.id}`] }}
-                  style={styles.avatarImage}
-                />
-              )}
-            </View>
-            <Text style={styles.tipText}>{currentTip.text}</Text>
-          </View>
-
-          <View style={styles.tipActions}>
-            <TouchableOpacity 
-              style={[styles.actionButton, favoriteTips.includes(currentTip.id) && styles.actionButtonActive]}
-              onPress={() => handleTipAction(currentTip.id, 'favorite')}
-            >
-              <Ionicons 
-                name={favoriteTips.includes(currentTip.id) ? "heart" : "heart-outline"} 
-                size={24} 
-                color={favoriteTips.includes(currentTip.id) ? "#FF6B6B" : "#666"}
-              />
-              <Text style={[
-                styles.actionButtonText,
-                favoriteTips.includes(currentTip.id) && styles.actionButtonTextActive
-              ]}>
-                {translations[language].like}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.actionButton, completedTips.includes(currentTip.id) && styles.actionButtonActive]}
-              onPress={() => handleTipAction(currentTip.id, 'complete')}
-            >
-              <Ionicons 
-                name={completedTips.includes(currentTip.id) ? "checkmark-circle" : "checkmark-circle-outline"} 
-                size={24} 
-                color={completedTips.includes(currentTip.id) ? "#4CAF50" : "#666"}
-              />
-              <Text style={[
-                styles.actionButtonText,
-                completedTips.includes(currentTip.id) && styles.actionButtonTextActive
-              ]}>
-                {translations[language].complete}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.navigationContainer}>
-            <TouchableOpacity
-              style={[styles.navArrowButton, currentTipIndex === 0 && styles.navButtonDisabled]}
-              onPress={() => setCurrentTipIndex(prev => Math.max(0, prev - 1))}
-              disabled={currentTipIndex === 0}
-            >
-              <Ionicons 
-                name="chevron-back" 
-                size={24} 
-                color={currentTipIndex === 0 ? "#ccc" : "#666"} 
-              />
-            </TouchableOpacity>
-
-            <View style={styles.navigationDots}>
-              {validTips.map((_, index) => (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => setCurrentTipIndex(index)}
-                  style={[
-                    styles.navigationDot,
-                    currentTipIndex === index && styles.activeDot,
-                  ]}
-                />
-              ))}
-            </View>
-
-            <TouchableOpacity
-              style={[styles.navArrowButton, currentTipIndex === validTips.length - 1 && styles.navButtonDisabled]}
-              onPress={() => setCurrentTipIndex(prev => Math.min(validTips.length - 1, prev + 1))}
-              disabled={currentTipIndex === validTips.length - 1}
-            >
-              <Ionicons 
-                name="chevron-forward" 
-                size={24} 
-                color={currentTipIndex === validTips.length - 1 ? "#ccc" : "#666"} 
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBarContainer}>
-            <View style={styles.progressBar}>
-              <View 
-                style={[
-                  styles.progressFill, 
-                  { width: `${getProgressPercentage()}%` }
-                ]} 
-              />
-            </View>
-            <Text style={styles.progressText}>
-              {completedTips.length} / {validTips.length} {translations[language].completed}
-            </Text>
-          </View>
-          <View style={styles.progressStats}>
-            <View style={styles.progressStat}>
-              <Ionicons name="heart" size={20} color="#FF6B6B" />
-              <Text style={styles.progressStatText}>
-                {favoriteTips.length} {translations[language].favorites}
-              </Text>
-            </View>
-            <View style={styles.progressStat}>
-              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-              <Text style={styles.progressStatText}>
-                {completedTips.length} {translations[language].completed}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
+      <PersonalizedTips
+        language={language}
+        answers={localAnswers}
+      />
     );
   };
 
@@ -1217,9 +1096,9 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'needsSupport': return '#FF6B6B';
-      case 'needsReinforcement': return '#FFD93D';
-      case 'goodLevel': return '#4CAF50';
+      case 'needsSupport': return '#FF6B6B'; // Rojo suave
+      case 'needsReinforcement': return '#FFB347'; // Ámbar
+      case 'goodLevel': return '#4CAF50'; // Verde brillante
       default: return '#4CAF50';
     }
   };
@@ -1242,15 +1121,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
 
   const getProgressPercentage = () => {
     return (completedTips.length / validTips.length) * 100;
-  };
-
-  const getPriorityColor = (priority: Priority) => {
-    switch (priority) {
-      case 'high': return '#FF6B6B';
-      case 'medium': return '#FFD93D';
-      case 'low': return '#6BCB77';
-      default: return '#6BCB77';
-    }
   };
 
   const getTipIcon = (domain: string) => {
@@ -1503,193 +1373,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginTop: 16,
   },
-  tipsContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  tipsHeader: {
-    marginBottom: 24,
-    gap: 12,
-  },
-  tipsHeaderTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  tipsTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#594545',
-  },
-  levelBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-  },
-  levelBadgeText: {
-    color: '#FFF',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  tipCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    marginVertical: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  tipHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  priorityBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  priorityText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  domainBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 6,
-  },
-  domainText: {
-    color: '#666',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  tipContent: {
-    padding: 20,
-    gap: 16,
-  },
-  avatarContainer: {
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  avatarImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-  },
-  tipText: {
-    fontSize: 16,
-    color: '#594545',
-    lineHeight: 24,
-  },
-  tipActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#f5f5f5',
-  },
-  actionButtonActive: {
-    backgroundColor: '#594545',
-  },
-  actionButtonText: {
-    color: '#666',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  actionButtonTextActive: {
-    color: '#FFF',
-  },
-  navigationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#f5f5f5',
-    padding: 16,
-  },
-  navigationDots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  navigationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#ddd',
-  },
-  activeDot: {
-    backgroundColor: '#594545',
-    width: 24,
-  },
-  navArrowButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  progressContainer: {
-    gap: 16,
-  },
-  progressBarContainer: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 4,
-    overflow: 'hidden',
-    width: '100%',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#4CAF50',
-    borderRadius: 4,
-  },
-  progressText: {
-    color: '#666',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  progressStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  progressStat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  progressStatText: {
-    color: '#666',
-    fontSize: 14,
-    fontWeight: '500',
-  },
   responseCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -1761,7 +1444,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFE5E5', // fallback
+    backgroundColor: '#FFE5E5',
   },
   teacherNoteContent: {
     flexDirection: 'row',
