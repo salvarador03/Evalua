@@ -18,6 +18,9 @@ import type { Language } from "../../translations/types";
 // @ts-ignore: No se encuentra el archivo de tipos, ignorar para evitar error de compilación
 import type { FeedbackData } from "./types";
 
+type UeqDimensions = 'attractive' | 'perspicuity' | 'efficiency' | 'dependability' | 'stimulation' | 'novelty';
+
+
 // --- Contenido de traducción local con descripciones y referencias (MODIFICADO) ---
 const feedbackTranslations: Record<Language, {
     feedbackTitle: string;
@@ -135,7 +138,7 @@ const feedbackTranslations: Record<Language, {
         ],
         susReference: {
             text: "Referencia: Brooke, J. (1996). SUS – A quick and dirty usability scale.",
-            url: "https://hell.meiert.org/core/pdf/sus.pdf"
+            url: "http://hell.meiert.org/core/pdf/sus.pdf"
         },
         ueqTitle: "Cuestionario de Experiencia de Usuario (UEQ)",
         ueqDescription: "Por favor, evalúa la aplicación en función de los siguientes pares de adjetivos, moviendo el marcador entre ellos. Cuanto más cerca esté de un adjetivo, más de acuerdo estarás con él.",
@@ -148,12 +151,12 @@ const feedbackTranslations: Record<Language, {
             novelty: "Novedad"
         },
         ueqDimensionReferences: {
-            attractive: "Info: Mahlke, S., & Lindgaard, G. (2007).",
-            perspicuity: "Info: Laugwitz, B., Held, T., & Schrepp, M. (2008).",
-            efficiency: "Info: Norman, D. (2013).",
-            dependability: "Info: Schuler, D. & Namioka, A. (1993).",
-            stimulation: "Info: Hassenzahl, M. (2008).",
-            novelty: "Info: Norman, D. A. (2004)."
+            attractive: "Mahlke & Lindgaard (2007)",
+            perspicuity: "Laugwitz, Held & Schrepp (2008)",
+            efficiency: "Norman (2013)",
+            dependability: "Schuler & Namioka (1993)",
+            stimulation: "Hassenzahl (2008)",
+            novelty: "Norman (2004)",
         },
         ueqPairs: {
             attractive: [
@@ -182,7 +185,7 @@ const feedbackTranslations: Record<Language, {
                 "Fiable - Poco fiable"
             ],
             stimulation: [
-                "Valioso - Inferior",
+                "Inferior - Valioso",
                 "Aburrido - Divertido",
                 "No inspirador - Inspirador",
                 "Monótono - Estimulante"
@@ -289,7 +292,7 @@ const feedbackTranslations: Record<Language, {
         ],
         susReference: {
             text: "Reference: Brooke, J. (1996). SUS – A quick and dirty usability scale.",
-            url: "https://hell.meiert.org/core/pdf/sus.pdf"
+            url: "http://hell.meiert.org/core/pdf/sus.pdf"
         },
         ueqTitle: "User Experience Questionnaire (UEQ)",
         ueqDescription: "Please evaluate the application based on the following pairs of adjectives, moving the slider between them. The closer you are to an adjective, the more you agree with it.",
@@ -302,12 +305,12 @@ const feedbackTranslations: Record<Language, {
             novelty: "Novelty"
         },
         ueqDimensionReferences: {
-            attractive: "Info: Mahlke, S., & Lindgaard, G. (2007).",
-            perspicuity: "Info: Laugwitz, B., Held, T., & Schrepp, M. (2008).",
-            efficiency: "Info: Norman, D. (2013).",
-            dependability: "Info: Schuler, D. & Namioka, A. (1993).",
-            stimulation: "Info: Hassenzahl, M. (2008).",
-            novelty: "Info: Norman, D. A. (2004)."
+            attractive: "Mahlke & Lindgaard (2007)",
+            perspicuity: "Laugwitz, Held & Schrepp (2008)",
+            efficiency: "Norman (2013)",
+            dependability: "Schuler & Namioka (1993)",
+            stimulation: "Hassenzahl (2008)",
+            novelty: "Norman (2004)",
         },
         ueqPairs: {
             attractive: [
@@ -336,7 +339,7 @@ const feedbackTranslations: Record<Language, {
                 "Confident - Fearful"
             ],
             stimulation: [
-                "Valuable - Inferior",
+                "Inferior - Valuable",
                 "Boring - Exciting",
                 "Not interesting - Interesting",
                 "Motivating - Demotivating"
@@ -408,468 +411,511 @@ const feedbackTranslations: Record<Language, {
             starCount: "Stars earned:"
         }
     },
-    // ... (rest of the languages: es-PA, pt-PT, pt-BR would also need these new keys)
+    // ... (rest of the languages: es-PA, pt-PT, pt-BR)
     "es-PA": {
-      feedbackTitle: "Tu Opinión",
-      editFeedbackTitle: "Editar Opinión",
-      rateExperience: "Califica tu experiencia",
-      overallExperience: "Experiencia general",
-      usability: "Usabilidad",
-      contentQuality: "Calidad del contenido",
-      visualDesign: "Diseño visual",
-      tellUsMore: "Cuéntanos más",
-      improvementSuggestions: "Sugerencias de mejora",
-      submitFeedback: "Enviar opinión",
-      updateFeedback: "Actualizar opinión",
-      thankYou: "¡Gracias!",
-      yourFeedbackHelps: "Tu opinión nos ayuda a mejorar",
-      close: "Cerrar",
-      errorSubmitting: "Error al enviar",
-      pleaseTryAgain: "Por favor, inténtalo de nuevo",
-      feedbackRequired: "Por favor, califica tu experiencia general",
-      resetFeedback: "Reiniciar",
-      susTitle: "Cuestionario de Usabilidad del Sistema (SUS)",
-      susDescription: "Por favor, responde a estas afirmaciones sobre la usabilidad general del sistema. Elige una puntuación del 1 (Totalmente en desacuerdo) al 5 (Totalmente de acuerdo).",
-      susQuestions: [
-        "Creo que me gustaría usar este sistema frecuentemente",
-        "Encontré el sistema innecesariamente complejo",
-        "Pensé que el sistema era fácil de usar",
-        "Creo que necesitaría el soporte de un técnico para poder usar este sistema",
-        "Encontré las diversas funciones del sistema bien integradas",
-        "Pensé que había demasiada inconsistencia en este sistema",
-        "Imagino que la mayoría de las personas aprenderían a usar este sistema muy rápidamente",
-        "Encontré el sistema muy engorroso de usar",
-        "Me sentí muy confiado usando el sistema",
-        "Necesité aprender muchas cosas antes de poder empezar con este sistema"
-      ],
-      susReference: {
-        text: "Referencia: Brooke, J. (1996). SUS – A quick and dirty usability scale.",
-        url: "https://hell.meiert.org/core/pdf/sus.pdf"
-      },
-      ueqTitle: "Cuestionario de Experiencia de Usuario (UEQ)",
-      ueqDescription: "Por favor, evalúa la aplicación en función de los siguientes pares de adjetivos, moviendo el marcador entre ellos. Cuanto más cerca esté de un adjetivo, más de acuerdo estarás con él.",
-      ueqDimensions: {
-        attractive: "Atractivo",
-        perspicuity: "Perspicuidad",
-        efficiency: "Eficiencia",
-        dependability: "Confiabilidad",
-        stimulation: "Estimulación",
-        novelty: "Novedad"
-      },
-      ueqDimensionReferences: {
-        attractive: "Info: Mahlke, S., & Lindgaard, G. (2007).",
-        perspicuity: "Info: Laugwitz, B., Held, T., & Schrepp, M. (2008).",
-        efficiency: "Info: Norman, D. (2013).",
-        dependability: "Info: Schuler, D. & Namioka, A. (1993).",
-        stimulation: "Info: Hassenzahl, M. (2008).",
-        novelty: "Info: Norman, D. A. (2004)."
-      },
-      ueqPairs: {
-        attractive: [
-          "Aburrido - Atractivo",
-          "Poco atractivo - Atractivo",
-          "Agradable - Desagradable",
-          "Bueno - Malo",
-          "Repulsivo - Atractivo"
+        feedbackTitle: "Tu Opinión",
+        editFeedbackTitle: "Editar Opinión",
+        rateExperience: "Califica tu experiencia",
+        overallExperience: "Experiencia general",
+        usability: "Usabilidad",
+        contentQuality: "Calidad del contenido",
+        visualDesign: "Diseño visual",
+        tellUsMore: "Cuéntanos más",
+        improvementSuggestions: "Sugerencias de mejora",
+        submitFeedback: "Enviar opinión",
+        updateFeedback: "Actualizar opinión",
+        thankYou: "¡Gracias!",
+        yourFeedbackHelps: "Tu opinión nos ayuda a mejorar",
+        close: "Cerrar",
+        errorSubmitting: "Error al enviar",
+        pleaseTryAgain: "Por favor, inténtalo de nuevo",
+        feedbackRequired: "Por favor, califica tu experiencia general",
+        resetFeedback: "Reiniciar",
+        susTitle: "Cuestionario de Usabilidad del Sistema (SUS)",
+        susDescription: "Por favor, responde a estas afirmaciones sobre la usabilidad general del sistema. Elige una puntuación del 1 (Totalmente en desacuerdo) al 5 (Totalmente de acuerdo).",
+        susQuestions: [
+            "Creo que me gustaría usar este sistema frecuentemente",
+            "Encontré el sistema innecesariamente complejo",
+            "Pensé que el sistema era fácil de usar",
+            "Creo que necesitaría el soporte de un técnico para poder usar este sistema",
+            "Encontré las diversas funciones del sistema bien integradas",
+            "Pensé que había demasiada inconsistencia en este sistema",
+            "Imagino que la mayoría de las personas aprenderían a usar este sistema muy rápidamente",
+            "Encontré el sistema muy engorroso de usar",
+            "Me sentí muy confiado usando el sistema",
+            "Necesité aprender muchas cosas antes de poder empezar con este sistema"
         ],
-        perspicuity: [
-          "No es fácil de aprender - Fácil de aprender",
-          "Complejo - Simple",
-          "Complicado - Fácil",
-          "Confuso - Claro"
-        ],
-        efficiency: [
-          "Lento - Rápido",
-          "Ineficiente - Eficiente",
-          "Poco práctico - Práctico",
-          "Organizado - Desorganizado"
-        ],
-        dependability: [
-          "Poco predecible - Predecible",
-          "Obstruye - Apoya",
-          "Seguro - Inseguro",
-          "Fiable - Poco fiable"
-        ],
-        stimulation: [
-          "Valioso - Inferior",
-          "Aburrido - Divertido",
-          "No inspirador - Inspirador",
-          "Monótono - Estimulante"
-        ],
-        novelty: [
-          "Cauteloso - Innovador",
-          "Convencional - Inventivo",
-          "Tradicional - Moderno",
-          "Estable - Avanzado"
-        ]
-      },
-      ueqPairDescriptions: {
-        attractive: [
-          "¿Cómo describirías la apariencia y sensación de la aplicación?",
-          "¿Qué tan bien diseñada visualmente te parece la aplicación?",
-          "¿Qué tan placentera es tu interacción con la aplicación?",
-          "¿Qué tan alta es tu impresión general sobre la calidad del diseño?",
-          "¿Te sientes atraído o repelido por la estética de la aplicación?"
-        ],
-        perspicuity: [
-          "¿Qué tan fácil te ha resultado aprender a usar la aplicación?",
-          "¿Consideras que la estructura y las funciones son complejas o simples?",
-          "¿El uso de la aplicación es complicado o fácil de entender?",
-          "¿Te resulta confuso o claro el diseño de la interfaz?"
-        ],
-        efficiency: [
-          "¿Te parece que la aplicación funciona a una velocidad adecuada?",
-          "¿Las tareas se pueden realizar de manera eficiente o ineficiente?",
-          "¿Encuentras la aplicación práctica para tus necesidades?",
-          "¿La organización del contenido y las funciones es clara?"
-        ],
-        dependability: [
-          "¿El comportamiento de la aplicación es predecible o impredecible?",
-          "¿Sientes que la aplicación te ayuda o te obstruye?",
-          "¿Te sientes seguro al usar la aplicación?",
-          "¿Qué tan fiable consideras el funcionamiento de la aplicación?"
-        ],
-        stimulation: [
-          "¿Qué valor le das a las funciones y contenido de la aplicación?",
-          "¿Consideras que la experiencia de uso es aburrida o divertida?",
-          "¿La aplicación te inspira a explorar más o no?",
-          "¿La interacción con la aplicación es monótona o estimulante?"
-        ],
-        novelty: [
-          "¿Cómo describirías el nivel de innovación de la aplicación?",
-          "¿Sientes que la aplicación es inventiva o sigue patrones convencionales?",
-          "¿La aplicación se siente moderna o tradicional?",
-          "¿Consideras que su diseño es avanzado o estable?"
-        ]
-      },
-      personalizedTips: "Consejos Personalizados",
-      tips: {
-        title: "Consejos Generales",
-        completed: "consejos completados",
-        needsSupport: "Necesita apoyo",
-        needsReinforcement: "Necesita refuerzo",
-        goodLevel: "Buen nivel",
-        like: "Me gusta",
-        complete: "Completar",
-        favorites: "favoritos",
-        showQuestion: "Ver pregunta",
-        low: "Bajo",
-        medium: "Medio",
-        high: "Alto",
-        highScore: "Tu puntaje es alto. Mantén tu actividad física para mantener tu salud.",
-        mediumScore: "Tu puntaje es medio. Mantén tu actividad física para mejorar tu salud.",
-        lowScore: "Tu puntaje es bajo. Considera aumentar tu actividad física regularmente.",
-        allCompleted: "¡Has completado todos los consejos! 🎉",
-        starCount: "Estrellas ganadas:"
-      }
+        susReference: {
+            text: "Referencia: Brooke, J. (1996). SUS – A quick and dirty usability scale.",
+            url: "http://hell.meiert.org/core/pdf/sus.pdf"
+        },
+        ueqTitle: "Cuestionario de Experiencia de Usuario (UEQ)",
+        ueqDescription: "Por favor, evalúa la aplicación en función de los siguientes pares de adjetivos, moviendo el marcador entre ellos. Cuanto más cerca esté de un adjetivo, más de acuerdo estarás con él.",
+        ueqDimensions: {
+            attractive: "Atractivo",
+            perspicuity: "Perspicuidad",
+            efficiency: "Eficiencia",
+            dependability: "Confiabilidad",
+            stimulation: "Estimulación",
+            novelty: "Novedad"
+        },
+        ueqDimensionReferences: {
+            attractive: "Mahlke & Lindgaard (2007)",
+            perspicuity: "Laugwitz, Held & Schrepp (2008)",
+            efficiency: "Norman (2013)",
+            dependability: "Schuler & Namioka (1993)",
+            stimulation: "Hassenzahl (2008)",
+            novelty: "Norman (2004)",
+        },
+        ueqPairs: {
+            attractive: [
+                "Aburrido - Atractivo",
+                "Poco atractivo - Atractivo",
+                "Agradable - Desagradable",
+                "Bueno - Malo",
+                "Repulsivo - Atractivo"
+            ],
+            perspicuity: [
+                "No es fácil de aprender - Fácil de aprender",
+                "Complejo - Simple",
+                "Complicado - Fácil",
+                "Confuso - Claro"
+            ],
+            efficiency: [
+                "Lento - Rápido",
+                "Ineficiente - Eficiente",
+                "Poco práctico - Práctico",
+                "Organizado - Desorganizado"
+            ],
+            dependability: [
+                "Poco predecible - Predecible",
+                "Obstruye - Apoya",
+                "Seguro - Inseguro",
+                "Fiable - Poco fiable"
+            ],
+            stimulation: [
+                "Inferior - Valioso",
+                "Aburrido - Divertido",
+                "No inspirador - Inspirador",
+                "Monótono - Estimulante"
+            ],
+            novelty: [
+                "Cauteloso - Innovador",
+                "Convencional - Inventivo",
+                "Tradicional - Moderno",
+                "Estable - Avanzado"
+            ]
+        },
+        ueqPairDescriptions: {
+            attractive: [
+                "¿Cómo describirías la apariencia y sensación de la aplicación?",
+                "¿Qué tan bien diseñada visualmente te parece la aplicación?",
+                "¿Qué tan placentera es tu interacción con la aplicación?",
+                "¿Qué tan alta es tu impresión general sobre la calidad del diseño?",
+                "¿Te sientes atraído o repelido por la estética de la aplicación?"
+            ],
+            perspicuity: [
+                "¿Qué tan fácil te ha resultado aprender a usar la aplicación?",
+                "¿Consideras que la estructura y las funciones son complejas o simples?",
+                "¿El uso de la aplicación es complicado o fácil de entender?",
+                "¿Te resulta confuso o claro el diseño de la interfaz?"
+            ],
+            efficiency: [
+                "¿Te parece que la aplicación funciona a una velocidad adecuada?",
+                "¿Las tareas se pueden realizar de manera eficiente o ineficiente?",
+                "¿Encuentras la aplicación práctica para tus necesidades?",
+                "¿La organización del contenido y las funciones es clara?"
+            ],
+            dependability: [
+                "¿El comportamiento de la aplicación es predecible o impredecible?",
+                "¿Sientes que la aplicación te ayuda o te obstruye?",
+                "¿Te sientes seguro al usar la aplicación?",
+                "¿Qué tan fiable consideras el funcionamiento de la aplicación?"
+            ],
+            stimulation: [
+                "¿Qué valor le das a las funciones y contenido de la aplicación?",
+                "¿Consideras que la experiencia de uso es aburrida o divertida?",
+                "¿La aplicación te inspira a explorar más o no?",
+                "¿La interacción con la aplicación es monótona o estimulante?"
+            ],
+            novelty: [
+                "¿Cómo describirías el nivel de innovación de la aplicación?",
+                "¿Sientes que la aplicación es inventiva o sigue patrones convencionales?",
+                "¿La aplicación se siente moderna o tradicional?",
+                "¿Consideras que su diseño es avanzado o estable?"
+            ]
+        },
+        personalizedTips: "Consejos Personalizados",
+        tips: {
+            title: "Consejos Generales",
+            completed: "consejos completados",
+            needsSupport: "Necesita apoyo",
+            needsReinforcement: "Necesita refuerzo",
+            goodLevel: "Buen nivel",
+            like: "Me gusta",
+            complete: "Completar",
+            favorites: "favoritos",
+            showQuestion: "Ver pregunta",
+            low: "Bajo",
+            medium: "Medio",
+            high: "Alto",
+            highScore: "Tu puntaje es alto. Mantén tu actividad física para mantener tu salud.",
+            mediumScore: "Tu puntaje es medio. Mantén tu actividad física para mejorar tu salud.",
+            lowScore: "Tu puntaje es bajo. Considera aumentar tu actividad física regularmente.",
+            allCompleted: "¡Has completado todos los consejos! 🎉",
+            starCount: "Estrellas ganadas:"
+        }
     },
     "pt-PT": {
-      feedbackTitle: "A sua opinião",
-      editFeedbackTitle: "Editar opinião",
-      rateExperience: "Avalie sua experiência",
-      overallExperience: "Experiência geral",
-      usability: "Usabilidade",
-      contentQuality: "Qualidade do conteúdo",
-      visualDesign: "Design visual",
-      tellUsMore: "Conte-nos mais",
-      improvementSuggestions: "Sugestões de melhoria",
-      submitFeedback: "Enviar opinião",
-      updateFeedback: "Atualizar opinião",
-      thankYou: "Obrigado!",
-      yourFeedbackHelps: "Sua opinião nos ajuda a melhorar",
-      close: "Fechar",
-      errorSubmitting: "Erro ao enviar",
-      pleaseTryAgain: "Por favor, tente novamente",
-      feedbackRequired: "Por favor, avalie sua experiência geral",
-      resetFeedback: "Reiniciar",
-      susTitle: "Escala de Usabilidade do Sistema (SUS)",
-      susDescription: "Por favor, responda a estas afirmações sobre a usabilidade geral do sistema. Escolha uma pontuação de 1 (Discordo totalmente) a 5 (Concordo totalmente).",
-      susQuestions: [
-        "Acho que gostaria de usar este sistema frequentemente",
-        "Encontrei o sistema desnecessariamente complexo",
-        "Pensei que o sistema era fácil de usar",
-        "Acho que precisaria do apoio de um técnico para usar este sistema",
-        "Encontrei as várias funções do sistema bem integradas",
-        "Pensei que havia demasiada inconsistência neste sistema",
-        "Imagino que a maioria das pessoas aprenderia a usar este sistema muito rapidamente",
-        "Encontrei o sistema muito incómodo de usar",
-        "Senti-me muito confiante usando o sistema",
-        "Precisei aprender muitas coisas antes de poder começar com este sistema"
-      ],
-      susReference: {
-        text: "Referência: Brooke, J. (1996). SUS – A quick and dirty usability scale.",
-        url: "https://hell.meiert.org/core/pdf/sus.pdf"
-      },
-      ueqTitle: "Questionário de Experiência do Utilizador (UEQ)",
-      ueqDescription: "Por favor, avalie a aplicação com base nos seguintes pares de adjetivos, movendo o marcador entre eles. Quanto mais perto de um adjetivo, mais concorda com ele.",
-      ueqDimensions: {
-        attractive: "Atractividade",
-        perspicuity: "Perspicuidade",
-        efficiency: "Eficiência",
-        dependability: "Confiabilidade",
-        stimulation: "Estimulação",
-        novelty: "Novidade"
-      },
-      ueqDimensionReferences: {
-        attractive: "Info: Mahlke, S., & Lindgaard, G. (2007).",
-        perspicuity: "Info: Laugwitz, B., Held, T., & Schrepp, M. (2008).",
-        efficiency: "Info: Norman, D. (2013).",
-        dependability: "Info: Schuler, D. & Namioka, A. (1993).",
-        stimulation: "Info: Hassenzahl, M. (2008).",
-        novelty: "Info: Norman, D. A. (2004)."
-      },
-      ueqPairs: {
-        attractive: [
-          "Aborrecido - Atractivo",
-          "Pouco atractivo - Atractivo",
-          "Agradável - Desagradável",
-          "Bom - Mau",
-          "Repulsivo - Atractivo"
+        feedbackTitle: "A sua opinião",
+        editFeedbackTitle: "Editar opinião",
+        rateExperience: "Avalie sua experiência",
+        overallExperience: "Experiência geral",
+        usability: "Usabilidade",
+        contentQuality: "Qualidade do conteúdo",
+        visualDesign: "Design visual",
+        tellUsMore: "Conte-nos mais",
+        improvementSuggestions: "Sugestões de melhoria",
+        submitFeedback: "Enviar opinião",
+        updateFeedback: "Atualizar opinião",
+        thankYou: "Obrigado!",
+        yourFeedbackHelps: "Sua opinião nos ajuda a melhorar",
+        close: "Fechar",
+        errorSubmitting: "Erro ao enviar",
+        pleaseTryAgain: "Por favor, tente novamente",
+        feedbackRequired: "Por favor, avalie sua experiência geral",
+        resetFeedback: "Reiniciar",
+        susTitle: "Escala de Usabilidade do Sistema (SUS)",
+        susDescription: "Por favor, responda a estas afirmações sobre a usabilidade geral do sistema. Escolha uma pontuação de 1 (Discordo totalmente) a 5 (Concordo totalmente).",
+        susQuestions: [
+            "Acho que gostaria de usar este sistema frequentemente",
+            "Encontrei o sistema desnecessariamente complexo",
+            "Pensei que o sistema era fácil de usar",
+            "Acho que precisaria do apoio de um técnico para usar este sistema",
+            "Encontrei as várias funções do sistema bem integradas",
+            "Pensei que havia demasiada inconsistência neste sistema",
+            "Imagino que a maioria das pessoas aprenderia a usar este sistema muito rapidamente",
+            "Encontrei o sistema muito incómodo de usar",
+            "Senti-me muito confiante usando o sistema",
+            "Precisei aprender muitas coisas antes de poder começar com este sistema"
         ],
-        perspicuity: [
-          "Não é fácil de aprender - Fácil de aprender",
-          "Complexo - Simples",
-          "Complicado - Fácil",
-          "Confuso - Claro"
-        ],
-        efficiency: [
-          "Lento - Rápido",
-          "Ineficiente - Eficiente",
-          "Imprático - Prático",
-          "Desordenado - Ordenado"
-        ],
-        dependability: [
-          "Imprevisível - Previsível",
-          "Obstrutivo - Apoiante",
-          "Seguro - Inseguro",
-          "Confiante - Temeroso"
-        ],
-        stimulation: [
-          "Valioso - Inferior",
-          "Aborrecido - Divertido",
-          "Não inspirador - Inspirador",
-          "Não atractivo - Atractivo"
-        ],
-        novelty: [
-          "Cauteloso - Inovador",
-          "Convencional - Inventivo",
-          "Usual - Líder",
-          "Estável - Avançado"
-        ]
-      },
-      ueqPairDescriptions: {
-        attractive: [
-          "Como descreveria a aparência e a sensação da aplicação?",
-          "Quão bem projetada visualmente a aplicação parece ser?",
-          "Quão agradável é a sua interação com a aplicação?",
-          "Quão alta é sua impressão geral sobre a qualidade do design?",
-          "Sente-se atraído ou repelido pela estética da aplicação?"
-        ],
-        perspicuity: [
-          "Quão fácil foi para si aprender a usar a aplicação?",
-          "Considera a estrutura e as funções complexas ou simples?",
-          "O uso da aplicação é complicado ou fácil de entender?",
-          "Acha o design da interface confuso ou claro?"
-        ],
-        efficiency: [
-          "Acha que a aplicação funciona a uma velocidade adequada?",
-          "As tarefas podem ser realizadas de forma eficiente ou ineficiente?",
-          "Acha a aplicação prática para as suas necessidades?",
-          "A organização do conteúdo e das funções é clara?"
-        ],
-        dependability: [
-          "O comportamento da aplicação é previsível ou imprevisível?",
-          "Sente que a aplicação o apoia ou o obstrui?",
-          "Sente-se seguro ao usar a aplicação?",
-          "Quão fiável considera o funcionamento da aplicação?"
-        ],
-        stimulation: [
-          "Que valor dá às funções e ao conteúdo da aplicação?",
-          "Acha a experiência de utilizador aborrecida ou divertida?",
-          "A aplicação inspira-o a explorar mais ou não?",
-          "A interação com a aplicação é monótona ou estimulante?"
-        ],
-        novelty: [
-          "Como descreveria o nível de inovação da aplicação?",
-          "Sente que a aplicação é inventiva ou segue padrões convencionais?",
-          "A aplicação parece moderna ou tradicional?",
-          "Considera o seu design avançado ou estável?"
-        ]
-      },
-      personalizedTips: "Dicas Personalizadas",
-      tips: {
-        title: "Dicas Gerais",
-        completed: "dicas completadas",
-        needsSupport: "Precisa de apoio",
-        needsReinforcement: "Precisa de reforço",
-        goodLevel: "Bom nível",
-        like: "Gosto",
-        complete: "Completar",
-        favorites: "favoritos",
-        showQuestion: "Ver pergunta",
-        low: "Baixo",
-        medium: "Médio",
-        high: "Alto",
-        highScore: "Sua pontuação é alta. Mantenha sua atividade física para manter sua saúde.",
-        mediumScore: "Sua pontuação é média. Mantenha sua atividade física para melhorar sua saúde.",
-        lowScore: "Sua pontuação é baixa. Considere aumentar sua atividade física regularmente.",
-        allCompleted: "Você completou todas as dicas! 🎉",
-        starCount: "Estrelas ganhas:"
-      }
+        susReference: {
+            text: "Referência: Brooke, J. (1996). SUS – A quick and dirty usability scale.",
+            url: "http://hell.meiert.org/core/pdf/sus.pdf"
+        },
+        ueqTitle: "Questionário de Experiência do Utilizador (UEQ)",
+        ueqDescription: "Por favor, avalie a aplicação com base nos seguintes pares de adjetivos, movendo o marcador entre eles. Quanto mais perto de um adjetivo, mais concorda com ele.",
+        ueqDimensions: {
+            attractive: "Atractividade",
+            perspicuity: "Perspicuidade",
+            efficiency: "Eficiência",
+            dependability: "Confiabilidade",
+            stimulation: "Estimulação",
+            novelty: "Novidade"
+        },
+        ueqDimensionReferences: {
+            attractive: "Mahlke & Lindgaard (2007)",
+            perspicuity: "Laugwitz, Held & Schrepp (2008)",
+            efficiency: "Norman (2013)",
+            dependability: "Schuler & Namioka (1993)",
+            stimulation: "Hassenzahl (2008)",
+            novelty: "Norman (2004)",
+        },
+        ueqPairs: {
+            attractive: [
+                "Aborrecido - Atractivo",
+                "Pouco atractivo - Atractivo",
+                "Agradável - Desagradável",
+                "Bom - Mau",
+                "Repulsivo - Atractivo"
+            ],
+            perspicuity: [
+                "Não é fácil de aprender - Fácil de aprender",
+                "Complexo - Simples",
+                "Complicado - Fácil",
+                "Confuso - Claro"
+            ],
+            efficiency: [
+                "Lento - Rápido",
+                "Ineficiente - Eficiente",
+                "Imprático - Prático",
+                "Desordenado - Ordenado"
+            ],
+            dependability: [
+                "Imprevisível - Previsível",
+                "Obstrutivo - Apoiante",
+                "Seguro - Inseguro",
+                "Confiante - Temeroso"
+            ],
+            stimulation: [
+                "Inferior - Valioso",
+                "Aborrecido - Divertido",
+                "Não inspirador - Inspirador",
+                "Não atractivo - Atractivo"
+            ],
+            novelty: [
+                "Cauteloso - Inovador",
+                "Convencional - Inventivo",
+                "Usual - Líder",
+                "Estável - Avançado"
+            ]
+        },
+        ueqPairDescriptions: {
+            attractive: [
+                "Como descreveria a aparência e a sensação da aplicação?",
+                "Quão bem projetada visualmente a aplicação parece ser?",
+                "Quão agradável é a sua interação com a aplicação?",
+                "Quão alta é sua impressão geral sobre a qualidade do design?",
+                "Sente-se atraído ou repelido pela estética da aplicação?"
+            ],
+            perspicuity: [
+                "Quão fácil foi para si aprender a usar a aplicação?",
+                "Considera a estrutura e as funções complexas ou simples?",
+                "O uso da aplicação é complicado ou fácil de entender?",
+                "Acha o design da interface confuso ou claro?"
+            ],
+            efficiency: [
+                "Acha que a aplicação funciona a uma velocidade adequada?",
+                "As tarefas podem ser realizadas de forma eficiente ou ineficiente?",
+                "Acha a aplicação prática para as suas necessidades?",
+                "A organização do conteúdo e das funções é clara?"
+            ],
+            dependability: [
+                "O comportamento da aplicação é previsível ou imprevisível?",
+                "Sente que a aplicação o apoia ou o obstrui?",
+                "Sente-se seguro ao usar a aplicação?",
+                "Quão fiável considera o funcionamento da aplicação?"
+            ],
+            stimulation: [
+                "Que valor dá às funções e ao conteúdo da aplicação?",
+                "Acha a experiência de utilizador aborrecida ou divertida?",
+                "A aplicação inspira-o a explorar mais ou não?",
+                "A interação com a aplicação é monótona ou estimulante?"
+            ],
+            novelty: [
+                "Como descreveria o nível de inovação da aplicação?",
+                "Sente que a aplicação é inventiva ou segue padrões convencionais?",
+                "A aplicação parece moderna ou tradicional?",
+                "Considera o seu design avançado ou estável?"
+            ]
+        },
+        personalizedTips: "Dicas Personalizadas",
+        tips: {
+            title: "Dicas Gerais",
+            completed: "dicas completadas",
+            needsSupport: "Precisa de apoio",
+            needsReinforcement: "Precisa de reforço",
+            goodLevel: "Bom nível",
+            like: "Gosto",
+            complete: "Completar",
+            favorites: "favoritos",
+            showQuestion: "Ver pergunta",
+            low: "Baixo",
+            medium: "Médio",
+            high: "Alto",
+            highScore: "Sua pontuação é alta. Mantenha sua atividade física para manter sua saúde.",
+            mediumScore: "Sua pontuação é média. Mantenha sua atividade física para melhorar sua saúde.",
+            lowScore: "Sua pontuação é baixa. Considere aumentar sua atividade física regularmente.",
+            allCompleted: "Você completou todas as dicas! 🎉",
+            starCount: "Estrelas ganhas:"
+        }
     },
     "pt-BR": {
-      feedbackTitle: "Sua opinião",
-      editFeedbackTitle: "Editar opinião",
-      rateExperience: "Avalie sua experiência",
-      overallExperience: "Experiência geral",
-      usability: "Usabilidade",
-      contentQuality: "Qualidade do conteúdo",
-      visualDesign: "Design visual",
-      tellUsMore: "Conte-nos mais",
-      improvementSuggestions: "Sugestões de melhoria",
-      submitFeedback: "Enviar opinião",
-      updateFeedback: "Atualizar opinião",
-      thankYou: "Obrigado!",
-      yourFeedbackHelps: "Sua opinião nos ajuda a melhorar",
-      close: "Fechar",
-      errorSubmitting: "Erro ao enviar",
-      pleaseTryAgain: "Por favor, tente novamente",
-      feedbackRequired: "Por favor, avalie sua experiência geral",
-      resetFeedback: "Reiniciar",
-      susTitle: "Escala de Usabilidade do Sistema (SUS)",
-      susDescription: "Por favor, responda a estas afirmações sobre a usabilidade geral do sistema. Escolha uma pontuação de 1 (Discordo totalmente) a 5 (Concordo totalmente).",
-      susQuestions: [
-        "Acho que gostaria de usar este sistema frequentemente",
-        "Encontrei o sistema desnecessariamente complexo",
-        "Pensei que o sistema era fácil de usar",
-        "Acho que precisaria do apoio de um técnico para usar este sistema",
-        "Encontrei as várias funções do sistema bem integradas",
-        "Pensei que havia muita inconsistência neste sistema",
-        "Imagino que a maioria das pessoas aprenderia a usar este sistema muito rapidamente",
-        "Encontrei o sistema muito incômodo de usar",
-        "Senti-me muito confiante usando o sistema",
-        "Precisei aprender muitas coisas antes de poder começar com este sistema"
-      ],
-      susReference: {
-        text: "Referência: Brooke, J. (1996). SUS – A quick and dirty usability scale.",
-        url: "https://hell.meiert.org/core/pdf/sus.pdf"
-      },
-      ueqTitle: "Questionário de Experiência do Usuário (UEQ)",
-      ueqDescription: "Por favor, avalie a aplicação com base nos seguintes pares de adjetivos, movendo o marcador entre eles. Quanto mais perto de um adjetivo, mais concorda com ele.",
-      ueqDimensions: {
-        attractive: "Atratividade",
-        perspicuity: "Perspicuidade",
-        efficiency: "Eficiência",
-        dependability: "Confiabilidade",
-        stimulation: "Estimulação",
-        novelty: "Novidade"
-      },
-      ueqDimensionReferences: {
-        attractive: "Info: Mahlke, S., & Lindgaard, G. (2007).",
-        perspicuity: "Info: Laugwitz, B., Held, T., & Schrepp, M. (2008).",
-        efficiency: "Info: Norman, D. (2013).",
-        dependability: "Info: Schuler, D. & Namioka, A. (1993).",
-        stimulation: "Info: Hassenzahl, M. (2008).",
-        novelty: "Info: Norman, D. A. (2004)."
-      },
-      ueqPairs: {
-        attractive: [
-          "Chato - Atraente",
-          "Pouco atraente - Atraente",
-          "Agradável - Desagradável",
-          "Bom - Ruim",
-          "Repulsivo - Atraente"
+        feedbackTitle: "Sua opinião",
+        editFeedbackTitle: "Editar opinião",
+        rateExperience: "Avalie sua experiência",
+        overallExperience: "Experiência geral",
+        usability: "Usabilidade",
+        contentQuality: "Qualidade do conteúdo",
+        visualDesign: "Design visual",
+        tellUsMore: "Conte-nos mais",
+        improvementSuggestions: "Sugestões de melhoria",
+        submitFeedback: "Enviar opinião",
+        updateFeedback: "Atualizar opinião",
+        thankYou: "Obrigado!",
+        yourFeedbackHelps: "Sua opinião nos ajuda a melhorar",
+        close: "Fechar",
+        errorSubmitting: "Erro ao enviar",
+        pleaseTryAgain: "Por favor, tente novamente",
+        feedbackRequired: "Por favor, avalie sua experiência geral",
+        resetFeedback: "Reiniciar",
+        susTitle: "Escala de Usabilidade do Sistema (SUS)",
+        susDescription: "Por favor, responda a estas afirmações sobre a usabilidade geral do sistema. Escolha uma pontuação de 1 (Discordo totalmente) a 5 (Concordo totalmente).",
+        susQuestions: [
+            "Acho que gostaria de usar este sistema frequentemente",
+            "Encontrei o sistema desnecessariamente complexo",
+            "Pensei que o sistema era fácil de usar",
+            "Acho que precisaria do apoio de um técnico para usar este sistema",
+            "Encontrei as várias funções do sistema bem integradas",
+            "Pensei que havia muita inconsistencia neste sistema",
+            "Imagino que a maioria das pessoas aprenderia a usar este sistema muito rapidamente",
+            "Encontrei o sistema muito incômodo de usar",
+            "Senti-me muito confiante usando o sistema",
+            "Precisei aprender muitas coisas antes de poder começar com este sistema"
         ],
-        perspicuity: [
-          "Não é fácil de aprender - Fácil de aprender",
-          "Complexo - Simples",
-          "Complicado - Fácil",
-          "Confuso - Claro"
-        ],
-        efficiency: [
-          "Lento - Rápido",
-          "Ineficiente - Eficiente",
-          "Imprático - Prático",
-          "Desordenado - Ordenado"
-        ],
-        dependability: [
-          "Imprevisível - Previsível",
-          "Obstrutivo - Apoiador",
-          "Seguro - Inseguro",
-          "Confiante - Temeroso"
-        ],
-        stimulation: [
-          "Valioso - Inferior",
-          "Chato - Divertido",
-          "Não inspirador - Inspirador",
-          "Monótono - Estimulante"
-        ],
-        novelty: [
-          "Cauteloso - Inovador",
-          "Convencional - Inventivo",
-          "Usual - Líder",
-          "Estável - Avançado"
-        ]
-      },
-      ueqPairDescriptions: {
-        attractive: [
-          "Como descreveria a aparência e a sensação da aplicação?",
-          "Quão bem projetada visualmente a aplicação parece ser?",
-          "Quão agradável é a sua interação com a aplicação?",
-          "Quão alta é sua impressão geral sobre a qualidade do design?",
-          "Sente-se atraído ou repelido pela estética da aplicação?"
-        ],
-        perspicuity: [
-          "Quão fácil foi para si aprender a usar a aplicação?",
-          "Considera a estrutura e as funções complexas ou simples?",
-          "O uso da aplicação é complicado ou fácil de entender?",
-          "Acha o design da interface confuso ou claro?"
-        ],
-        efficiency: [
-          "Acha que a aplicação funciona a uma velocidade adequada?",
-          "As tarefas podem ser realizadas de forma eficiente ou ineficiente?",
-          "Acha a aplicação prática para as suas necessidades?",
-          "A organização do conteúdo e das funções é clara?"
-        ],
-        dependability: [
-          "O comportamento da aplicação é previsível ou imprevisível?",
-          "Sente que a aplicação o apoia ou o obstrui?",
-          "Sente-se seguro ao usar a aplicação?",
-          "Quão fiável considera o funcionamento da aplicação?"
-        ],
-        stimulation: [
-          "Que valor dá às funções e ao conteúdo da aplicação?",
-          "Acha a experiência de utilizador aborrecida ou divertida?",
-          "A aplicação inspira-o a explorar mais ou não?",
-          "A interação com a aplicação é monótona ou estimulante?"
-        ],
-        novelty: [
-          "Como descreveria o nível de inovação da aplicação?",
-          "Sente que a aplicação é inventiva ou segue padrões convencionais?",
-          "A aplicação parece moderna ou tradicional?",
-          "Considera o seu design avançado ou estável?"
-        ]
-      },
-      personalizedTips: "Dicas Personalizadas",
-      tips: {
-        title: "Dicas Gerais",
-        completed: "dicas completadas",
-        needsSupport: "Precisa de apoio",
-        needsReinforcement: "Precisa de reforço",
-        goodLevel: "Bom nível",
-        like: "Gosto",
-        complete: "Completar",
-        favorites: "favoritos",
-        showQuestion: "Ver pergunta",
-        low: "Baixo",
-        medium: "Médio",
-        high: "Alto",
-        highScore: "Sua pontuação é alta. Mantenha sua atividade física para manter sua saúde.",
-        mediumScore: "Sua pontuação é média. Mantenha sua atividade física para melhorar sua saúde.",
-        lowScore: "Sua pontuação é baixa. Considere aumentar sua atividade física regularmente.",
-        allCompleted: "Você completou todas as dicas! 🎉",
-        starCount: "Estrelas ganhas:"
-      }
+        susReference: {
+            text: "Referência: Brooke, J. (1996). SUS – A quick and dirty usability scale.",
+            url: "http://hell.meiert.org/core/pdf/sus.pdf"
+        },
+        ueqTitle: "Questionário de Experiência do Usuário (UEQ)",
+        ueqDescription: "Por favor, avalie a aplicação com base nos seguintes pares de adjetivos, movendo o marcador entre eles. Quanto mais perto de um adjetivo, mais concorda com ele.",
+        ueqDimensions: {
+            attractive: "Atratividade",
+            perspicuity: "Perspicuidade",
+            efficiency: "Eficiência",
+            dependability: "Confiabilidade",
+            stimulation: "Estimulação",
+            novelty: "Novidade"
+        },
+        ueqDimensionReferences: {
+            attractive: "Mahlke & Lindgaard (2007)",
+            perspicuity: "Laugwitz, Held & Schrepp (2008)",
+            efficiency: "Norman (2013)",
+            dependability: "Schuler & Namioka (1993)",
+            stimulation: "Hassenzahl (2008)",
+            novelty: "Norman (2004)",
+        },
+        ueqPairs: {
+            attractive: [
+                "Chato - Atraente",
+                "Pouco atraente - Atraente",
+                "Agradável - Desagradável",
+                "Bom - Ruim",
+                "Repulsivo - Atraente"
+            ],
+            perspicuity: [
+                "Não é fácil de aprender - Fácil de aprender",
+                "Complexo - Simples",
+                "Complicado - Fácil",
+                "Confuso - Claro"
+            ],
+            efficiency: [
+                "Lento - Rápido",
+                "Ineficiente - Eficiente",
+                "Imprático - Prático",
+                "Desordenado - Ordenado"
+            ],
+            dependability: [
+                "Imprevisível - Previsível",
+                "Obstrutivo - Apoiador",
+                "Seguro - Inseguro",
+                "Confiante - Temeroso"
+            ],
+            stimulation: [
+                "Inferior - Valioso",
+                "Chato - Divertido",
+                "Não inspirador - Inspirador",
+                "Monótono - Estimulante"
+            ],
+            novelty: [
+                "Cauteloso - Inovador",
+                "Convencional - Inventivo",
+                "Usual - Líder",
+                "Estável - Avançado"
+            ]
+        },
+        ueqPairDescriptions: {
+            attractive: [
+                "Como descreveria a aparência e a sensação da aplicação?",
+                "Quão bem projetada visualmente a aplicação parece ser?",
+                "Quão agradável é a sua interação com a aplicação?",
+                "Quão alta é sua impressão geral sobre a qualidade do design?",
+                "Sente-se atraído ou repelido pela estética da aplicação?"
+            ],
+            perspicuity: [
+                "Quão fácil foi para si aprender a usar a aplicação?",
+                "Considera a estrutura e as funções complexas ou simples?",
+                "O uso da aplicação é complicado ou fácil de entender?",
+                "Acha o design da interface confuso ou claro?"
+            ],
+            efficiency: [
+                "Acha que a aplicação funciona a uma velocidade adequada?",
+                "As tarefas podem ser realizadas de forma eficiente ou ineficiente?",
+                "Acha a aplicação prática para as suas necessidades?",
+                "A organização do conteúdo e das funções é clara?"
+            ],
+            dependability: [
+                "O comportamento da aplicação é previsível ou imprevisível?",
+                "Sente que a aplicação o apoia ou o obstrui?",
+                "Sente-se seguro ao usar a aplicação?",
+                "Quão fiável considera o funcionamento da aplicação?"
+            ],
+            stimulation: [
+                "Que valor dá às funções e ao conteúdo da aplicação?",
+                "Acha a experiência de utilizador aborrecida ou divertida?",
+                "A aplicação inspira-o a explorar mais ou não?",
+                "A interação com a aplicação é monótona ou estimulante?"
+            ],
+            novelty: [
+                "Como descreveria o nível de inovação da aplicação?",
+                "Sente que a aplicação é inventiva ou segue padrões convencionales?",
+                "A aplicação parece moderna ou tradicional?",
+                "Considera o seu design avançado ou estável?"
+            ]
+        },
+        personalizedTips: "Dicas Personalizadas",
+        tips: {
+            title: "Dicas Gerais",
+            completed: "dicas completadas",
+            needsSupport: "Precisa de apoio",
+            needsReinforcement: "Precisa de reforço",
+            goodLevel: "Bom nível",
+            like: "Gosto",
+            complete: "Completar",
+            favorites: "favoritos",
+            showQuestion: "Ver pergunta",
+            low: "Baixo",
+            medium: "Medio",
+            high: "Alto",
+            highScore: "Sua pontuação é alta. Mantenha sua atividade física para manter sua saúde.",
+            mediumScore: "Sua pontuação é média. Mantenha sua atividade física para melhorar sua saúde.",
+            lowScore: "Sua pontuação é baixa. Considere aumentar sua atividade física regularmente.",
+            allCompleted: "Você completou todas as dicas! 🎉",
+            starCount: "Estrelas ganhas:"
+        }
+    }
+};
+
+const ueqFullReferences = {
+    es: {
+        attractive: "Mahlke, S., & Lindgaard, G. (2007). Emotional and Aesthetic Aspects of User Experience. En Actas de la Conferencia HCI 2007: The Bigger Picture.",
+        perspicuity: "Laugwitz, B., Held, T., & Schrepp, M. (2008). Construction and Evaluation of a User Experience Questionnaire. En Lecture Notes in Computer Science, Vol. 4882, pp. 63-76.",
+        efficiency: "Norman, D. (2013). The Design of Everyday Things. (Edición revisada). Basic Books.",
+        dependability: "Schuler, D. & Namioka, A. (1993). Participatory Design: Principles and Practices. Lawrence Erlbaum Associates.",
+        stimulation: "Hassenzahl, M. (2008). User Experience and Emotions. En The Human-Computer Interaction Handbook. CRC Press.",
+        novelty: "Norman, D. A. (2004). Emotional Design: Why We Love (or Hate) Everyday Things. Basic Books.",
+    },
+    en: {
+        attractive: "Mahlke, S., & Lindgaard, G. (2007). Emotional and Aesthetic Aspects of User Experience. In Proceedings of the 21st British HCI Group Annual Conference on HCI 2007: The Bigger Picture.",
+        perspicuity: "Laugwitz, B., Held, T., & Schrepp, M. (2008). Construction and Evaluation of a User Experience Questionnaire. In Lecture Notes in Computer Science, Vol. 4882, pp. 63-76.",
+        efficiency: "Norman, D. (2013). The Design of Everyday Things. (Revised Edition). Basic Books.",
+        dependability: "Schuler, D. & Namioka, A. (1993). Participatory Design: Principles and Practices. Lawrence Erlbaum Associates.",
+        stimulation: "Hassenzahl, M. (2008). User Experience and Emotions. In The Human-Computer Interaction Handbook. CRC Press.",
+        novelty: "Norman, D. A. (2004). Emotional Design: Why We Love (or Hate) Everyday Things. Basic Books.",
+    },
+    "es-PA": {
+        attractive: "Mahlke, S., & Lindgaard, G. (2007). Emotional and Aesthetic Aspects of User Experience. En Actas de la Conferencia HCI 2007: The Bigger Picture.",
+        perspicuity: "Laugwitz, B., Held, T., & Schrepp, M. (2008). Construction and Evaluation of a User Experience Questionnaire. En Lecture Notes in Computer Science, Vol. 4882, pp. 63-76.",
+        efficiency: "Norman, D. (2013). The Design of Everyday Things. (Edición revisada). Basic Books.",
+        dependability: "Schuler, D. & Namioka, A. (1993). Participatory Design: Principles and Practices. Lawrence Erlbaum Associates.",
+        stimulation: "Hassenzahl, M. (2008). User Experience and Emotions. En The Human-Computer Interaction Handbook. CRC Press.",
+        novelty: "Norman, D. A. (2004). Emotional Design: Why We Love (or Hate) Everyday Things. Basic Books.",
+    },
+    "pt-PT": {
+        attractive: "Mahlke, S., & Lindgaard, G. (2007). Emotional and Aesthetic Aspects of User Experience. Em Atas da 21ª Conferência Anual do Grupo HCI Britânico sobre HCI 2007.",
+        perspicuity: "Laugwitz, B., Held, T., & Schrepp, M. (2008). Construction and Evaluation of a User Experience Questionnaire. Em Lecture Notes in Computer Science, Vol. 4882, pp. 63-76.",
+        efficiency: "Norman, D. (2013). O Design das Coisas do Dia a Dia. (Edição revista). Basic Books.",
+        dependability: "Schuler, D. & Namioka, A. (1993). Participatory Design: Principles and Practices. Lawrence Erlbaum Associates.",
+        stimulation: "Hassenzahl, M. (2008). User Experience and Emotions. Em The Human-Computer Interaction Handbook. CRC Press.",
+        novelty: "Norman, D. A. (2004). Emotional Design: Why We Love (or Hate) Everyday Things. Basic Books.",
+    },
+    "pt-BR": {
+        attractive: "Mahlke, S., & Lindgaard, G. (2007). Emotional and Aesthetic Aspects of User Experience. Em Anais da 21ª Conferência Anual do Grupo HCI Britânico sobre HCI 2007.",
+        perspicuity: "Laugwitz, B., Held, T., & Schrepp, M. (2008). Construction and Evaluation of a User Experience Questionnaire. Em Lecture Notes in Computer Science, Vol. 4882, pp. 63-76.",
+        efficiency: "Norman, D. (2013). O Design do Dia a Dia. (Edição revisada). Basic Books.",
+        dependability: "Schuler, D. & Namioka, A. (1993). Participatory Design: Principles and Practices. Lawrence Erlbaum Associates.",
+        stimulation: "Hassenzahl, M. (2008). User Experience and Emotions. Em The Human-Computer Interaction Handbook. CRC Press.",
+        novelty: "Norman, D. A. (2004). Emotional Design: Why We Love (or Hate) Everyday Things. Basic Books.",
     }
 };
 
@@ -1068,9 +1114,14 @@ const TeacherFeedbackForm: React.FC<TeacherFeedbackFormProps> = ({
         }
     };
 
-    const handleUeqReferencePress = () => {
-        const url = `https://www.ueq-online.org/resources/downloads/`; // URL base para los documentos
-        Linking.openURL(url).catch(err => console.error("Failed to open URL:", err));
+
+    const handleUeqReferencePress = (dimension: UeqDimensions) => {
+        const fullReference = ueqFullReferences[language as keyof typeof ueqFullReferences]?.[dimension];
+        if (fullReference) {
+            Alert.alert("Referencia UEQ", fullReference);
+        } else {
+            Alert.alert("Referencia no encontrada", "No se encontró información detallada para esta dimensión.");
+        }
     };
 
     if (submitted) {
@@ -1176,12 +1227,6 @@ const TeacherFeedbackForm: React.FC<TeacherFeedbackFormProps> = ({
                         <View style={styles.section}>
                             <View style={styles.titleWithReference}>
                                 <Text style={styles.sectionTitle}>{t.ueqTitle}</Text>
-                                <TouchableOpacity onPress={handleUeqReferencePress}>
-                                    <Text style={styles.referenceText}>
-                                        <Ionicons name="information-circle-outline" size={16} color="#666" />
-                                        {` Referencia UEQ`}
-                                    </Text>
-                                </TouchableOpacity>
                             </View>
                             <Text style={styles.sectionDescription}>{t.ueqDescription}</Text>
 
@@ -1189,11 +1234,14 @@ const TeacherFeedbackForm: React.FC<TeacherFeedbackFormProps> = ({
                                 <View key={dimension} style={styles.dimensionSection}>
                                     <View style={styles.titleWithReference}>
                                         <Text style={styles.dimensionTitle}>
-                                            {t.ueqDimensions[dimension as keyof typeof t.ueqDimensions]}
+                                            {t.ueqDimensions[dimension as UeqDimensions]}
                                         </Text>
-                                        <Text style={styles.dimensionInfoText}>
-                                            {t.ueqDimensionReferences[dimension as keyof typeof t.ueqDimensionReferences]}
-                                        </Text>
+                                        <TouchableOpacity onPress={() => handleUeqReferencePress(dimension as UeqDimensions)}>
+                                            <Text style={styles.dimensionInfoText}>
+                                                <Ionicons name="information-circle-outline" size={16} color="#666" />
+                                                {` ${t.ueqDimensionReferences[dimension as UeqDimensions]}`}
+                                            </Text>
+                                        </TouchableOpacity>
                                     </View>
                                     {pairs.map((pair, index) =>
                                         renderUeqPair(
