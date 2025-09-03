@@ -220,7 +220,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         const age = guestData?.age || userData?.age;
         if (age) {
           setStudentAge(age);
-          console.log('Edad del estudiante cargada:', age);
         }
 
         if (guestData?.classCode || userData?.classCode) {
@@ -239,18 +238,12 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         }
 
         const userPath = formResponse.isGuest ? 'guests' : 'users';
-        console.log('Loading class code for:', {
-          effectiveUserId,
-          userPath,
-          isGuest: formResponse.isGuest
-        });
+
 
         const userRef = await db().ref(`/${userPath}/${effectiveUserId}`).once("value");
         const userData = userRef.val();
 
         if (userData?.classCode) {
-          console.log('Class code loaded:', userData.classCode);
-          setStudentClassCode(userData.classCode);
         } else {
           console.warn('No class code found for user');
         }
@@ -278,11 +271,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         }
 
         const userPath = formResponse.isGuest ? 'guests' : 'users';
-        console.log('Loading answers for:', {
-          effectiveUserId,
-          userPath,
-          isGuest: formResponse.isGuest
-        });
+
 
         const formResponseRef = await db()
           .ref(`/form_responses/${effectiveUserId}/physical_literacy`)
@@ -291,10 +280,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         const formResponseData = formResponseRef.val();
 
         if (formResponseData?.answers) {
-          console.log('Loaded answers:', {
-            length: formResponseData.answers.length,
-            answers: formResponseData.answers
-          });
+
 
           if (formResponseData.answers.length === 8) {
             setLocalAnswers(formResponseData.answers);
@@ -423,25 +409,16 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     const targetAge = isTeacherView ? studentAge : formResponse.age;
 
     if (!targetAge) {
-      console.log('No age found, defaulting to kids questions');
       return questions[language].slice();
     }
 
-    console.log('Age check:', {
-      targetAge,
-      isUniversity: targetAge >= 18 && targetAge <= 24,
-      isTeen: targetAge >= 12 && targetAge <= 17,
-      isKid: targetAge < 12
-    });
+
 
     if (targetAge >= 18 && targetAge <= 24) {
-      console.log('Using university questions');
       return teenQuestions[language].slice();
     } else if (targetAge >= 12 && targetAge <= 17) {
-      console.log('Using teen questions');
       return teenQuestions[language].slice();
     } else {
-      console.log('Using kids questions');
       return questions[language].slice();
     }
   };
@@ -880,11 +857,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const renderComparison = () => {
     const questions = getAgeAppropriateQuestions(language);
     
-    console.log('Stats completos:', stats);
-    console.log('Stats[0]:', stats[0]);
-    console.log('Class medians:', stats[0]?.classMedians);
-    console.log('User answers:', localAnswers);
-    console.log('Current class code:', studentClassCode);
+
     
     const classScores = stats?.[0]?.classMedians || [];
     const globalScores = stats?.[0]?.globalMedians || [];

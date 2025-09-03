@@ -323,7 +323,6 @@ const AdminFeedbackView: React.FC<AdminFeedbackViewProps> = ({ language }) => {
       newFeedbacks.sort((a, b) => (b.submittedAt || 0) - (a.submittedAt || 0));
       
       setFeedbacks(newFeedbacks);
-      console.log('Feedbacks cargados:', newFeedbacks.length);
     } catch (error) {
       console.error('Error cargando feedbacks:', error);
     }

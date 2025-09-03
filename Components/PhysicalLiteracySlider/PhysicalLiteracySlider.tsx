@@ -10,6 +10,7 @@ interface PhysicalLiteracySliderProps {
   minLabel: string;
   maxLabel: string;
   language: Language;
+  readOnly?: boolean;
 }
 
 type SliderInfo = {
@@ -24,7 +25,8 @@ const PhysicalLiteracySlider: React.FC<PhysicalLiteracySliderProps> = ({
   onChange,
   minLabel,
   maxLabel,
-  language
+  language,
+  readOnly = false
 }) => {
   const getSliderInfo = (value: number | null): SliderInfo => {
     if (value === null) {
@@ -169,10 +171,11 @@ const renderLabels = () => {
           maximumValue={10}
           step={1}
           value={value !== null ? value : 0}
-          onValueChange={onChange}
+          onValueChange={readOnly ? undefined : onChange}
           minimumTrackTintColor="transparent"
           maximumTrackTintColor="transparent"
           thumbTintColor="#ffffff"
+          disabled={readOnly}
         />
       </View>
       {renderLabels()}

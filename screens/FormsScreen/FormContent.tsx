@@ -60,6 +60,7 @@ interface FormContentProps {
   onQuestionChange: (direction: 'next' | 'prev') => void;
   onSubmit: () => void;
   userAge: number;
+  readOnly?: boolean;
 }
 
 // Función auxiliar para formatear texto
@@ -157,6 +158,7 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
   onQuestionChange,
   onSubmit,
   userAge,
+  readOnly = false,
 }) => {
   // Estado para controlar el modal de feedback
   const [showFeedback, setShowFeedback] = useState(false);
@@ -258,24 +260,31 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
 
   // Memoizar la función canProceedToNext
   const canProceedToNext = useCallback(() =>
-    answers[currentQuestion] !== null,
-    [answers, currentQuestion]
+    readOnly ? true : answers[currentQuestion] !== null,
+    [answers, currentQuestion, readOnly]
   );
 
   // Memoizar la función handleNext
   const handleNext = useCallback(() => {
     if (!canProceedToNext()) {
-      Alert.alert(
-        translations[language].requiredAnswer,
-        translations[language].pleaseSelectValue,
-        [{ text: "OK", style: "default" }]
-      );
+      if (!readOnly) {
+        Alert.alert(
+          translations[language].requiredAnswer,
+          translations[language].pleaseSelectValue,
+          [{ text: "OK", style: "default" }]
+        );
+      }
       return;
     }
     onQuestionChange('next');
-  }, [canProceedToNext, language, onQuestionChange]);
+  }, [canProceedToNext, language, onQuestionChange, readOnly]);
 
   const handleSubmit = useCallback(() => {
+    // En modo solo lectura, no validar respuestas
+    if (readOnly) {
+      return;
+    }
+    
     // Verificar si hay alguna pregunta sin responder
     const hasUnansweredQuestions = answers.some(answer => answer === null);
     
@@ -288,14 +297,17 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
       return;
     }
     confirmAnswer(() => { });
-  }, [answers, language, confirmAnswer]);
+  }, [answers, language, confirmAnswer, readOnly]);
 
   // Memoizar la función handleAnswerChange
   const handleAnswerChange = useCallback((value: number) => {
+    if (readOnly) {
+      return; // No hacer nada en modo solo lectura
+    }
     const newAnswers = [...answers];
     newAnswers[currentQuestion] = value;
     onAnswerChange(newAnswers);
-  }, [answers, currentQuestion, onAnswerChange]);
+  }, [answers, currentQuestion, onAnswerChange, readOnly]);
 
   // Traducción de la última pregunta para niños
   const lastKidsQuestionTranslations = {
@@ -558,6 +570,7 @@ export const FormContent: React.FC<FormContentProps> = React.memo(({
         minLabel={currentQuestions[currentQuestion].min}
         maxLabel={currentQuestions[currentQuestion].max}
         language={language}
+        readOnly={readOnly}
       />
     );
   };

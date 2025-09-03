@@ -35,6 +35,7 @@ import { isUniversityStudent } from "./data/universityStudentQuestions";
 import { isTeenager } from "./data/teenQuestions";
 import FormImageCarousel from "./FormImageCarousel";
 import FormCompletionFeedback from '../../Components/FormCompletionFeedback/FormCompletionFeedback';
+import QuestionnaireViewer from '../../Components/QuestionnaireViewer';
 
 // Actualiza la interfaz Creator para incluir el tipo correcto de imageUrl
 interface Creator {
@@ -138,6 +139,16 @@ const CREATORS: Creator[] = [
     }
   },
   {
+    "name": "María Elena López de Silva",
+    "role": "Directora Académica (Facultad de Ciencias Aplicadas)",
+    "institution": "Universidad Nacional de Pilar",
+    "email": "mlopez@aplicadas.edu.py",
+    "orcid": "https://orcid.org/0000-0009-0004-7122-3241",
+    "imageUrl": "require('../../assets/images/mlopez.webp')",
+    "country": "Paraguay",
+    "socialLinks": {}
+  },
+  {
     name: "Adilson Passos da Costa Marques",
     role: "Investigador",
     institution: "University of Lisbon",
@@ -162,6 +173,19 @@ const CREATORS: Creator[] = [
     socialLinks: {
       researchGate: "https://www.researchgate.net/profile/Tiago-Ribeiro-41",
 
+    }
+  },
+  {
+    name: "Gabriel Fessia",
+    role: "Investigador",
+    institution: "Universidad Nacional del Litoral",
+    email: "",
+    orcid: "https://orcid.org/0000-0002-5227-368X",
+    imageUrl: require("../../assets/images/gabriel.webp"),
+    country: "Argentina",
+    socialLinks: {
+      linkedin: "https://www.linkedin.com/in/gabriel-fessia-b0a21851?originalSubdomain=ar",
+      researchGate: "https://www.researchgate.net/scientific-contributions/Gabriel-Fessia-2147074792"
     }
   },
   {
@@ -352,6 +376,20 @@ const INSTITUTIONS: Institution[] = [
     country: "Nicaragua",
     logo: require("../../assets/images/managua.webp"),
     website: "https://www.unan.edu.ni"
+  },
+  {
+    name: "Universidad Nacional del Litoral",
+    description: "Institución comprometida con la investigación en ciencias del deporte y el desarrollo de programas de actividad física, con un enfoque especial en la promoción de la salud y el bienestar.",
+    country: "Argentina",
+    logo: require("../../assets/images/litoral.webp"),
+    website: "https://www.unl.edu.ar"
+  },
+  {
+    name: "Universidad del Pilar",
+    description: "Institución dedicada a la formación de profesionales e investigación en ciencias aplicadas, con énfasis en la promoción de la salud y la actividad física.",
+    country: "Paraguay",
+    logo: require("../../assets/images/upilar.webp"),
+    website: "https://www.aplicadas.edu.py"
   }
 ];
 
@@ -372,6 +410,7 @@ export const FormsListScreen: React.FC = () => {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showQuestionnaireViewer, setShowQuestionnaireViewer] = useState(false);
   const [formType, setFormType] = useState("physical_literacy");
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [filteredCreators, setFilteredCreators] = useState<Creator[]>([]);
@@ -741,6 +780,30 @@ export const FormsListScreen: React.FC = () => {
             <Text style={styles.flagLabel}>Ecuador</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Fila 6: Argentina y Paraguay */}
+        <View style={styles.rowTwo}>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Argentina")}
+          >
+            <Image
+              source={require("../../assets/flags/argentina.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Argentina</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={() => navigateToCreatorsByCountry("Paraguay")}
+          >
+            <Image
+              source={require("../../assets/flags/paraguay.webp")}
+              style={styles.flagImage}
+            />
+            <Text style={styles.flagLabel}>Paraguay</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -853,6 +916,10 @@ export const FormsListScreen: React.FC = () => {
         return require('../../assets/flags/panama.webp');
       case 'Ecuador':
         return require('../../assets/flags/ecuador.webp');
+      case 'Argentina':
+        return require('../../assets/flags/argentina.webp');
+      case 'Paraguay':
+        return require('../../assets/flags/paraguay.webp');
       default:
         return null;
     }
@@ -1134,21 +1201,38 @@ export const FormsListScreen: React.FC = () => {
             <Text style={styles.cardMeta}>8 preguntas • ~5 minutos</Text>
             <View style={styles.buttonGroup}>
               {user?.role === 'teacher' && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowFeedback(true);
-                  }}
-                  style={styles.feedbackButton}
-                >
-                  <Text style={styles.feedbackButtonText}>
-                    Valorar
-                  </Text>
-                  <Ionicons
-                    name="star"
-                    size={20}
-                    color="#9E7676"
-                  />
-                </TouchableOpacity>
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowQuestionnaireViewer(true);
+                    }}
+                    style={styles.observeButton}
+                  >
+                    <Text style={styles.observeButtonText}>
+                      Ver Cuestionarios
+                    </Text>
+                    <Ionicons
+                      name="eye"
+                      size={20}
+                      color="#4A90E2"
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowFeedback(true);
+                    }}
+                    style={styles.feedbackButton}
+                  >
+                    <Text style={styles.feedbackButtonText}>
+                      Valorar
+                    </Text>
+                    <Ionicons
+                      name="star"
+                      size={20}
+                      color="#9E7676"
+                    />
+                  </TouchableOpacity>
+                </View>
               )}
               <TouchableOpacity
                 onPress={handleStartForm}
@@ -1174,6 +1258,13 @@ export const FormsListScreen: React.FC = () => {
           />
         </View>
       )}
+
+      {/* Modal de Observación de Cuestionarios */}
+      <QuestionnaireViewer
+        visible={showQuestionnaireViewer}
+        onClose={() => setShowQuestionnaireViewer(false)}
+        language={user?.language || "es"}
+      />
     </View>
   );
 
@@ -1296,6 +1387,18 @@ export const FormsListScreen: React.FC = () => {
                 <View style={styles.logoDivider} />
                 <Image
                   source={require("../../assets/images/managua.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/litoral.webp")}
+                  style={[styles.logo, { width: 60, height: 60 }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.logoDivider} />
+                <Image
+                  source={require("../../assets/images/upilar.webp")}
                   style={[styles.logo, { width: 60, height: 60 }]}
                   resizeMode="contain"
                 />
@@ -1568,8 +1671,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end', // Para alinearlos a la derecha
-    gap: 10,
+    gap: 12,
     flexWrap: 'wrap', // Para evitar que se desborden
+    marginBottom: 10,
   },
   refreshButton: {
     position: 'absolute',
@@ -1604,6 +1708,24 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontSize: 14,
   },
+  observeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "rgba(74, 144, 226, 0.2)",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginBottom: 0,
+    width: 'auto',
+    minWidth: 120,
+  },
+  observeButtonText: {
+    color: "#4A90E2",
+    fontWeight: "500",
+    fontSize: 14,
+  },
   feedbackButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -1613,9 +1735,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    marginBottom: 10,
-    width: '100%',
-    maxWidth: 220,
+    marginBottom: 0,
+    width: 'auto',
+    minWidth: 120,
   },
   feedbackButtonText: {
     color: "#9E7676",

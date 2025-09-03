@@ -35,28 +35,7 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
 }) => {
   // Validación de datos
   useEffect(() => {
-    console.log('Datos recibidos en SpiderChart:', {
-      userScores: {
-        length: userScores.length,
-        values: userScores
-      },
-      classScores: {
-        length: classScores?.length,
-        values: classScores
-      },
-      globalScores: {
-        length: globalScores?.length,
-        values: globalScores
-      },
-      countryScores: {
-        length: countryScores?.length,
-        values: countryScores
-      },
-      ageScores: {
-        length: ageScores?.length,
-        values: ageScores
-      }
-    });
+
 
     // Verificar que todos los arrays tengan la longitud correcta
     const expectedLength = 8;
@@ -211,7 +190,6 @@ const SpiderChart: React.FC<SpiderChartProps> = ({
                 if (hasScores) {
                   toggleFilter(filter.id);
                 } else {
-                  console.log('Button disabled - no scores available');
                 }
               }}
               disabled={!hasScores}

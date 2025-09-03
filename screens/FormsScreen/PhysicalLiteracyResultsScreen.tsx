@@ -27,11 +27,9 @@ interface LocalFormStats {
 
 const calculateMedians = (group: Record<string, number[][]>, key: string) => {
   const medians = Array(8).fill(0);
-  console.log('Calculando medianas para key:', key);
-  console.log('Grupo disponible:', Object.keys(group));
+
   
   if (group[key]) {
-    console.log('Datos encontrados para key:', key, group[key]);
     group[key].forEach((values, idx) => {
       if (values && values.length > 0) {
         const sorted = [...values].sort((a, b) => a - b);
@@ -39,13 +37,10 @@ const calculateMedians = (group: Record<string, number[][]>, key: string) => {
         medians[idx] = sorted.length % 2 === 0
           ? (sorted[mid - 1] + sorted[mid]) / 2
           : sorted[mid];
-        console.log(`Mediana calculada para índice ${idx}:`, medians[idx], 'de', values.length, 'valores');
       } else {
-        console.log(`No hay valores para índice ${idx}`);
       }
     });
   } else {
-    console.log('No se encontraron datos para key:', key);
   }
   return medians;
 };
@@ -89,7 +84,6 @@ export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigati
     try {
       setLoading(true);
       const snapshot = await db().ref("/form_responses").once("value");
-      console.log('Total de respuestas encontradas:', snapshot.numChildren());
 
       const allResponses: any[] = [];
       const promises: Promise<void>[] = [];
@@ -99,23 +93,12 @@ export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigati
       const userSnapshot = await db().ref(`/${userPath}/${formResponse.userId}`).once('value');
       const userData = userSnapshot.val();
       const userClassCode = userData?.classCode;
-      
-      console.log('Datos del usuario actual:', {
-        userId: formResponse.userId,
-        userPath,
-        classCode: userClassCode,
-        isGuest: formResponse.isGuest
-      });
+
       
       snapshot.forEach((childSnapshot) => {
         const response = childSnapshot.child("physical_literacy").val();
         if (response && response.answers) {
-          console.log('Respuesta encontrada:', {
-            userId: response.userId,
-            classCode: response.classCode,
-            isGuest: response.isGuest,
-            answersLength: response.answers.length
-          });
+
           
           const promise = (async () => {
             const userId = response.userId;
@@ -135,14 +118,6 @@ export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigati
       });
 
       await Promise.all(promises);
-      console.log('Total de respuestas procesadas:', allResponses.length);
-      console.log('Distribución de classCodes:', 
-        allResponses.reduce((acc, r) => {
-          const code = (r.classCode || 'unknown').trim().toUpperCase();
-          acc[code] = (acc[code] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>)
-      );
 
       // Calcular grupos fuera del map
       const classGroups = allResponses.reduce((acc, response) => {
@@ -158,12 +133,7 @@ export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigati
         return acc;
       }, {} as Record<string, number[][]>);
 
-      console.log('Grupos de clase encontrados:', {
-        totalGroups: Object.keys(classGroups).length,
-        groups: Object.keys(classGroups),
-        userGroup: userClassCode,
-        userGroupData: classGroups[userClassCode]
-      });
+
 
       const countryGroups = allResponses.reduce((acc, response) => {
         const country = response.countryRole?.country || 'unknown';
@@ -204,24 +174,14 @@ export const PhysicalLiteracyResultsScreen: React.FC<Props> = ({ route, navigati
       const userCountry = formResponse.countryRole?.country || 'unknown';
       const userAge = userData?.age || 0;
 
-      console.log('User data for medians:', {
-        classCode: userClassCode,
-        country: userCountry,
-        age: userAge
-      });
+
 
       const classMedians = calculateMedians(classGroups, userClassCode);
       const countryMedians = calculateMedians(countryGroups, userCountry);
       const ageMedians = calculateMedians(ageGroups, userAge.toString());
       const globalMedians = calculateGlobalMedians(globalGroups);
 
-      // Log para verificación
-      console.log('Medianas calculadas:', {
-        classMedians,
-        countryMedians,
-        ageMedians,
-        globalMedians
-      });
+
 
       const calculatedStats = answers.map((userAnswer, questionIndex) => {
         const values = allResponses
